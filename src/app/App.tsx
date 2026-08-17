@@ -10,7 +10,7 @@ import { refusalFor } from '../sandbox/platform'
 import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
-import { disown, ensureWorker, own, onSheetGrow } from '../sandbox/host'
+import { disown, ensureWorker, own, onSheetGrow, onMissing, missingFor } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
 import { measureCoverage, type Coverage } from '../sandbox/coverage'
@@ -171,6 +171,9 @@ export function App() {
     setLoaded({ ...cur })
   }, [])
   const [thin, setThin] = useState<string | null>(null)
+  const [missingFiles, setMissingFiles] = useState<string[]>([])
+  useEffect(() => onMissing((project) => { if (loadedRef.current?.project.id === project.id) setMissingFiles(missingFor(project)) }), [])
+  useEffect(() => { setMissingFiles(loaded ? missingFor(loaded.project) : []) }, [loaded])
   const [coverage, setCoverage] = useState<Coverage | null>(null)
   const coverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const remeasure = useCallback(() => {
@@ -315,7 +318,7 @@ export function App() {
               onLoaded={onFrameLoaded}
               onPin={pinCurrent}
               changedCount={changedCount}
-              warning={thin}
+              warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive — ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : null)}
               coverage={coverage}
             />
             {showNotes && (

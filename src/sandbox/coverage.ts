@@ -80,7 +80,9 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
     }
     if (parseFloat(cs.borderTopWidth) > 0) { const bc = rgbKey(cs.borderTopColor); if (bc && bc !== 'transparent') { cov.colours.total++; if (colourSet.has(bc)) cov.colours.hit++ } }
     const rad = parseFloat(cs.borderTopLeftRadius)
-    if (rad > 0 && rad < 100) { cov.radii.total++; if (near(radiusSet, rad)) cov.radii.hit++ }
+    // A circle or a pill (radius ≥ half the box) is authored as 50 % / 999px —
+    // kept out of the sheet on purpose, so not a miss here either.
+    if (rad > 0 && rad < 100 && rad < Math.min(r.width, r.height) / 2 - 0.5) { cov.radii.total++; if (near(radiusSet, rad)) cov.radii.hit++ }
   }
   return cov
 }

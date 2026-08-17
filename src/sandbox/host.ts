@@ -23,6 +23,18 @@ interface Owned {
 const owned = new Map<string, Owned>()
 let ready: Promise<ServiceWorkerRegistration> | null = null
 const growListeners = new Set<(project: SandboxProject) => void>()
+/** Files a page asked for that the archive does not hold — the honest sign of
+ *  "this is source, not the build" (CodeMirror's demos want lib/codemirror.js,
+ *  which only `npm run build` writes). Per project, deduplicated. */
+const missing = new Map<string, Set<string>>()
+const missListeners = new Set<(project: SandboxProject, path: string) => void>()
+export function onMissing(fn: (project: SandboxProject, path: string) => void): () => void {
+  missListeners.add(fn)
+  return () => missListeners.delete(fn)
+}
+export function missingFor(project: SandboxProject): string[] {
+  return [...(missing.get(project.id) ?? [])]
+}
 
 /** Be told when a runtime rule added entries to a project's sheet. */
 export function onSheetGrow(fn: (project: SandboxProject) => void): () => void {
@@ -158,7 +170,16 @@ async function onMessage(e: MessageEvent) {
     const candidates = [path, ...path.split('/').map((_, i, a) => a.slice(i).join('/')).slice(1, 4)]
     for (const c of candidates) { if (await loadOutsideRoot(o.project, c)) { f = files.get(c); if (f) break } }
   }
-  if (!f) { port.postMessage({ found: false, owner: true }); return }
+  if (!f) {
+    // Only scripts and stylesheets count as missing: a @font-face lists several
+    // formats and legitimately 404s on the ones after the first that loads.
+    if (o.variant === 'rewritten' && /\.(js|mjs|css)$/i.test(path)) {
+      if (!missing.has(o.project.id)) missing.set(o.project.id, new Set())
+      const set = missing.get(o.project.id)!
+      if (!set.has(path)) { set.add(path); for (const fn of missListeners) fn(o.project, path) }
+    }
+    port.postMessage({ found: false, owner: true }); return
+  }
   let body: ArrayBuffer
   // Only a NAVIGATED document gets the variable block and the hook: an HTML
   // import, an XHR'd template or a fragment fetched by their JS is not a page

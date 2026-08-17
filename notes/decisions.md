@@ -403,3 +403,25 @@ avatars) · SVG-Loaders · anime.js (36 examples).
 Scorecard: reveal.js 100/75/100 · Bootstrap Icons 100/100/100 (11,227 el.
 1:1) · NES.css 97/100/100 (2,443 el. 1:1 after the image rule) · SVG-Loaders
 100/100/100 · anime.js 100/100/100 · Leaflet: build missing, flagged.
+
+## Sweep 9 — six more, unseen (2026-08-18)
+
+Monaco editor (gh-pages, 503 pages) · CodeMirror 5 (183 pages) · MDN
+dom-examples (198 pages) · SpinKit · Hover.css · Spectrum colorpicker.
+
+71. **Missing files are reported.** A page that asks for a script or a
+    stylesheet the archive does not hold gets "N files this page asked for
+    are not in the archive — <paths>. That usually means source, not the
+    built output" (CodeMirror's demos want `lib/codemirror.js`, which only
+    `npm run build` writes). Fonts do NOT count: a `@font-face` lists several
+    formats and legitimately 404s on the ones after the first that loads
+    (Hover.css's Font Awesome woff/ttf).
+72. **Circles and pills leave the radius count** in the reach meter: a radius
+    of half the box or more (`50 %`, `999px`) is kept out of the sheet on
+    purpose (a circle must stay a circle under the radius dial), so SpinKit's
+    "0 % radii" was the meter reading its own rule as a miss.
+
+Scorecard: Monaco 100/100/100 (1,252 el. 1:1) · CodeMirror home 100/100/100
+(demo pages: build missing, flagged) · dom-examples 100/50/100 (their JS sets
+font sizes at runtime — 1:1) · SpinKit 100/100/100 · Hover.css 100/100/100
+(288 el. 1:1) · Spectrum 100/100/100 (4,580 el. 1:1).
