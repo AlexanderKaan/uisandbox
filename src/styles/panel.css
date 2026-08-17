@@ -1,0 +1,949 @@
+/* The control menu sits in a slim column that *pushes the preview aside*
+ * (no overlap) — a floating rounded card in a --app-bg gutter. Collapsing it
+ * (from the card's own button) removes the column and gives the preview the
+ * full width. The top nav still runs continuously above everything. */
+.panel {
+  flex: none;
+  /* Above the stage so flyout popovers paint over the canvas. */
+  position: relative;
+  z-index: 40;
+  width: 288px;
+  /* Top inset matches the stage's 28px padding so the menu card's top lines up
+   * with the preview frame's top edge (.cockpit-preview). Left inset (22px)
+   * lines the card's left edge up with the topbar logo above it. */
+  padding: 28px 12px 12px 22px;
+  background: var(--app-bg);
+  display: flex;
+  flex-direction: column;
+  /* No overflow clip — the FontPicker dropdown must be free to escape the
+   * card. The accordion is short (one category open), so it stays on-screen. */
+  overflow: visible;
+}
+/* Shuffle — a full-width footer action below the menu card (roll a fresh kit).
+ * Lives with the controls it acts on; separated from the card by a small gap so
+ * it reads as an action, not a setting. Matches the card chrome (surface +
+ * hairline + shadow). */
+.panel__foot {
+  margin-top: 10px;
+  flex: none;
+  display: flex;
+  gap: 8px;
+}
+.panel__shuffle,
+.panel__reset {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--app-border);
+  color: var(--app-fg);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--app-dur) var(--app-ease), color var(--app-dur) var(--app-ease), box-shadow var(--app-dur) var(--app-ease), opacity var(--app-dur) var(--app-ease);
+}
+.panel__shuffle {
+  background: var(--app-surface);
+  box-shadow: var(--app-shadow-sm);
+}
+.panel__shuffle:hover { background: var(--app-hover); box-shadow: var(--app-shadow-md); }
+.panel__shuffle:active { transform: scale(0.99); }
+.panel__shuffle svg { color: var(--app-fg-muted); }
+/* Reset — quieter (ghost) than Shuffle; dims when already on the default kit. */
+.panel__reset {
+  background: transparent;
+  color: var(--app-fg-muted);
+}
+.panel__reset:hover:not(:disabled) { background: var(--app-hover); color: var(--app-fg); }
+.panel__reset:active:not(:disabled) { transform: scale(0.99); }
+.panel__reset svg { color: var(--app-fg-muted); }
+.panel__reset:disabled { opacity: 0.4; cursor: default; }
+/* === The control shell (.fmenu) === COMPOSES `.card`.
+ * It was four properties that `.card` already sets together — surface, border,
+ * radius, shadow — with a 14px radius answering to nothing. `.card` is the kit's
+ * surface; this is a surface; there was never a second one to write.
+ *
+ * NOT `.menu`, though the rows inside it are menu items and it should read as
+ * our menu component. `.menu` is a FLOATING overlay: it caps at
+ * --k-overlay-max (22rem) and scrolls. This shell is DOCKED and full-height —
+ * composing `.menu` here would push 645px of rows into a 352px scroller. The
+ * right decomposition is the one the markup already shows: a surface holding a
+ * menu, not a menu pretending to be a surface.
+ *
+ * The two overrides go through `.card`'s own documented comp-tier hooks rather
+ * than around them: this shell lays out its own padding (a flush bar over a
+ * 6px row list), so it zeroes the card's. */
+.fmenu {
+  --k-card-pad: 0;
+  --k-card-gap: 0;
+}
+/* Slim header — an identity label + the collapse-to-full-width control. */
+.fmenu__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 8px 9px 14px;
+  border-bottom: 1px solid var(--app-border);
+}
+.fmenu__bar-title {
+  flex: 1;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--app-fg-faint);
+}
+.fmenu__collapse {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: transparent;
+  border: 0;
+  color: var(--app-fg-muted);
+  cursor: pointer;
+  transition: background var(--app-dur) var(--app-ease), color var(--app-dur) var(--app-ease);
+}
+.fmenu__collapse:hover { background: var(--app-hover); color: var(--app-fg); }
+/* === Flat menu — one row per control (shadcn-create style) ===
+ * No category accordion: every control's current value is visible at rest.
+ * Click a row → its options float over the canvas (.fmrow__pop). Thin
+ * non-clickable section labels (.fmsec) chunk the list. */
+.fmenu__rows {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+/* Section divider — quiet uppercase label, not interactive. */
+/* .menu__label carries the type, the tracking, the case and the colour — every
+   line that used to be here was a copy of it, including a hard-coded 10px where
+   the recipe reads --k-type-caption. What stays is the 28px indent, which is the
+   panel's own gutter for the lock affordance and belongs to nobody else. */
+.panel .fmsec {
+  /* Aligned with the row labels, from the same expression rather than a copy. */
+  padding-left: calc(var(--k-in-h-default, 36px) + var(--k-s-8));
+}
+/* A section header that twins a Foundations stage section — clicking jumps there.
+ * Resets button chrome to match the .fmsec label; a → appears on hover as the cue. */
+.fmsec--link {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.14s ease;
+}
+.fmsec--link:hover { color: var(--app-fg-muted); }
+.fmsec--link::after {
+  content: '→';
+  margin-left: auto;
+  /* Persistent faint arrow (C8) — the panel↔Foundations twin had zero affordance
+   * (the jump cue only appeared on hover). A quiet always-on arrow advertises
+   * "click this header to inspect it in Foundations"; it brightens on hover. */
+  opacity: 0.3;
+  transition: opacity 0.14s ease;
+}
+.fmsec--link:hover::after { opacity: 0.55; }
+/* A control row: label (left) + current value (right) + chevron. */
+.fmrow { position: relative; }
+.fmrow--open { z-index: 50; }
+/* Per-row Shuffle lock — a small padlock in a left gutter before every title; click
+   to pin a knob so Shuffle keeps it through a roll. Always shown (faint), brighter on
+   hover, solid when pinned. The gutter (28px left padding) lives in the row/section
+   padding rules below so the shorthand `padding` doesn't reset it. */
+.fmrow__lock {
+  position: absolute; left: 4px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  /* 24, not 19. WCAG 2.5.8 AA, and the spacing exception does not rescue it —
+   * the row's controls sit right beside it. The GLYPH stays small; only the
+   * target grows, which is the same trick the kit uses on close buttons. */
+  /* NO SIZE HERE ANY MORE. .btn--icon sizes itself from --k-in-h-default, which
+     is the control ladder the whole kit sits on, and the 24px written here was
+     our own number fighting it — the button rendered at 36 and lay 30px across
+     the label. The answer was not to shrink the kit's button back down: it is
+     that size on purpose, because that is where the target floor is. The GUTTER
+     grows to fit it, below. Same lesson the topbar taught an hour ago, where
+     "this chrome needs its own denser control" also turned out to be untrue. */
+  padding: 0; border: 0;
+  background: transparent; color: var(--app-fg-faint); cursor: pointer;
+  /* Locking is a secondary affordance — it protects a row from Shuffle, which
+   * most visits never touch. At 0.85 it sat level with the control labels and
+   * pulled the eye down the left edge; the controls are the subject. It comes
+   * up to full on row hover, so it is still one glance away. */
+  opacity: 0.45;
+  transition: opacity var(--app-dur) var(--app-ease), color var(--app-dur) var(--app-ease),
+              background var(--app-dur) var(--app-ease);
+}
+.fmrow:hover .fmrow__lock { opacity: 1; }
+.fmrow__lock:hover { opacity: 1; background: var(--app-hover); color: var(--app-fg); }
+/* Pinned = FILLED, so it clearly reads as "on" (the outline alone was too subtle). */
+.fmrow--locked .fmrow__lock { opacity: 1; background: var(--app-fg); color: var(--app-surface); }
+.fmrow--locked .fmrow__lock:hover { background: var(--app-fg); color: var(--app-surface); }
+/* Row labels read as one consistent tier — every control title is the same
+ * semibold (see .fmrow__label below). The old "essential rows" treatment (a
+ * heavier 680 label + a left tick on Brand/Scale/Display font/Box radius) was
+ * dropped: the ticks read as noise (especially in dark mode) and a single, calm
+ * title weight is cleaner than a per-row emphasis split. The .fmrow--key class
+ * stays inert in the markup — group order + section headers carry the structure. */
+/* .panel-scoped ON PURPOSE. injectKit appends the recipes to <head> AFTER the
+   bundled stylesheets, so at equal specificity .menu__item wins — which is why
+   the first version of this override silently did nothing and the lock ended up
+   lying across the label. A panel adjusting a recipe for its own surface should
+   say so in the selector rather than hope about order. */
+.panel .fmrow__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* The left gutter holds the lock, so it is sized from the same token the lock
+     is: control height + a little air. It used to be a hard-coded 28, which was
+     narrower than the button it had to contain. */
+  padding: 9px 10px;
+  padding-left: calc(var(--k-in-h-default, 36px) + var(--k-s-8));
+  /* The row IS the target now that every setting is one, so it holds to the
+     floor we hold everyone else to — and it gets there for free, because a
+     full-width row is large by construction. The old inline segments measured
+     64x21 against a 24px floor and needed the panel to be redesigned to fix it;
+     this shape simply cannot fail. */
+  /* --k-row-h-md, not the sm rung .menu__item defaults to. A dropdown is
+     transient and wants to be dense; a settings panel is a surface you sit in,
+     and at the sm rung the rows read as one block of text with no air between
+     them. Same ladder, the rung that fits the context. */
+  min-height: var(--k-row-h-md, 32px);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--k-radius-md, 8px);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background var(--app-dur) var(--app-ease),
+              border-color var(--app-dur) var(--app-ease);
+}
+.fmrow__head:hover { background: var(--app-hover); }
+.fmrow--open > /* .panel-scoped ON PURPOSE. injectKit appends the recipes to <head> AFTER the
+   bundled stylesheets, so at equal specificity .menu__item wins — which is why
+   the first version of this override silently did nothing and the lock ended up
+   lying across the label. A panel adjusting a recipe for its own surface should
+   say so in the selector rather than hope about order. */
+.panel .fmrow__head {
+  background: var(--app-bg);
+  border-color: var(--app-border);
+}
+.fmrow__label {
+  /* Fixed to its content — never wraps to a second line, never clips. */
+  flex: none;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--app-fg);
+  letter-spacing: -0.01em;
+}
+.fmrow__val {
+  /* .menu__value gives the position, the type and the colour. What stays is the
+     ellipsis behaviour: the VALUE shortens when it runs long so the label never
+     moves — a property of this panel, not of a menu item. */
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--k-s-6);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-fg);
+}
+.fmrow__val-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fmrow__chev {
+  flex: none;
+  color: var(--app-fg-faint);
+  transition: transform var(--app-dur-md) var(--app-ease);
+}
+.fmrow--open .fmrow__chev { transform: rotate(90deg); }
+/* Leading dot in a value (Color theme / Brand color). */
+.fmrow__dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.fmrow__dot--viz {
+  box-shadow: none;
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+}
+/* Hidden native colour picker that fills its row (the Brand-colour footer). */
+.fmrow__colorinput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+/* === Flyout popover — floats over the canvas, to the right of the menu === */
+/* .menu carries the surface, the border, the radius, the shadow, the padding,
+   the max-height, the scroll behaviour, the scrollbar and the enter animation.
+   Every one of those lines used to be restated here, including a 10px radius, a
+   5px padding, a z-index of 60 and a SECOND keyframe that duplicated the kit's.
+   What is left is where this particular menu opens: beside its row, not under
+   a trigger. */
+.panel .fmrow__pop {
+  position: absolute;
+  top: -6px;
+  left: calc(100% + var(--k-s-10));
+  z-index: var(--k-z-popover, 60);
+}
+.fmrow__pop--font {
+  padding: 0;
+  width: 240px;
+  /* Pin the upload footer: the pop is a flex column, the font list scrolls
+   * inside it, the grey footer stays put. */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.fmpop__list { display: flex; flex-direction: column; gap: 1px; }
+/* Colour-theme: a 2-column grid of dot + name, filled COLUMN-major so the
+   spectrum reads as a clean fan — down column 1 (neutral → red → orange → green →
+   teal), then down column 2 (sky → blue → indigo → violet → pink). 5 fixed rows ×
+   the 10 themes = 2 even columns; bump the row count if the theme count changes. */
+.fmpop__grid {
+  display: grid;
+  grid-template-rows: repeat(5, auto);
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  width: 232px;
+}
+/* A flyout option === COMPOSES `.menu__item`.
+ *
+ * It used to be a 15-line copy of that recipe — flex, gap, padding, radius,
+ * transparent background, hover tint — and I deleted it as dead code in the same
+ * sweep that removed the unreachable slider, because my regex matched the group
+ * `fmsld|fmslider|fmseg|fmrow__inline|fmopt` and I verified the GROUP rather than
+ * each member. Ten live options in every flyout rendered as unstyled 17px blocks
+ * with the checkmark floating loose. Checking that one member of a batch is dead
+ * is not checking the batch.
+ *
+ * Restoring the copy would have been the easy repair and the wrong one. The
+ * recipe brings more than the deleted rule had: the SM row rhythm
+ * (--k-row-h-sm), the nested radius the parent `.menu` computes so hover corners
+ * curve concentrically, icon sizing, and the roll-down stagger. What stays below
+ * is only the selected state, which the kit expresses as a token pair rather
+ * than as `.fmopt--on { background: var(--app-hover) }` reaching for a chrome
+ * variable — and the kit turned out not to HAVE one, which is the third gap this
+ * dogfooding pass has found. `.menu__item` had only :hover, so a menu of ten
+ * choices could not show which was in force. That now lives in the recipe as
+ * `.menu__item--on` (class or ARIA), and this file carries nothing. */
+.fmopt__viz {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+}
+.fmopt__label { flex: 1; white-space: nowrap; }
+.fmopt__check { flex: none; color: var(--app-fg); }
+/* Two-line option (Style picker): name + a muted one-line character blurb. */
+.fmopt__text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; align-items: flex-start; }
+.fmopt__text .fmopt__label { flex: none; }
+.fmopt__sub { font-size: 11px; font-weight: 400; line-height: 1.3; color: var(--app-fg-muted); white-space: normal; }
+/* Brand-colour footer — the emphasised row at the foot of the theme flyout.
+ * Breaks out of the popover padding for a full-width divider; the whole row
+ * is the native colour-picker trigger. */
+.fmbrand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 6px -5px -5px;
+  padding: 11px 12px;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-bg);
+  border-radius: 0 0 9px 9px;
+  cursor: pointer;
+  transition: background var(--app-dur) var(--app-ease);
+}
+.fmbrand:hover { background: var(--app-hover); }
+.fmbrand__label {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--app-fg-muted);
+}
+.fmbrand__val {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-fg);
+}
+/* === Harmony dials (H1) — the Spread/Expression sliders at the foot of the
+ * Harmony flyout. Same footer treatment as .fmbrand (divider + recessed band). */
+.fmharmony {
+  display: grid;
+  gap: 8px;
+  margin: 6px -5px -5px;
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-bg);
+  border-radius: 0 0 9px 9px;
+}
+.fmslider__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-fg-muted);
+}
+.fmslider__val {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--app-fg);
+}
+.fmseg__opt {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 4px 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--app-fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background var(--app-dur) var(--app-ease), color var(--app-dur) var(--app-ease);
+}
+.fmseg__opt:hover { color: var(--app-fg); }
+.fmseg__opt--on {
+  background: var(--app-surface);
+  color: var(--app-fg);
+  font-weight: 600;
+  /* Selected-edge (Invariant I2) — the depth-independent inset ring keeps the
+     active pill legible where the surface-on-bg tonal step + the faint shadow
+     collapse (the icon-picker "which one is selected?" bug). Mirrors the kit's
+     --k-selected-edge using the chrome's own border token. */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07), inset 0 0 0 1px var(--app-border);
+}
+/* Icon-glyph segment (Icons row) — center the family glyph, no text. */
+.fmseg__opt--viz { display: inline-flex; align-items: center; justify-content: center; padding: 3px; }
+.fmseg__viz { display: inline-flex; }
+/* Foundation-coherence lock (surface-separation guard) — the option that would
+   dissolve the block is disabled and wears a padlock, instead of being silently
+   floored. Honest: the user sees WHY they can't pick it. */
+.fmseg__opt--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  gap: 4px;
+}
+.fmseg__opt--locked:hover { color: var(--app-fg-muted); }
+.fmseg__lock { flex: none; opacity: 0.85; }
+.fmsld__val {
+  flex: none;
+  min-width: 58px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--app-fg);
+  white-space: nowrap;
+}
+/* Reduced-motion: the chrome guard at the file end already covers fmrow__pop. */
+
+/* === Ctrl: one labelled control row === */
+.ctrl {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ctrl__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.ctrl__name {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--app-fg);
+}
+.ctrl__value {
+  font-size: 11px;
+  color: var(--app-fg-faint);
+  font-feature-settings: 'tnum';
+}
+.ctrl__hint {
+  font-size: 11px;
+  color: var(--app-fg-faint);
+}
+/* === Seg: segmented toggle ===
+ *
+ * Depth pattern (no color accent — Cockpit's chrome stays monochrome):
+ *   • Inactive: muted text, transparent on a white-ish track — recedes
+ *   • Active: slightly DARKER background (subtle overlay) + INSET shadow
+ *     so the picked option reads as "pressed into the panel" while the
+ *     others sit flat. Plus 600 weight on active text so the eye snaps
+ *     to the selection at-a-glance without scanning every label. */
+.seg {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.seg__opt {
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--app-fg-muted);
+  white-space: nowrap;
+  text-align: center;
+  transition: background var(--app-dur) var(--app-ease),
+              color var(--app-dur) var(--app-ease),
+              box-shadow var(--app-dur) var(--app-ease);
+}
+.seg__opt:hover { color: var(--app-fg); }
+.seg__opt--on {
+  background: var(--app-hover);
+  color: var(--app-fg);
+  font-weight: 600;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+/* Touch — floor the panel's own tap targets to the 44px WCAG 2.5.5 / Apple-HIG
+   target on a coarse pointer (mirrors the kit's globalLayer floor, for app chrome).
+   The 19px per-row Shuffle padlock is a deliberate exception — a tiny absolute
+   glyph that needs a hit-expanding pseudo, deferred to that careful pass. */
+@media (pointer: coarse) {
+  .fmrow__head,
+  .seg__opt,
+  .panel__shuffle,
+  .panel__reset { min-height: 44px; }
+  .seg__opt { display: flex; align-items: center; justify-content: center; }
+}
+/* === FontPicker — custom dropdown where each option is rendered in its
+   own typeface (Google Fonts eager-loaded in index.html). Replaces the
+   native <select> which could only show font names in the chrome font. */
+.fp { position: relative; }
+.fp__btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: border-color var(--app-dur) var(--app-ease);
+  line-height: 1.2;
+}
+.fp__btn:hover { border-color: var(--app-fg-muted); }
+.fp__name { flex: 1; color: var(--app-fg); }
+.fp__chev { color: var(--app-fg-faint); display: inline-flex; }
+/* Real preview, not a hint — full text color, sized to mirror the font's
+   actual role: display picker shows headline-sized, body picker shows
+   body-reading-sized. Makes the type hierarchy visible in the picker
+   itself, not just in the rendered preview. */
+.fp__sample {
+  margin-top: 8px;
+  padding: 4px 2px 2px;
+  font-weight: 400;
+  color: var(--app-fg);
+}
+.fp__sample--display {
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.fp__sample--body {
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+/* The font list — COMPOSES `.menu`. It is a floating option list, which is what
+ * `.menu` is; it kept only what is genuinely about WHERE it hangs.
+ *
+ * `.menu` brings the surface, the 22rem cap with its scroll, the roll-down, AND
+ * the scrollbar treatment — which this rule needed and never had. That is the
+ * tell that the duplicate was never free: the comment above pointed at
+ * --k-anim-menu for "chrome parity" while hand-copying one property out of a
+ * recipe that would have given all of them. Parity by transcription lasts until
+ * the recipe learns something new. */
+.fp__menu {
+  position: absolute;
+  top: calc(100% + var(--k-s-4));
+  left: 0;
+  right: 0;
+  z-index: 12;
+}
+/* Inline mode — the font LIST drops its absolute positioning + own chrome and
+ * fills a parent flyout (.fmrow__pop--font) directly. */
+.fp--inline {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+.fp__menu--inline {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
+  border: 0;
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  animation: none;
+}
+/* Upload-your-own-font footer — grey, pinned, mirrors the Brand-colour
+ * footer in the theme flyout. */
+.fp__foot {
+  flex: none;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-bg);
+  border-radius: 0 0 10px 10px;
+  transition: background var(--app-dur) var(--app-ease);
+}
+.fp__foot--over { background: var(--app-hover); }
+.fp__foot-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--app-fg);
+  border-radius: 0 0 10px 10px;
+  transition: background var(--app-dur) var(--app-ease);
+}
+.fp__foot-btn:hover { background: var(--app-hover); }
+.fp__foot-btn > svg { flex: none; color: var(--app-fg-muted); }
+.fp__foot-label { flex: 1; text-align: left; }
+.fp__foot-hint { font-size: 10.5px; font-weight: 400; color: var(--app-fg-faint); }
+.fp__error--foot { padding: 0 12px 8px; }
+/* Items roll out staggered. nth-of-type: item is <button>, group-label is a
+ * <div>, so type-counting indexes buttons within each group. */
+.fp__item {
+  animation: app-menu-item var(--app-dur-md) var(--app-ease) both;
+  animation-delay: calc(var(--stagger-i, 0) * 18ms);
+}
+.fp__item:nth-of-type(1){--stagger-i:0} .fp__item:nth-of-type(2){--stagger-i:1}
+.fp__item:nth-of-type(3){--stagger-i:2} .fp__item:nth-of-type(4){--stagger-i:3}
+.fp__item:nth-of-type(5){--stagger-i:4} .fp__item:nth-of-type(n+6){--stagger-i:5}
+.fp__group + .fp__group { margin-top: 6px; }
+.fp__group-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--app-fg-faint);
+  padding: 6px 10px 4px;
+}
+.fp__item {
+  width: 100%;
+  display: block;
+  padding: 7px 10px;
+  border-radius: 6px;
+  text-align: left;
+  font-size: 14px;
+  color: var(--app-fg);
+  line-height: 1.2;
+}
+.fp__item:hover { background: var(--app-hover); }
+/* The font list's chosen row. It used to be `background: var(--app-hover)` —
+   the HOVER colour used as the SELECTED colour, so the current font was
+   indistinguishable from whatever the mouse happened to be over. Two rows, same
+   paint, no way to tell which one is in force. Now the kit's one selected
+   treatment, the same as every other option list. */
+.fp__item--on {
+  background: var(--k-state-selected-bg);
+  color: var(--k-fg);
+  font-weight: var(--k-weight-semibold);
+  box-shadow: var(--k-selected-edge);
+}
+/* "Custom" tag — sibling of .fp__name (not nested) so it doesn't pick up
+   the custom font that .fp__name renders in. Stays in the chrome's own
+   neutral type + muted system color so it reads as meta-info, not content. */
+.fp__tag {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--app-hover);
+  color: var(--app-fg-faint);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+/* Warning shown when the user reloaded and their custom font is gone */
+.fp__warn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  background: var(--app-hover);
+  color: var(--app-fg-muted);
+  border-radius: 6px;
+  font-size: 11px;
+}
+/* Upload section — inline variant sits between System and Google fonts
+   groups (so the action is high in the dropdown, not buried). */
+.fp__upload {
+  margin-top: 6px;
+  padding: 6px 4px 4px;
+  border-top: 1px solid var(--app-border);
+}
+.fp__upload--inline {
+  margin-top: 4px;
+  padding: 6px 0 8px;
+  border-top: 0;
+  border-bottom: 1px solid var(--app-border);
+  margin-bottom: 4px;
+}
+.fp__upload-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px dashed var(--app-border);
+  color: var(--app-fg);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease);
+  text-align: left;
+}
+.fp__upload-btn:hover {
+  border-color: var(--app-fg-muted);
+  border-style: solid;
+  background: var(--app-hover);
+}
+/* Drag-over state — solid accent border + soft tint. Communicates
+   "release here" more strongly than the hover state. */
+.fp__upload-btn--over,
+.fp__upload-btn--over:hover {
+  border-color: var(--app-accent);
+  border-style: solid;
+  background: var(--app-hover);
+  color: var(--app-accent);
+}
+.fp__upload-hint {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: var(--app-fg-faint);
+  font-weight: 400;
+}
+.fp__upload-disclaimer {
+  padding: 6px 10px 0;
+  font-size: 10.5px;
+  color: var(--app-fg-faint);
+}
+.fp__error {
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #c53030;
+}
+/* (The panel's own .select rule lived here until 2026-08-16. Nothing in the
+ * chrome rendered class="select" any more, and its existence was the reason
+ * the kit's select.select recipe was scoped to .cockpit-preview — dead in the
+ * export. Both gone; the kit's rule ships.) */
+/* === Saved kits — 3 fixed slots in localStorage === */
+.kits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.kit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 8px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease);
+}
+.kit:hover { border-color: var(--app-fg-muted); }
+.kit__label {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--app-fg-muted);
+  letter-spacing: 0.01em;
+}
+.kit__swatches {
+  display: flex;
+  gap: 2px;
+}
+.kit__sw {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  /* Hairline must follow the theme — a hardcoded black-alpha border vanishes
+   * on the dark panel. --app-border carries the right tone in both modes. */
+  border: 1px solid var(--app-border);
+}
+.kit__plus {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--app-bg);
+  color: var(--app-fg-faint);
+}
+.kit--empty { border-style: dashed; }
+.kit--empty .kit__label { color: var(--app-fg-faint); }
+.kit__clear {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-surface);
+  color: var(--app-fg-muted);
+  box-shadow: var(--app-shadow-sm);
+  cursor: pointer;
+}
+.kit:hover .kit__clear { display: inline-flex; }
+.kit__clear:hover { color: var(--app-fg); background: var(--app-hover); }
+.kit__clear:focus-visible {
+  display: inline-flex;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--k-focus-ring, rgba(59, 130, 246, 0.6));
+}
+/* Respect OS reduced-motion for chrome menus (preview side is covered by the
+ * global guard in preview.css; chrome --app-* CSS needs its own). */
+@media (prefers-reduced-motion: reduce) {
+  .fp__menu, .fp__item, .fmrow__pop {
+    animation-duration: 0.01ms !important;
+  }
+}
+/* === Mobile — the panel is a bottom SHEET (chrome.css) =========================
+ * Two things break the desktop panel model on a phone:
+ *  1. Knob flyouts float to the RIGHT of the column (`left: calc(100% + 10px)`),
+ *     which lands off-screen in a full-width sheet — so you couldn't pick a colour,
+ *     style or font at all. Render them INLINE instead: an accordion-style dropdown
+ *     that expands within the row and pushes the rows below it down (still scrolls
+ *     inside the sheet). This is the fix for "you can't open a sub-nav in the drawer".
+ *  2. On a wide (tablet) sheet the rows stretch edge-to-edge and read as sparse —
+ *     cap the content width and centre it. */
+@media (max-width: 768px) {
+  .fmrow__pop,
+  .fmrow__pop--font {
+    position: static;
+    inset: auto;
+    left: auto;
+    top: auto;
+    width: auto;
+    min-width: 0;
+    max-height: 46vh;
+    overflow-y: auto;
+    margin-top: 6px;
+    box-shadow: none;
+    animation: none;
+    background: var(--app-bg);
+  }
+  .fmpop__grid { width: auto; }
+  .fmrow--open { z-index: auto; }
+  /* Tablet-width sheet: keep the controls in a comfortable, centred measure
+     instead of stretching the segmented strips across the whole width. */
+  .fmenu { max-width: 620px; margin-inline: auto; }
+}
+/* === Provenance — where a control's value came from ========================
+ * Only present when the visitor arrived from an audit. Sits UNDER the label,
+ * not beside it: the value column is already tight and a badge next to the
+ * label squeezed sliders and segmented controls into unreadable stubs.
+ *
+ * Deliberately quiet type. This is a footnote on a control, not a status the
+ * eye should keep returning to — the controls stay the subject. */
+.fmrow__label { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+.fmrow__prov {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1.2;
+  color: var(--app-fg-muted);
+}
+/* Green reads as "verified", which is exactly the claim: your code said this. */
+.fmrow__prov { color: #0f766e; }
+/* Amber, because it is an open question rather than a problem — the codebase
+   never settled this and the choice is genuinely theirs. */
+.fmrow__prov--default { color: #a16207; }
+/* Neutral once they take over: no longer evidence, just history. */
+.fmrow__prov--changed { color: var(--app-fg-faint); font-weight: 500; }
+/* Brand-colour note — shown only when the engine had to add a button boundary
+   because the chosen brand does not separate from the page. Quiet by design: it
+   reports, it does not warn. Nothing is wrong with their colour. */
+.fmbrand__note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--app-radius-sm, 6px);
+  background: var(--app-surface-2, rgba(0, 0, 0, 0.03));
+  color: var(--app-fg-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.fmbrand__note-swatch {
+  flex: 0 0 auto;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-top: 2px;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}

@@ -1,0 +1,5 @@
+node_modules/
+dist/
+bench/audit-*/
+.DS_Store
+*.tsbuildinfo
