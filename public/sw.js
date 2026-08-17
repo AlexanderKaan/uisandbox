@@ -83,6 +83,10 @@ self.addEventListener('fetch', (event) => {
       }
       return new Response(`Not in sandbox: ${path}`, { status: 404, headers: { 'content-type': 'text/plain' } })
     }
+    // NEVER cache: a root-relative URL (`/assets/x.css`) is the SAME URL for the
+    // raw, the identity and the live sandbox of one project, and the browser's
+    // cache is keyed by URL — a cached rewritten sheet served to the raw control
+    // made it unstyled (measured on getbootstrap.com). Fresh from the page, always.
     return new Response(answer.body, {
       status: 200,
       headers: {

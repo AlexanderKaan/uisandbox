@@ -345,8 +345,22 @@ export function rewriteInlineStyle(style: string, table: SubstitutionTable, file
  * Rewrite the `<style>` blocks and `style=""` attributes of an HTML document.
  * Text-level, like the CSS: the markup keeps its bytes.
  */
+/**
+ * Subresource Integrity on <link>: a rewritten stylesheet no longer matches its
+ * hash and the browser drops it without a word (getbootstrap.com's own docs
+ * lost bootstrap.min.css that way — measured). The bytes changed on purpose,
+ * so the promise the hash made is ours to withdraw. The RAW control drops it
+ * too: a hash is a transport guarantee, not a style, and an archive whose CSS
+ * drifted from the hash in its HTML (the gh-pages branch did) would otherwise
+ * make the control unstyled. Scripts are untouched and keep theirs.
+ */
+export function stripLinkIntegrity(html: string): string {
+  return html.replace(/<link\b[^>]*>/gi, (tag) => (/\bintegrity\s*=/i.test(tag) ? tag.replace(/\s+integrity\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, '') : tag))
+}
+
 export function rewriteHtml(html: string, table: SubstitutionTable, file: string): string {
-  let out = html.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (_m, open: string, css: string, close: string) =>
+  let out = stripLinkIntegrity(html)
+  out = out.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (_m, open: string, css: string, close: string) =>
     open + rewriteCss(css, table, file) + close)
   out = out.replace(/(<[a-zA-Z][^>]*?\sstyle=)("([^"]*)"|'([^']*)')/g, (m, pre: string, _q: string, dq?: string, sq?: string) => {
     const raw = dq ?? sq ?? ''

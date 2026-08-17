@@ -60,6 +60,25 @@ export function disown(project: SandboxProject): void {
   owned.delete(rawSid(project.id))
 }
 
+/**
+ * A build deployed under a sub-path writes it into every URL — CRA's
+ * `homepage`, Vite's `base`, a gh-pages project site: `/react-gh-pages/static/
+ * js/main.js` for a file that sits at `static/js/main.js` in the archive. The
+ * archive has no memory of the deploy path, so a miss is retried with leading
+ * segments stripped, first match wins (measured on a CRA gh-pages build that
+ * rendered blank).
+ */
+export function resolveFile<T>(files: Map<string, T>, path: string): T | undefined {
+  const direct = files.get(path)
+  if (direct) return direct
+  const parts = path.split('/')
+  for (let i = 1; i < parts.length && i <= 4; i++) {
+    const hit = files.get(parts.slice(i).join('/'))
+    if (hit) return hit
+  }
+  return undefined
+}
+
 async function onMessage(e: MessageEvent) {
   const data = e.data as { type?: string; sid?: string; path?: string } | undefined
   if (!data || data.type !== 'us:fetch' || !data.sid) return
@@ -69,7 +88,7 @@ async function onMessage(e: MessageEvent) {
   if (!o) { port.postMessage({ found: false, owner: false }); return }
   const files = o.variant === 'raw' ? o.project.raw : o.project.rewritten
   const path = decodeURIComponent(data.path ?? '')
-  const f = files.get(path)
+  const f = resolveFile(files, path)
   if (!f) { port.postMessage({ found: false, owner: true }); return }
   let body: ArrayBuffer
   if (o.variant === 'rewritten' && /\.html?$/i.test(path)) {

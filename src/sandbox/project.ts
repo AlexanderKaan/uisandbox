@@ -16,7 +16,7 @@
  * next step (see PROMPT.md, hard nut 2).
  */
 import type { Archive, ZipEntry } from '../audit/intake/readZip'
-import { rewriteCss, rewriteHtml } from './rewrite'
+import { rewriteCss, rewriteHtml, stripLinkIntegrity } from './rewrite'
 import { SubstitutionTable } from './table'
 
 export interface ServedFile {
@@ -119,6 +119,8 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
       rewritten.set(rel, { blob: new Blob([rewriteCss(css, table, rel)], { type }), type })
     } else if (/\.html?$/i.test(rel)) {
       const html = await blob.text()
+      // The control keeps every byte except <link integrity> — see stripLinkIntegrity.
+      raw.set(rel, { blob: new Blob([stripLinkIntegrity(html)], { type }), type })
       rewritten.set(rel, { blob: new Blob([rewriteHtml(html, table, rel)], { type }), type })
     } else {
       rewritten.set(rel, { blob, type })

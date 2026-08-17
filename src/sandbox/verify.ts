@@ -31,37 +31,67 @@ export interface VerifyResult {
   ok: boolean
   /** A refusal explains itself; a pass has elements > 0 and mismatches = []. */
   refusal?: string
+  /** Elements that could be PAIRED across the two documents. */
   elements: number
+  /** Elements only in one document — ads, widgets, anything time-dependent. */
+  unpaired: { raw: number; sandbox: number }
   mismatches: Mismatch[]
 }
 
 const MAX_REPORT = 40
 
-/** Elements of both documents in document order, paired by position. */
+/** A stable address for an element: its path of tag#id.class:nth from <body>. */
+function keyOf(el: Element): string {
+  const parts: string[] = []
+  let e: Element | null = el
+  while (e && e.tagName !== 'BODY') {
+    const tag = e.tagName.toLowerCase()
+    const cls = (e.getAttribute('class') ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 3).join('.')
+    const id = e.id ? `#${e.id}` : ''
+    let nth = 0
+    let sib = e.previousElementSibling
+    while (sib) { if (sib.tagName === e.tagName) nth++; sib = sib.previousElementSibling }
+    parts.push(`${tag}${id}${cls ? '.' + cls : ''}:${nth}`)
+    e = e.parentElement
+  }
+  return parts.reverse().join('>')
+}
+
+/**
+ * Elements of both documents paired by their stable path — NOT by position, so
+ * an ad or a widget that renders differently between two loads (getbootstrap.com's
+ * Carbon ads: 1192 vs 1181 elements) leaves the rest comparable and shows up as
+ * "unpaired" instead of refusing the whole page.
+ */
 export function compareDocuments(raw: Document, sandbox: Document, props: readonly string[] = VERIFY_PROPS): VerifyResult {
   const a = Array.from(raw.querySelectorAll('body *')).filter((el) => !isOurs(el))
   const b = Array.from(sandbox.querySelectorAll('body *')).filter((el) => !isOurs(el))
-  if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, mismatches: [] }
-  if (a.length !== b.length) {
-    return {
-      ok: false,
-      refusal: `The two documents differ in structure (${a.length} vs ${b.length} elements) — the page renders non-deterministically, so styles cannot be paired.`,
-      elements: Math.min(a.length, b.length),
-      mismatches: [],
-    }
-  }
+  if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, unpaired: { raw: a.length, sandbox: b.length }, mismatches: [] }
+  const bByKey = new Map<string, Element>()
+  for (const el of b) { const k = keyOf(el); if (!bByKey.has(k)) bByKey.set(k, el) }
   const wa = raw.defaultView!
   const wb = sandbox.defaultView!
   const mismatches: Mismatch[] = []
-  for (let i = 0; i < a.length && mismatches.length < MAX_REPORT; i++) {
-    const ea = a[i]!, eb = b[i]!
+  let paired = 0
+  const seen = new Set<string>()
+  a.forEach((ea, i) => {
+    const k = keyOf(ea)
+    const eb = bByKey.get(k)
+    if (!eb || seen.has(k)) return
+    seen.add(k)
+    paired++
+    if (mismatches.length >= MAX_REPORT) return
     const sa = wa.getComputedStyle(ea), sb = wb.getComputedStyle(eb)
     for (const p of props) {
       const va = sa.getPropertyValue(p), vb = sb.getPropertyValue(p)
       if (va !== vb) mismatches.push({ index: i, tag: ea.tagName.toLowerCase(), prop: p, raw: va, sandbox: vb })
     }
+  })
+  const unpaired = { raw: a.length - paired, sandbox: b.length - paired }
+  if (paired < Math.min(a.length, b.length) * 0.5) {
+    return { ok: false, refusal: `Only ${paired} of ${Math.min(a.length, b.length)} elements could be paired — the two loads render too differently to compare.`, elements: paired, unpaired, mismatches }
   }
-  return { ok: mismatches.length === 0, elements: a.length, mismatches }
+  return { ok: mismatches.length === 0, elements: paired, unpaired, mismatches }
 }
 
 /** Our injected style block is not part of their page. */
@@ -77,8 +107,14 @@ export function loadHidden(url: string, parent: HTMLElement, width: number, heig
       try {
         const doc = frame.contentDocument
         if (!doc) throw new Error('no document')
+        // `load` can fire while a same-origin stylesheet served by the worker is
+        // still pending; wait until every <link rel=stylesheet> has a sheet (or
+        // 4s pass), then fonts, then a beat for layout.
+        const t0 = Date.now()
+        const pending = () => Array.from(doc.querySelectorAll('link[rel~="stylesheet"]')).some((l) => !(l as HTMLLinkElement).sheet)
+        while (pending() && Date.now() - t0 < 4000) await new Promise((r) => setTimeout(r, 100))
         await doc.fonts?.ready
-        await new Promise((r) => setTimeout(r, 150))
+        await new Promise((r) => setTimeout(r, 200))
         resolve({ frame, doc })
       } catch (err) { reject(err) }
     }

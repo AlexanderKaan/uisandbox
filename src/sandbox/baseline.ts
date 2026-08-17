@@ -40,6 +40,22 @@ interface AuditLike {
   inferredConfig?: RawInferred
 }
 
+/** A colour DECLARED as the brand — `--primary`, `--bs-primary`, `--brand`,
+ *  `--color-primary` — outranks any count and any softer name (`accent`,
+ *  `highlight`): getbootstrap.com's docs declare `--bd-accent: #ffe484` (a
+ *  yellow) and the audit crowned it while `--bs-primary` sat right there. */
+const BRAND_NAME = /^--([\w-]*-)?(primary|brand)(-(color|base|default|500|600|main|hex))?$/i
+export function brandDeclared(table: SubstitutionTable): string | null {
+  let best: { hex: string; n: number } | null = null
+  for (const e of table.ofKind('color')) {
+    const c = parseCssColor(e.value)
+    if (!c || c.a < 0.99 || c.C < 0.05 || !/^#[0-9a-f]{6}$/i.test(e.value)) continue
+    const n = e.sites.filter((s) => BRAND_NAME.test(s.prop)).length
+    if (n && (!best || n > best.n)) best = { hex: e.value, n }
+  }
+  return best?.hex ?? null
+}
+
 /** Their most-used chromatic colour, when the audit could not name a brand. */
 export function brandFromTable(table: SubstitutionTable): string | null {
   let best: { hex: string; score: number } | null = null
@@ -66,18 +82,25 @@ export function knobFont(stack: string): string {
   return known ?? CUSTOM_FONT_PREFIX + first
 }
 
-/** The body/display families that carry the most declarations. */
+/** Icon fonts are glyph carriers, never a typeface choice. */
+const ICON_FONT = /awesome|icon|glyph|material symbols|fontello|ionicons|feather|dashicons|simple-line/i
+const SITE_SELECTOR = /^(html|body|:root)(\s*,\s*(html|body|:root))*$/i
+
+/** The body/display families: what `body`/`html` declares wins; else the most-used. */
 export function fontsFromTable(table: SubstitutionTable): { body: string | null; display: string | null } {
-  let body: { v: string; n: number } | null = null
+  let body: { v: string; n: number; site: boolean } | null = null
   let display: { v: string; n: number } | null = null
   for (const e of table.ofKind('font-family')) {
+    if (ICON_FONT.test(e.value)) continue
     const role = fontRole(e)
     if (role === 'mono') continue
-    const slot = role === 'display' ? display : body
-    if (!slot || e.count > slot.n) {
-      if (role === 'display') display = { v: e.value, n: e.count }
-      else body = { v: e.value, n: e.count }
+    if (role === 'display') {
+      if (!display || e.count > display.n) display = { v: e.value, n: e.count }
+      continue
     }
+    const site = e.sites.some((s) => SITE_SELECTOR.test(s.selector ?? ''))
+    // A family set on the page root beats any count; among equals, count.
+    if (!body || (site && !body.site) || (site === body.site && e.count > body.n)) body = { v: e.value, n: e.count, site }
   }
   return { body: body ? knobFont(body.v) : null, display: display ? knobFont(display.v) : null }
 }
@@ -123,7 +146,11 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
   }
 
   const v = (inferred?.values ?? {}) as Record<string, unknown>
-  if (typeof v.brandHex !== 'string') {
+  const declared = brandDeclared(table)
+  if (declared) {
+    cfg = { ...cfg, cPrimary: declared as Config['cPrimary'] }
+    notes.push(`Brand declared in the built CSS as a primary/brand variable: ${declared}${typeof v.brandHex === 'string' && v.brandHex !== declared ? ` (the source scan said ${v.brandHex})` : ''}.`)
+  } else if (typeof v.brandHex !== 'string') {
     const brand = brandFromTable(table)
     if (brand) { cfg = { ...cfg, cPrimary: brand as Config['cPrimary'] }; notes.push(`Brand taken from the most-painted colour in the built CSS: ${brand}.`) }
     else notes.push('No brand colour could be told from the code — the Brand knob starts at our default.')
@@ -152,7 +179,7 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
       const camefromUs = key === 'fontBody' ? !fonts.body : !fonts.display && !fonts.body
       out[label] = camefromUs ? 'default' : live[key] === was ? 'derived' : 'changed'
     }
-    if (typeof v.brandHex !== 'string' && brandFromTable(table)) out['Brand'] = live.cPrimary === cfg.cPrimary ? 'derived' : 'changed'
+    if (declared || (typeof v.brandHex !== 'string' && brandFromTable(table))) out['Brand'] = live.cPrimary === cfg.cPrimary ? 'derived' : 'changed'
     if (v.radius == null && radiusFromTable(table)) out['Box radius'] = live.radius === cfg.radius ? 'derived' : 'changed'
     if (bodySize) out['Text size'] = live.typeScale === cfg.typeScale ? 'derived' : 'changed'
     return out

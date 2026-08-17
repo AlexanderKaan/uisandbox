@@ -57,3 +57,42 @@ Short, with the reason. Add to this file when a decision costs something.
 
 Known gaps carried forward: CSSOM `insertRule` (speedy CSS-in-JS), SPA route
 enumeration, cross-origin stylesheets, iOS render, MCP shell.
+
+## Hold-out round 1 (2026-08-17, five public repos vs. their live sites)
+
+Method: computed-style census (10 props × every element) of the LIVE page in
+one tab, the same census of the sandbox frame, diffed; plus the in-app 1:1
+check (raw vs identity). Repos: water.css, Simple.css, SB Admin 2 (Bootstrap
+admin), Bootstrap 5.3 docs (getbootstrap.com), react-gh-pages (CRA build).
+Findings, all fixed and pinned by a test:
+
+10. **`.9em` → `0.9em` counted as "moved".** A numeric no-op now keeps the
+    author's spelling (`fromPx(px, unit, original)`), so identity is byte-identity.
+11. **A near-brand literal snapped to the brand at rest** (`#0d47a1` next to a
+    `#10489e` brand — Simple.css v1/v2 accents). The "exact brand → new token"
+    shortcut fires only after the knob has actually moved.
+12. **Font families lost their quotes** — `"Font Awesome 5 Free"` unquoted is
+    invalid CSS and the icons fell back to Nunito (SB Admin 2). Normalisation
+    keeps the author's quoting.
+13. **The baseline chose an icon font as body font** (declaration count).
+    Icon fonts are excluded; the family on `body`/`html` wins.
+14. **Subresource Integrity dropped the rewritten CSS** (getbootstrap.com's
+    docs). `integrity` is stripped from `<link>` in both variants — a transport
+    guarantee, not a style; the raw control had drifted from its own hash too.
+15. **A brand declared as `--bd-accent` beat `--bs-primary`** in the audit.
+    A variable named `primary`/`brand` in the built CSS now outranks the audit.
+16. **Sub-path deploys rendered blank** (CRA `homepage`, gh-pages project
+    sites): `/react-gh-pages/static/…` → retried with leading segments stripped.
+17. **Caching sandbox assets by URL served the REWRITTEN sheet to the RAW
+    control** (same root-relative URL, different sandbox). Everything is
+    `no-store`; the raw control was unstyled until this was found.
+18. **The 1:1 check pairs elements by a stable path key**, not by position, so
+    ads/widgets that differ between two loads are reported as unpaired instead
+    of refusing the page (Bootstrap home: 1191 paired, 1 unpaired, 0 diffs).
+19. **`loadHidden` waits for every `<link rel=stylesheet>` to have a sheet**
+    before comparing — `load` can fire while a worker-served sheet is pending.
+
+Instrument note: in the automation browser, form controls' computed style is
+frozen at first paint (an inline `!important` cannot move it, live or sandbox) —
+the census excludes them. Live-vs-sandbox differences that remained were all
+viewport-dependent (`vw`/`vmin` sizes) or version drift (repo ≠ deployed page).

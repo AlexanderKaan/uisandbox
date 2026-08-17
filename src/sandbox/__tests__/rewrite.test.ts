@@ -98,9 +98,17 @@ describe('rewriteCss', () => {
     expect(t.identityVars()).toEqual({
       '--us-v1': '#4f39f6',
       '--us-v2': '8px',
-      '--us-v3': 'Inter, sans-serif',
+      '--us-v3': '"Inter", sans-serif',
       '--us-v4': '14px',
     })
+  })
+})
+
+describe('font families keep their quotes', () => {
+  it('"Font Awesome 5 Free" stays quoted in the identity sheet (unquoted it is invalid CSS)', () => {
+    const t = sheet()
+    rewriteCss(`.fa{font-family:"Font Awesome 5 Free";font-weight:900}`, t, 'fa.css')
+    expect(t.identityVars()['--us-v1']).toBe('"Font Awesome 5 Free"')
   })
 })
 
@@ -115,6 +123,11 @@ describe('their variables stay where they are scoped', () => {
 })
 
 describe('rewriteHtml', () => {
+  it('drops integrity from <link> (the rewritten CSS cannot match the hash) and leaves scripts alone', () => {
+    const t = sheet()
+    const html = `<link href="/a.css" rel="stylesheet" integrity="sha384-abc" crossorigin="anonymous"><script src="/a.js" integrity="sha384-def"></script>`
+    expect(rewriteHtml(html, t, 'i.html')).toBe(`<link href="/a.css" rel="stylesheet" crossorigin="anonymous"><script src="/a.js" integrity="sha384-def"></script>`)
+  })
   it('rewrites <style> blocks and style="" attributes, and nothing else', () => {
     const t = sheet()
     const html = `<html><head><style>.a{color:#fff}</style></head><body><div style="background: #4f39f6; padding: 8px" data-x="#000">#000</div><p style=''></p></body></html>`

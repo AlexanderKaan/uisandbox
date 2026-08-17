@@ -62,6 +62,10 @@ export function App() {
   }, [cfg.fontDisplay, cfg.fontBody, loaded])
   const fontCssRef = useRef(fontCss)
   fontCssRef.current = fontCss
+  // Debug/agent hook: the live state, readable from the console.
+  useEffect(() => {
+    ;(window as unknown as { __us?: unknown }).__us = loaded ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, identity: loaded.project.table.identityVars() } : null
+  }, [loaded, cfg, vars])
   const changedCount = useMemo(() => {
     if (!loaded) return 0
     const id = loaded.project.table.identityVars()

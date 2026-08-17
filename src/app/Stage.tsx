@@ -46,7 +46,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, changedCo
       ])
       setVerify(compareDocuments(raw.doc, idn.doc))
     } catch (err) {
-      setVerify({ ok: false, refusal: `Could not load both frames: ${(err as Error).message}`, elements: 0, mismatches: [] })
+      setVerify({ ok: false, refusal: `Could not load both frames: ${(err as Error).message}`, elements: 0, unpaired: { raw: 0, sandbox: 0 }, mismatches: [] })
     } finally {
       host.replaceChildren()
     }
@@ -94,7 +94,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, changedCo
             ) : verify.refusal ? (
               <div>⚠ {verify.refusal}</div>
             ) : verify.ok ? (
-              <div>✓ <b>{verify.elements}</b> elements, <b>0</b> computed-style differences across {18} properties. What you see is your CSS with its literals replaced by variables holding the very same values.</div>
+              <div>✓ <b>{verify.elements}</b> elements paired, <b>0</b> computed-style differences across 18 properties.{verify.unpaired.raw + verify.unpaired.sandbox > 0 ? ` ${verify.unpaired.raw + verify.unpaired.sandbox} elements differed between the two loads (ads, widgets) and were left out.` : ''} What you see is your CSS with its literals replaced by variables holding the very same values.</div>
             ) : (
               <div>
                 ✗ {verify.mismatches.length}{verify.mismatches.length >= 40 ? '+' : ''} differences on {verify.elements} elements — a rewriter gap. Please report the first few:

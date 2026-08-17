@@ -46,6 +46,28 @@ describe('identity — no knob turned', () => {
   })
 })
 
+describe('identity keeps spelling', () => {
+  it('a `.9em` size is still `.9em` at the baseline (float no-op → original string)', () => {
+    const table = new SubstitutionTable()
+    rewriteCss(`legend{font-size:.9em}.x{padding:.5rem;border-radius:.375rem}`, table, 'a.css')
+    const baseline: Baseline = { cfg: theirCfg, tokens: buildTokens(theirCfg) }
+    expect(computeVars(table, baseline, theirCfg, buildTokens(theirCfg))).toEqual(table.identityVars())
+  })
+})
+
+describe('a literal near the brand stays itself at rest', () => {
+  it('#0d47a1 beside a #10489e brand is identity until the brand knob moves (measured on simple.css)', () => {
+    const table = new SubstitutionTable()
+    rewriteCss(`:root{--accent:#0d47a1}.b{background:#10489e}`, table, 'a.css')
+    const cfg: Config = { ...DEFAULT_CONFIG, cPrimary: '#10489e' }
+    const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
+    expect(computeVars(table, baseline, cfg, buildTokens(cfg))).toEqual(table.identityVars())
+    const rose = { ...cfg, cPrimary: COLOR_THEMES.rose.cPrimary }
+    const out = computeVars(table, baseline, rose, buildTokens(rose))
+    expect(out['--us-v1']).not.toBe('#0d47a1')
+  })
+})
+
 describe('brand knob', () => {
   const rose = { ...theirCfg, cPrimary: COLOR_THEMES.rose.cPrimary }
   it('rotates the brand family by the hue delta of --k-primary, and only that family', () => {
@@ -115,14 +137,14 @@ describe('text size + scale knobs', () => {
 describe('font knobs', () => {
   it('identity until the knob leaves their family; body and display are told apart by where they are used', () => {
     const same = vars(theirCfg)
-    expect(byValue(same.table, same.out, 'font-family', 'Inter, sans-serif')).toBe('Inter, sans-serif')
+    expect(byValue(same.table, same.out, 'font-family', '"Inter", sans-serif')).toBe('"Inter", sans-serif')
     const { table, out } = vars({ ...theirCfg, fontBody: 'Manrope' } as Config)
-    expect(byValue(table, out, 'font-family', 'Inter, sans-serif')).toBe(String(buildTokens({ ...theirCfg, fontBody: 'Manrope' } as Config).vars['--k-font-body']))
+    expect(byValue(table, out, 'font-family', '"Inter", sans-serif')).toBe(String(buildTokens({ ...theirCfg, fontBody: 'Manrope' } as Config).vars['--k-font-body']))
     // The heading face is display: untouched by the body knob.
-    expect(byValue(table, out, 'font-family', 'Fraunces, serif')).toBe('Fraunces, serif')
+    expect(byValue(table, out, 'font-family', '"Fraunces", serif')).toBe('"Fraunces", serif')
     const d = vars({ ...theirCfg, fontDisplay: 'Fraunces' } as Config)
-    expect(byValue(d.table, d.out, 'font-family', 'Fraunces, serif')).not.toBe('Fraunces, serif')
-    expect(byValue(d.table, d.out, 'font-family', 'Inter, sans-serif')).toBe('Inter, sans-serif')
+    expect(byValue(d.table, d.out, 'font-family', '"Fraunces", serif')).not.toBe('"Fraunces", serif')
+    expect(byValue(d.table, d.out, 'font-family', '"Inter", sans-serif')).toBe('"Inter", sans-serif')
   })
 })
 

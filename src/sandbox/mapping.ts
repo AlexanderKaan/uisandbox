@@ -39,9 +39,15 @@ export function toPx(v: string): { px: number; unit: string } | null {
   const n = parseFloat(m[1]!)
   return { px: m[2] === 'px' ? n : n * 16, unit: m[2]! }
 }
-const fromPx = (px: number, unit: string): string => {
+const fromPx = (px: number, unit: string, original?: string): string => {
   const n = unit === 'px' ? px : px / 16
   const r = Math.round(n * 1000) / 1000
+  // A numeric no-op keeps its original spelling (`.9em` stays `.9em`), so
+  // "identity" is byte-identity and nothing is reported as moved.
+  if (original !== undefined) {
+    const o = toPx(original)
+    if (o && Math.abs(o.px - px) < 1e-6) return original
+  }
   return `${r}${unit}`
 }
 
@@ -87,7 +93,10 @@ function mapChromatic(c: Okla, fam: Exclude<Family, 'neutral' | 'keep'>, base: V
   // THE brand colour itself (their #4f39f6 is what --k-primary was built from)
   // becomes the new token exactly — a visitor who picks Rose expects Rose, not
   // Rose-shifted-by-the-engine's-AA-nudge. Everything near it moves by delta.
-  if (Math.abs(c.L - b.L) < 0.03 && Math.abs(c.C - b.C) < 0.03 && Math.abs(hueDelta(c.H, b.H)) < 4) return { ...n, a: c.a }
+  // Only once the knob has actually moved: at rest a near-brand literal
+  // (#0d47a1 beside a #10489e brand) must stay exactly itself.
+  const moved = !(Math.abs(b.L - n.L) < 1e-4 && Math.abs(b.C - n.C) < 1e-4 && Math.abs(hueDelta(b.H, n.H)) < 1e-3)
+  if (moved && Math.abs(c.L - b.L) < 0.03 && Math.abs(c.C - b.C) < 0.03 && Math.abs(hueDelta(c.H, b.H)) < 4) return { ...n, a: c.a }
   const H = c.H + hueDelta(b.H, n.H)
   const C = clamp(c.C * (n.C / Math.max(b.C, 0.01)), 0, 0.4)
   const L = shiftL(c.L, b.L, n.L - b.L)
@@ -177,7 +186,7 @@ function mapFontSize(value: string, base: Vars, now: Vars): string {
   // Below body (captions, labels) only the body size scales — a step ratio has
   // no business shrinking a 12px caption to 9px because headings got taller.
   const px = k >= 0 ? nBody.px * Math.pow(nStep, k) : v.px * (nBody.px / bBody.px)
-  return fromPx(px, v.unit)
+  return fromPx(px, v.unit, value)
 }
 
 // ─────────────────────────── the sheet ───────────────────────────
@@ -228,15 +237,15 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       const n = toPx(str(now['--k-radius-md']))
       if (!v || !b || !n) return e.value
       if (b.px === n.px) return e.value
-      if (b.px === 0) return fromPx(n.px, v.unit)
-      return fromPx(v.px * (n.px / b.px), v.unit)
+      if (b.px === 0) return fromPx(n.px, v.unit, e.value)
+      return fromPx(v.px * (n.px / b.px), v.unit, e.value)
     }
     case 'space': {
       const v = toPx(e.value)
       const b = toPx(str(base['--k-space']))
       const n = toPx(str(now['--k-space']))
       if (!v || !b || !n || b.px === 0 || b.px === n.px) return e.value
-      return fromPx(v.px * (n.px / b.px), v.unit)
+      return fromPx(v.px * (n.px / b.px), v.unit, e.value)
     }
     case 'font-size':
       return mapFontSize(e.value, base, now)
