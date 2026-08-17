@@ -9,7 +9,7 @@
  *   <id>-id    the rewritten site with the IDENTITY sheet — what "1:1" claims
  *   <id>-raw   the untouched site: the CONTROL `verify.ts` measures against
  */
-import { injectVars, type SandboxProject } from './project'
+import { injectVars, loadOutsideRoot, type SandboxProject } from './project'
 import { rewriteCss } from './rewrite'
 import { cssValue, defineNewVars, varName } from './table'
 
@@ -151,7 +151,13 @@ async function onMessage(e: MessageEvent) {
   if (!o) { port.postMessage({ found: false, owner: false }); return }
   const files = o.variant === 'raw' ? o.project.raw : o.project.rewritten
   const path = decodeURIComponent(data.path ?? '')
-  const f = resolveFile(files, path)
+  let f = resolveFile(files, path)
+  if (!f) {
+    // Above the root? A page under `examples/` asking for `/build/x.js` means
+    // the archive path `build/x.js` (or `<root>/../build/x.js`, the same thing).
+    const candidates = [path, ...path.split('/').map((_, i, a) => a.slice(i).join('/')).slice(1, 4)]
+    for (const c of candidates) { if (await loadOutsideRoot(o.project, c)) { f = files.get(c); if (f) break } }
+  }
   if (!f) { port.postMessage({ found: false, owner: true }); return }
   let body: ArrayBuffer
   // Only a NAVIGATED document gets the variable block and the hook: an HTML

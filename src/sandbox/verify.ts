@@ -139,6 +139,10 @@ export function loadHidden(url: string, parent: HTMLElement, width: number, heig
       } catch (err) { reject(err) }
     }
     frame.onerror = () => reject(new Error('frame failed to load'))
+    // A dead CDN link (rawgit, a retired font host) can hold `load` for the
+    // length of a DNS failure; after 15 s the document we have is the document
+    // we measure — the check must not hang on someone else's outage.
+    setTimeout(() => { const doc = frame.contentDocument; if (doc?.body) resolve({ frame, doc }) }, 15000)
     frame.src = url
     parent.appendChild(frame)
   })

@@ -194,7 +194,8 @@ export function App() {
         const rules = Array.from(doc.styleSheets).reduce((n, sh) => { try { return n + sh.cssRules.length } catch { return n } }, 0)
         const text = (doc.body.innerText ?? '').trim().length
         const media = doc.body.querySelectorAll('img, svg, canvas, video, picture').length
-        const shell = els < 6 || rules < 3 || (text < 20 && media === 0)
+        // A canvas/WebGL page is three elements and no text — and not a shell.
+        const shell = media === 0 && (els < 6 || rules < 3 || text < 20)
         setThin(shell ? `This screen rendered ${els} element${els === 1 ? '' : 's'}, ${rules} style rules and ${text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
       }, 1200)
     }

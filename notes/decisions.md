@@ -358,3 +358,28 @@ Scorecard: Clean Blog 100/100/100 · SVGOMG 100/100/98 · JavaScript30
 100/50/100 (generic families) · Bulma 74/100/100 (CDN now in, split-hsl out) ·
 Bootswatch 100/100/97 (1 min to load 45 MB of CSS) · TodoMVC 92/100/100 with
 the Polymer home page failing 1:1 by design.
+
+## Sweep 7 — six more, unseen (2026-08-17)
+
+docsify docs (runtime-rendered, CDN JS+CSS) · Tailwind Landing Page (full
+Tailwind v2 from unpkg) · web-design-in-4-minutes (progressive styling by JS)
+· three.js examples (600 WebGL pages, `../build/` sibling) · 50projects50days
+(52 mini-apps) · SortableJS (Bootstrap + FA from CDN, one dead CDN link).
+
+64. **Files above the root are served on demand** (`loadOutsideRoot`): three.js's
+    examples import `../build/three.module.js`, a sibling of the chosen root
+    `examples/`; a miss now falls through to the archive, is rewritten if
+    CSS/HTML, and cached under its archive path. The cube renders (canvas
+    994×1120, "1 outside").
+65. **Media is content**: a WebGL page is three elements and no text — the
+    shell-warning now fires only when there is no img/svg/canvas/video either.
+66. **The 1:1 check caps its wait at 15 s** — a dead CDN link held a hidden
+    frame's `load` for the length of a DNS failure (Sortable: rawgit).
+67. Honest non-findings: docsify's cover gradient is RANDOM per load (the check
+    reports 1 difference — theirs, not ours); web-design-in-4-minutes starts
+    unstyled by design (type reach 39 % until its JS applies styles).
+
+Scorecard: docsify 100/100/100 (1 random gradient) · Landing Page 100/100/100
+(395 values from a CDN Tailwind, 1:1) · 4-minutes 100/39/100 · three.js
+100/100/100 on the index and on a WebGL example · 50projects 100/100/100 ·
+Sortable 100/100/100 (291 CDN values, 1:1).

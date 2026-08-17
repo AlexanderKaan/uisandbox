@@ -51,6 +51,11 @@ export interface SandboxProject {
   platform: Platform
   /** The dark/light scheme hooks their CSS responds to (empty = no dark mode). */
   scheme: Scheme
+  /** The archive itself, for files OUTSIDE the root a page reaches with `../`
+   *  (three.js's examples import `../build/three.module.js`): read lazily,
+   *  rewritten if CSS/HTML, then cached into `raw`/`rewritten` under the
+   *  archive-relative path. */
+  archive: Archive
 }
 
 const MIME: Record<string, string> = {
@@ -175,7 +180,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
 
   const platform = detectPlatform(paths, screens.length > 0 || anyPage, heads)
-  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme }
+  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme, archive }
 }
 
 /** The `<style>` block that defines the sheet's variables, for injection into a page's head. */
@@ -228,4 +233,31 @@ export function discoverRoutes(doc: Document, known: Screen[]): Screen[] {
     out.set(label, { path: path.replace(/^\//, ''), label, source: 'link' })
   }
   return [...out.values()].sort((a, b) => a.label.localeCompare(b.label))
+}
+
+/**
+ * A file the root does not contain but the archive does — reached by a page
+ * with `../`. Read once, rewritten like the rest, cached under its
+ * ARCHIVE-relative path (which is how the resolver's segment-stripping will
+ * find it again). Returns null when the archive has no such file either.
+ */
+export async function loadOutsideRoot(project: SandboxProject, archivePath: string): Promise<boolean> {
+  if (project.raw.has(archivePath)) return true
+  const e = project.archive.entries.find((x) => x.path === archivePath)
+  if (!e) return false
+  const blob = await project.archive.readBlob(e)
+  if (!blob) return false
+  const type = mimeOf(archivePath)
+  project.raw.set(archivePath, { blob, type })
+  if (/\.css$/i.test(archivePath)) {
+    const css = await blob.text()
+    project.rewritten.set(archivePath, { blob: new Blob([rewriteCss(css, project.table, archivePath)], { type }), type })
+  } else if (/\.html?$/i.test(archivePath)) {
+    const html = await blob.text()
+    project.raw.set(archivePath, { blob: new Blob([stripLinkIntegrity(html)], { type }), type })
+    project.rewritten.set(archivePath, { blob: new Blob([rewriteHtml(html, project.table, archivePath)], { type }), type })
+  } else {
+    project.rewritten.set(archivePath, { blob, type })
+  }
+  return true
 }
