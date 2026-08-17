@@ -28,6 +28,8 @@ export interface Dials {
   hue: number         // ° rotation of every chromatic colour (−180 … 180)
   sat: number         // × chroma of every colour  (0 … 2)
   contrast: number    // ± lightness stretch around the middle (−0.3 … 0.3)
+  /** Their dark mode, switched: undefined = as is. */
+  dark?: 'dark' | 'light'
   /** Overrides for the colour families the sheet contains, as #rrggbb. */
   cSecondary?: string
   cAccent?: string

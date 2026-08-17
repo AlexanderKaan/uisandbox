@@ -307,3 +307,14 @@ values on real builds; the sheet-only meter cannot see the display-font rule.
     counted as "outside". A chip in the stage foot, details on click. Icons per
     kind: icon fonts ✓ · inline SVG currentColor ✓ · inline SVG hard fills ✓
     (observer) · SVG as <img>/sprite file ✗ (an image) · data-URI SVG in CSS ✓.
+
+57. **Dark mode = THEIR dark mode, switched.** `sandbox/scheme.ts` reads their
+    CSS for `@media (prefers-color-scheme: dark)` and for attribute/class hooks
+    (`[data-theme=dark]`, `[data-bs-theme=dark]`, `.dark`, `.theme-dark`…);
+    the row appears only when one was found. Toggling is done in the frame:
+    media rules get their `mediaText` forced to `all` / `not all` (an iframe
+    cannot be told what the OS prefers, but its CSSOM is ours — duck-typed,
+    the frame's classes are cross-realm), hooks are set on `<html>` exactly as
+    their own switcher would, `color-scheme` follows for form controls.
+    "As is" restores everything. Measured: water.css (media) light → white;
+    Bootstrap docs (`data-bs-theme`) light/dark/as-is round-trip.

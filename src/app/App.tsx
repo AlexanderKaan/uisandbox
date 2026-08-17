@@ -14,6 +14,7 @@ import { disown, ensureWorker, own, onSheetGrow } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
 import { measureCoverage, type Coverage } from '../sandbox/coverage'
+import { applyScheme } from '../sandbox/scheme'
 import { googleFontsImport, isCustomFont, customFontFamily, SYSTEM_FONT } from '../tokens/fonts'
 import { customFontUrl } from '../tokens/customFonts'
 import { Intake } from './Intake'
@@ -40,6 +41,10 @@ export function App() {
   const [showExport, setShowExport] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
   const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const cfgRef = useRef(cfg)
+  cfgRef.current = cfg
+  const loadedRef = useRef(loaded)
+  loadedRef.current = loaded
   // Bumped when the live observer adds entries to the sheet (runtime styles).
   const [sheetVersion, setSheetVersion] = useState(0)
   const stopObserver = useRef<(() => void) | null>(null)
@@ -114,14 +119,13 @@ export function App() {
     }
     const fcss = fontCssRef.current
     if (fonts.textContent !== fcss) fonts.textContent = fcss
+    // Their dark mode, switched on their own hooks (sandbox/scheme.ts).
+    const cur = loadedRef.current
+    if (cur) { try { applyScheme(doc, cur.project.scheme, cfgRef.current.sb.dark ?? null) } catch { /* mid-navigation */ } }
   }, [])
-  useEffect(() => { applyVars() }, [vars, fontCss, applyVars])
+  useEffect(() => { applyVars() }, [vars, fontCss, cfg.sb.dark, applyVars])
 
   // After each load: apply the sheet, then watch what their JS styles at runtime.
-  const cfgRef = useRef(cfg)
-  cfgRef.current = cfg
-  const loadedRef = useRef(loaded)
-  loadedRef.current = loaded
   /* Let the SCREEN and the GROWN sheet correct the baseline — but only while
      every knob still stands where the baseline put it. Runs after each load and
      after runtime rules arrived (styled-components inserts after `load` on a
@@ -294,6 +298,7 @@ export function App() {
                 tokens={tokens}
                 base={loaded.report.baseline.cfg}
                 families={loaded.report.baseline.families}
+                scheme={loaded.project.scheme}
                 dispatch={dispatch}
                 onCollapse={() => setPanelOpen(false)}
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}

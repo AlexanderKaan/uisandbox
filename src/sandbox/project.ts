@@ -19,6 +19,7 @@ import type { Archive, ZipEntry } from '../audit/intake/readZip'
 import { rewriteCss, rewriteHtml, stripLinkIntegrity } from './rewrite'
 import { SubstitutionTable } from './table'
 import { detectPlatform, type Platform } from './platform'
+import { detectScheme, type Scheme } from './scheme'
 
 export interface ServedFile {
   blob: Blob
@@ -48,6 +49,8 @@ export interface SandboxProject {
   cssBytes: number
   /** What was dropped, and whether it renders. */
   platform: Platform
+  /** The dark/light scheme hooks their CSS responds to (empty = no dark mode). */
+  scheme: Scheme
 }
 
 const MIME: Record<string, string> = {
@@ -113,6 +116,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   const rewritten = new Map<string, ServedFile>()
   const redirects = new Set<string>()
   const table = new SubstitutionTable()
+  const scheme: Scheme = { media: false, hooks: [] }
   let cssBytes = 0
   let done = 0
 
@@ -134,13 +138,14 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     if (/\.css$/i.test(rel)) {
       const css = await blob.text()
       cssBytes += css.length
+      detectScheme(css, scheme)
       rewritten.set(rel, { blob: new Blob([rewriteCss(css, table, rel)], { type }), type })
     } else if (/\.html?$/i.test(rel)) {
       const html = await blob.text()
       // A page whose only job is to send you elsewhere is not a screen.
       if (/<meta[^>]+http-equiv=["']?refresh["']?[^>]*>/i.test(html) && html.length < 4000) redirects.add(rel)
       // Inlined <style> counts as stylesheet too (Astro, Next inline critical CSS).
-      for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) cssBytes += m[1]!.length
+      for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) { cssBytes += m[1]!.length; detectScheme(m[1]!, scheme) }
       // The control keeps every byte except <link integrity> — see stripLinkIntegrity.
       raw.set(rel, { blob: new Blob([stripLinkIntegrity(html)], { type }), type })
       rewritten.set(rel, { blob: new Blob([rewriteHtml(html, table, rel)], { type }), type })
@@ -159,7 +164,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
 
   const platform = detectPlatform(paths, screens.length > 0, heads)
-  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform }
+  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme }
 }
 
 /** The `<style>` block that defines the sheet's variables, for injection into a page's head. */

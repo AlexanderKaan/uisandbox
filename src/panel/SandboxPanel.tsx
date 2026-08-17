@@ -10,6 +10,7 @@ import { FontPicker } from './FontPicker'
 import { DIALS, fmtDial, nearestSnap, type DialSpec, type Dials } from '../sandbox/dials'
 import type { Families, Family } from '../sandbox/mapping'
 import { formatCssColor } from '../sandbox/cssColor'
+import type { Scheme } from '../sandbox/scheme'
 
 interface Props {
   cfg: Config
@@ -17,6 +18,7 @@ interface Props {
   /** The stand their code implied — every knob's "as is". */
   base: Config
   families?: Families
+  scheme?: Scheme
   dispatch: Dispatch<ConfigAction>
   onCollapse: () => void
   onRandomize: () => void
@@ -41,7 +43,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, dispatch, onCollapse, onRandomize, onReset }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, dispatch, onCollapse, onRandomize, onReset }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -146,6 +148,22 @@ export function SandboxPanel({ cfg, tokens, base, families, dispatch, onCollapse
     }
   }
   for (const spec of DIALS.filter((d) => d.section === 'Colour')) rows.push(dialRow(spec))
+  if (scheme && (scheme.media || scheme.hooks.length)) {
+    const cur = cfg.sb.dark
+    rows.push({
+      key: 'dark', label: 'Dark mode', changed: cur !== base.sb.dark, value: cur === 'dark' ? 'Dark' : cur === 'light' ? 'Light' : 'as is',
+      body: () => (
+        <div className="fmpop__list">
+          {([[undefined, 'as is', 'whatever your page does on its own'], ['dark', 'Dark', 'your own dark scheme, switched on'], ['light', 'Light', 'your own light scheme, forced']] as const).map(([id, label, sub]) => (
+            <button key={String(id)} type="button" className={`menu__item fmopt ${cur === id ? 'menu__item--on' : ''}`} onClick={() => { setDial('dark', id); close() }} title={sub}>
+              <span className="fmopt__label">{label}</span>{cur === id && <Check size={14} strokeWidth={2.5} className="fmopt__check" />}
+            </button>
+          ))}
+          <p className="sbp__hint">Found in your CSS: {[scheme.media ? 'prefers-color-scheme' : null, ...scheme.hooks.map(([a, d]) => (a === 'class' ? `.${d}` : `[${a}="${d}"]`))].filter(Boolean).join(' · ')}.</p>
+        </div>
+      ),
+    })
+  }
   rows.push({
     key: 'neutral', label: 'Grey tint', changed: cfg.neutral !== base.neutral, value: cfg.neutral === 'auto' ? 'Follows brand' : 'Neutral',
     body: () => (
