@@ -104,6 +104,16 @@ describe('rewriteCss', () => {
   })
 })
 
+describe('their variables stay where they are scoped', () => {
+  it('a shadow that references THEIR var() is not hoisted to :root (measured on a real build)', () => {
+    const t = sheet()
+    const out = rewriteCss(`.a{box-shadow:inset 0 0 0 1px var(--accD)}.b{box-shadow:0 1px 2px #000, 0 0 0 1px var(--edge)}`, t, 'x.css')
+    expect(t.ofKind('shadow')).toEqual([])
+    // The literal colour inside .b is still tokenised; the shadow as a whole is not.
+    expect(out).toBe(`.a{box-shadow:inset 0 0 0 1px var(--accD)}.b{box-shadow:0 1px 2px var(--us-v1), 0 0 0 1px var(--edge)}`)
+  })
+})
+
 describe('rewriteHtml', () => {
   it('rewrites <style> blocks and style="" attributes, and nothing else', () => {
     const t = sheet()

@@ -314,8 +314,13 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string):
     for (const { s, ref } of refs.reverse()) {
       text = text.slice(0, s.start) + ref + text.slice(s.end)
     }
-    if (outer.length) {
-      // Only one outer splice is ever produced per declaration.
+    // Only one outer splice is ever produced per declaration — and never when
+    // the value still references THEIR variable. Our variables live on :root;
+    // a `var(--accD)` inside would be resolved THERE, where `--accD` may not
+    // be defined (it was scoped to a theme block), and the whole shadow would
+    // compute to invalid → none. Measured on a real build; see verify.ts.
+    const foreignVar = /var\(--(?!us-v)/i
+    if (outer.length && !foreignVar.test(text)) {
       const o = outer[0]!
       text = table.add(o.kind, text, site)
     }
