@@ -27,7 +27,7 @@ describe('splicesFor', () => {
   const kinds = (prop: string, value: string) => splicesFor(prop, value).map((s) => `${s.kind}:${s.raw}`)
   it('colours in colour-carrying props, incl. named and function colours', () => {
     expect(kinds('color', '#fff')).toEqual(['color:#fff'])
-    expect(kinds('border', '1px solid rgba(0,0,0,.08)')).toEqual(['color:rgba(0,0,0,.08)'])
+    expect(kinds('border', '1px solid rgba(0,0,0,.08)')).toEqual(['border-width:1px', 'color:rgba(0,0,0,.08)'])
     expect(kinds('background', 'linear-gradient(90deg, red 0%, #00f 100%)')).toEqual(['color:red', 'color:#00f'])
     expect(kinds('background', 'url(#fff) no-repeat')).toEqual([])
     expect(kinds('color', 'transparent')).toEqual([])
@@ -47,7 +47,13 @@ describe('splicesFor', () => {
     expect(kinds('padding', '0 1.5rem')).toEqual(['space:1.5rem'])
     expect(kinds('gap', 'calc(100% - 20px)')).toEqual(['space:20px'])
     expect(kinds('font-size', '0.875rem')).toEqual(['font-size:0.875rem'])
-    expect(kinds('font', 'italic 600 14px/1.4 "Inter", sans-serif')).toEqual(['font-size:14px', 'font-family:"Inter", sans-serif'])
+    expect(kinds('font', 'italic 600 14px/1.4 "Inter", sans-serif')).toEqual(['font-weight:600', 'font-size:14px', 'line-height:1.4', 'font-family:"Inter", sans-serif'])
+    expect(kinds('line-height', '1.5')).toEqual(['line-height:1.5'])
+    expect(kinds('line-height', 'normal')).toEqual([])
+    expect(kinds('letter-spacing', '.02em')).toEqual(['letter-spacing:.02em'])
+    expect(kinds('font-weight', 'bold')).toEqual(['font-weight:bold'])
+    expect(kinds('transition', 'opacity .2s ease, transform 300ms')).toEqual(['duration:.2s', 'duration:300ms'])
+    expect(kinds('outline-width', '2px')).toEqual(['border-width:2px'])
   })
   it('custom properties: colours always, lengths only when the name says the role', () => {
     expect(kinds('--primary', '#4f39f6')).toEqual(['color:#4f39f6'])

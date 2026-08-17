@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Info, PanelLeftOpen, Redo2, Undo2, X } from 'lucide-react'
-import { Panel } from '../panel/Panel'
+import { SandboxPanel } from '../panel/SandboxPanel'
 import type { Config } from '../tokens/types'
 import { useConfig } from '../state/useConfig'
-import { randomKit } from '../state/randomKit'
+import { shuffle } from '../sandbox/shuffle'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
 import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
-import { computeVars } from '../sandbox/mapping'
+import { computeVars, familiesOf } from '../sandbox/mapping'
 import { disown, ensureWorker, own, onSheetGrow } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
@@ -38,7 +38,6 @@ export function App() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [showExport, setShowExport] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
-  const [locked, setLocked] = useState<Set<string>>(new Set())
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   // Bumped when the live observer adds entries to the sheet (runtime styles).
   const [sheetVersion, setSheetVersion] = useState(0)
@@ -65,6 +64,14 @@ export function App() {
     for (const f of custom) {
       const url = customFontUrl(f)
       if (url) parts.push(`@font-face{font-family:'${customFontFamily(f)}';src:url(${url});font-weight:100 900;font-display:swap}`)
+    }
+    // Display font: most apps set ONE family and let headings inherit it, so
+    // there is no heading literal for the sheet to move. The knob therefore
+    // speaks by SELECTOR — the one semantic override that is honest, because
+    // "which face do headings use" is a real question in every app.
+    if (cfg.fontDisplay !== base.fontDisplay) {
+      const stack = String(buildTokens(cfg).vars['--k-font-display'])
+      parts.push(`h1,h2,h3,h4,h5,h6,[class*="title"],[class*="heading"],[class*="hero"],[class*="display"]{font-family:${stack} !important}`)
     }
     return parts.join('\n')
   }, [cfg.fontDisplay, cfg.fontBody, loaded])
@@ -133,7 +140,7 @@ export function App() {
     const fromDoc = refineFromDocument(doc, mid, { brand: brandFromPaint })
     if (!fromTable && !fromDoc) return
     const cfg2 = { ...mid, ...(fromDoc ?? {}) }
-    cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2) }
+    cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2), families: familiesOf(cur.project.table, cfg2.cPrimary) }
     if (fromTable) cur.report.notes.push(`Corrected from rules your JS inserted at runtime: ${Object.entries(fromTable).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     if (fromDoc) cur.report.notes.push(`Corrected from the rendered page: ${Object.entries(fromDoc).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     dispatch({ type: 'REPLACE', cfg: cfg2 })
@@ -246,7 +253,6 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [undo, redo])
 
-  const provenance = loaded ? loaded.report.provenance(cfg) : undefined
 
   return (
     <div className="app">
@@ -270,17 +276,15 @@ export function App() {
               <button type="button" className="btn btn--ghost btn--icon" style={{ position: 'absolute', left: 8, top: 56, zIndex: 41 }} onClick={() => setPanelOpen(true)} title="Show the knobs"><PanelLeftOpen size={16} /></button>
             )}
             {panelOpen && (
-              <Panel
+              <SandboxPanel
                 cfg={cfg}
                 tokens={tokens}
+                base={loaded.report.baseline.cfg}
+                families={loaded.report.baseline.families}
                 dispatch={dispatch}
-                provenance={provenance}
                 onCollapse={() => setPanelOpen(false)}
-                onRandomize={() => dispatch({ type: 'REPLACE', cfg: randomKit(cfg, Math.random, locked) })}
+                onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}
                 onReset={() => dispatch({ type: 'REPLACE', cfg: loaded.report.baseline.cfg })}
-                resetTo={loaded.report.baseline.cfg}
-                lockedKeys={locked}
-                onToggleLock={(k) => setLocked((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n })}
               />
             )}
             <Stage

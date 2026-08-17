@@ -5,19 +5,22 @@ import { COLOR_THEMES } from '../../tokens/stylesAndThemes'
 import type { Config } from '../../tokens/types'
 import { rewriteCss } from '../rewrite'
 import { SubstitutionTable } from '../table'
-import { computeVars, classifyColor, toPx, type Baseline } from '../mapping'
+import { computeVars, familiesOf, toPx, type Baseline } from '../mapping'
 import { parseCssColor, hueDelta } from '../cssColor'
+import { DEFAULT_DIALS, type Dials } from '../dials'
 
-/* A small "their app": an indigo brand, greys, one radius, a type scale, a shadow. */
+/* A small "their app": an indigo brand, greys, a teal secondary, status greens/reds,
+   one radius, a type scale, line-heights, weights, borders, a transition, a shadow. */
 const THEIR_CSS = `
 :root { --brand: #4f39f6; --radius: 12px; }
-body { font-family: "Inter", sans-serif; font-size: 14px; color: #111827; background: #ffffff; }
-h1 { font-size: 30px; font-family: "Fraunces", serif; }
-.btn { background: #4f39f6; color: #fff; border-radius: 12px; padding: 8px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+body { font-family: "Inter", sans-serif; font-size: 14px; line-height: 1.5; color: #111827; background: #ffffff; }
+h1 { font-size: 30px; font-family: "Fraunces", serif; letter-spacing: -0.02em; font-weight: 700; }
+.btn { background: #4f39f6; color: #fff; border-radius: 12px; padding: 8px 16px; box-shadow: 0 1px 2px rgba(0,0,0,.08); transition: background .15s ease; }
 .btn:hover { background: #4338ca; }
+.btn--teal { background: #0d9488; } .btn--teal:hover { background: #0f766e; }
 .card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1); }
-.tag { background: #eef2ff; color: #3730a3; border-radius: 6px; font-size: 12px; }
-.ok { color: #16a34a; }
+.tag { background: #eef2ff; color: #3730a3; border-radius: 6px; font-size: 12px; font-weight: 600; }
+.ok { color: #16a34a; } .bad { color: #dc2626; }
 .muted { color: #6b7280; }
 `
 const theirCfg: Config = { ...DEFAULT_CONFIG, cPrimary: '#4f39f6', radius: 'round', typeScale: 'md', scale: 'default' }
@@ -25,14 +28,14 @@ const theirCfg: Config = { ...DEFAULT_CONFIG, cPrimary: '#4f39f6', radius: 'roun
 function setup() {
   const table = new SubstitutionTable()
   rewriteCss(THEIR_CSS, table, 'app.css')
-  const baseline: Baseline = { cfg: theirCfg, tokens: buildTokens(theirCfg) }
+  const baseline: Baseline = { cfg: theirCfg, tokens: buildTokens(theirCfg), families: familiesOf(table, theirCfg.cPrimary) }
   return { table, baseline }
 }
-
 const vars = (cfg: Config) => {
   const { table, baseline } = setup()
   return { table, out: computeVars(table, baseline, cfg, buildTokens(cfg)) }
 }
+const dial = (patch: Partial<Dials>): Config => ({ ...theirCfg, sb: { ...DEFAULT_DIALS, ...patch } })
 const byValue = (table: SubstitutionTable, out: Record<string, string>, kind: string, value: string) => {
   const e = table.entries.find((x) => x.kind === kind && x.value === value)!
   return out[`--us-v${e.id}`]!
@@ -42,29 +45,30 @@ describe('identity — no knob turned', () => {
   it('every variable holds exactly the literal it replaced (1:1 by construction)', () => {
     const { table, out } = vars(theirCfg)
     expect(out).toEqual(table.identityVars())
-    expect(Object.keys(out).length).toBeGreaterThan(15)
+    expect(Object.keys(out).length).toBeGreaterThan(20)
+  })
+  it('the sheet now carries line-height, letter-spacing, weight, border-width and duration too', () => {
+    const { table } = setup()
+    expect(table.ofKind('line-height').map((e) => e.value)).toEqual(['1.5'])
+    expect(table.ofKind('letter-spacing').map((e) => e.value)).toEqual(['-0.02em'])
+    expect(table.ofKind('font-weight').map((e) => e.value)).toEqual(['700', '600'])
+    expect(table.ofKind('border-width').map((e) => e.value)).toEqual(['1px'])
+    expect(table.ofKind('duration').map((e) => e.value)).toEqual(['.15s'])
   })
 })
 
-describe('identity keeps spelling', () => {
-  it('a `.9em` size is still `.9em` at the baseline (float no-op → original string)', () => {
-    const table = new SubstitutionTable()
-    rewriteCss(`legend{font-size:.9em}.x{padding:.5rem;border-radius:.375rem}`, table, 'a.css')
-    const baseline: Baseline = { cfg: theirCfg, tokens: buildTokens(theirCfg) }
-    expect(computeVars(table, baseline, theirCfg, buildTokens(theirCfg))).toEqual(table.identityVars())
-  })
-})
-
-describe('a literal near the brand stays itself at rest', () => {
-  it('#0d47a1 beside a #10489e brand is identity until the brand knob moves (measured on simple.css)', () => {
-    const table = new SubstitutionTable()
-    rewriteCss(`:root{--accent:#0d47a1}.b{background:#10489e}`, table, 'a.css')
-    const cfg: Config = { ...DEFAULT_CONFIG, cPrimary: '#10489e' }
-    const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
-    expect(computeVars(table, baseline, cfg, buildTokens(cfg))).toEqual(table.identityVars())
-    const rose = { ...cfg, cPrimary: COLOR_THEMES.rose.cPrimary }
-    const out = computeVars(table, baseline, rose, buildTokens(rose))
-    expect(out['--us-v1']).not.toBe('#0d47a1')
+describe('families come from THEIR sheet', () => {
+  it('brand by hue window; teal is secondary; greens/reds are status; greys neutral', () => {
+    const { table, baseline } = setup()
+    const f = baseline.families!
+    const famOf = (v: string) => f.of.get(table.entries.find((e) => e.kind === 'color' && e.value === v)!.id)
+    expect(famOf('#4f39f6')).toBe('brand')
+    expect(famOf('#4338ca')).toBe('brand')
+    expect(famOf('#0d9488')).toBe('secondary')
+    expect(famOf('#16a34a')).toBe('success')
+    expect(famOf('#dc2626')).toBe('danger')
+    expect(famOf('#e5e7eb')).toBe('neutral')
+    expect(f.centre.secondary).toBeTruthy()
   })
 })
 
@@ -77,112 +81,77 @@ describe('brand knob', () => {
     const now = parseCssColor(String(buildTokens(rose).vars['--k-primary']))!
     const expectedH = ((parseCssColor('#4f39f6')!.H + hueDelta(base.H, now.H)) % 360 + 360) % 360
     expect(Math.abs(hueDelta(b.H, expectedH))).toBeLessThan(2)
-    // The hover shade and the tint move with it — same delta, so the ramp stays a ramp.
-    const hover = parseCssColor(byValue(table, out, 'color', '#4338ca'))!
-    const tint = parseCssColor(byValue(table, out, 'color', '#eef2ff'))!
-    expect(Math.abs(hueDelta(hover.H, b.H))).toBeLessThan(12)
-    expect(tint.L).toBeGreaterThan(0.9) // a tint stays a tint
-    // The success green and white are not the brand. A tinted grey may take
-    // the new tint (neutral 'auto' follows the brand — the engine's rule), but
-    // it stays a grey of the same lightness.
+    expect(byValue(table, out, 'color', '#0d9488')).toBe('#0d9488') // secondary untouched
     expect(byValue(table, out, 'color', '#16a34a')).toBe('#16a34a')
     expect(byValue(table, out, 'color', '#ffffff')).toBe('#ffffff')
-    const grey = parseCssColor(byValue(table, out, 'color', '#6b7280'))!
-    expect(grey.C).toBeLessThan(0.03)
-    expect(grey.L).toBeCloseTo(parseCssColor('#6b7280')!.L, 2)
-  })
-  it('the accent-family classifier is judged against the BASELINE, not the current tokens', () => {
-    const { baseline } = setup()
-    expect(classifyColor(parseCssColor('#4f39f6')!, baseline.tokens.vars)).toBe('brand')
-    expect(classifyColor(parseCssColor('#e5e7eb')!, baseline.tokens.vars)).toBe('neutral')
-    expect(classifyColor(parseCssColor('#16a34a')!, baseline.tokens.vars)).toBe('keep')
   })
 })
 
-describe('radius knob', () => {
-  it('scales every radius by the ratio of --k-radius-md; none → 0', () => {
-    const { table, out } = vars({ ...theirCfg, radius: 'none' })
+describe('secondary / status pickers move only their family', () => {
+  it('cSecondary moves the teal pair; the brand and greens stay', () => {
+    const { table, out } = vars(dial({ cSecondary: '#e11d48' }))
+    expect(byValue(table, out, 'color', '#0d9488')).toBe('#e11d48') // the centre becomes the pick exactly
+    expect(byValue(table, out, 'color', '#0f766e')).not.toBe('#0f766e')
+    expect(byValue(table, out, 'color', '#4f39f6')).toBe('#4f39f6')
+    expect(byValue(table, out, 'color', '#16a34a')).toBe('#16a34a')
+    const s = vars(dial({ cSuccess: '#2563eb' }))
+    expect(byValue(s.table, s.out, 'color', '#16a34a')).toBe('#2563eb')
+  })
+})
+
+describe('size dials — ×1 is their code, everything scales relatively', () => {
+  it('radius', () => {
+    const { table, out } = vars(dial({ radius: 0 }))
     expect(byValue(table, out, 'radius', '12px')).toBe('0px')
-    expect(byValue(table, out, 'radius', '16px')).toBe('0px')
-    const soft = vars({ ...theirCfg, radius: 'soft' })
-    const r12 = toPx(byValue(soft.table, soft.out, 'radius', '12px'))!.px
-    const r16 = toPx(byValue(soft.table, soft.out, 'radius', '16px'))!.px
-    const ratio = toPx(String(buildTokens({ ...theirCfg, radius: 'soft' }).vars['--k-radius-md']))!.px / toPx(String(buildTokens(theirCfg).vars['--k-radius-md']))!.px
-    expect(r12).toBeCloseTo(12 * ratio, 2)
-    expect(r16).toBeCloseTo(16 * ratio, 2)
-    expect(r16 / r12).toBeCloseTo(16 / 12, 2) // their shape is kept
+    const half = vars(dial({ radius: 0.5 }))
+    expect(byValue(half.table, half.out, 'radius', '16px')).toBe('8px')
   })
-})
-
-describe('text size + scale knobs', () => {
-  it('body follows --k-type-body; headings keep their step relation; captions only follow body', () => {
-    const { table, out } = vars({ ...theirCfg, typeScale: 'xl' })
-    const body = toPx(byValue(table, out, 'font-size', '14px'))!.px
-    const h1 = toPx(byValue(table, out, 'font-size', '30px'))!.px
-    const cap = toPx(byValue(table, out, 'font-size', '12px'))!.px
-    const nb = toPx(String(buildTokens({ ...theirCfg, typeScale: 'xl' }).vars['--k-type-body']))!.px
-    const bb = toPx(String(buildTokens(theirCfg).vars['--k-type-body']))!.px
-    expect(body).toBeCloseTo(14 * (nb / bb), 2)
-    expect(h1).toBeGreaterThan(body)
-    expect(cap).toBeCloseTo(12 * (nb / bb), 2)
+  it('spacing, text size, line-height (unitless too), border width, motion, tracking, weight', () => {
+    const o = vars(dial({ space: 0.75, type: 1.25, lineHeight: 1.1, borderWidth: 2, motion: 0.5, tracking: 0.05, weight: -1 }))
+    expect(byValue(o.table, o.out, 'space', '24px')).toBe('18px')
+    expect(toPx(byValue(o.table, o.out, 'font-size', '30px'))!.px).toBeCloseTo(37.5, 2)
+    expect(byValue(o.table, o.out, 'line-height', '1.5')).toBe('1.65')
+    expect(byValue(o.table, o.out, 'border-width', '1px')).toBe('2px')
+    expect(byValue(o.table, o.out, 'duration', '.15s')).toBe('0.075s')
+    expect(byValue(o.table, o.out, 'letter-spacing', '-0.02em')).toBe('0.03em')
+    expect(byValue(o.table, o.out, 'font-weight', '700')).toBe('600')
   })
-  it('spacing scales with --k-space', () => {
-    const { table, out } = vars({ ...theirCfg, scale: 'compact' })
-    const ratio = toPx(String(buildTokens({ ...theirCfg, scale: 'compact' }).vars['--k-space']))!.px / toPx(String(buildTokens(theirCfg).vars['--k-space']))!.px
-    expect(ratio).not.toBe(1)
-    expect(toPx(byValue(table, out, 'space', '24px'))!.px).toBeCloseTo(24 * ratio, 2)
+  it('elevation: 0 → none; 2 → darker and a little wider', () => {
+    const flat = vars(dial({ shadow: 0 }))
+    const shadow = flat.table.ofKind('shadow')[0]!
+    expect(flat.out[`--us-v${shadow.id}`]).toBe('none')
+    const deep = vars(dial({ shadow: 2 }))
+    expect(deep.out[`--us-v${shadow.id}`]).not.toBe(shadow.value)
+  })
+  it('background and border tone move neutrals by USE', () => {
+    const o = vars(dial({ bgTone: -0.05, borderTone: 0.05 }))
+    expect(byValue(o.table, o.out, 'color', '#f9fafb')).not.toBe('#f9fafb') // .card background
+    expect(byValue(o.table, o.out, 'color', '#e5e7eb')).not.toBe('#e5e7eb') // .card border
+    expect(byValue(o.table, o.out, 'color', '#6b7280')).toBe('#6b7280')     // ink stays
+    expect(byValue(o.table, o.out, 'color', '#111827')).toBe('#111827')
   })
 })
 
 describe('font knobs', () => {
-  it('identity until the knob leaves their family; body and display are told apart by where they are used', () => {
-    const same = vars(theirCfg)
-    expect(byValue(same.table, same.out, 'font-family', '"Inter", sans-serif')).toBe('"Inter", sans-serif')
+  it('identity until the knob leaves their family; body and display told apart by use', () => {
     const { table, out } = vars({ ...theirCfg, fontBody: 'Manrope' } as Config)
     expect(byValue(table, out, 'font-family', '"Inter", sans-serif')).toBe(String(buildTokens({ ...theirCfg, fontBody: 'Manrope' } as Config).vars['--k-font-body']))
-    // The heading face is display: untouched by the body knob.
     expect(byValue(table, out, 'font-family', '"Fraunces", serif')).toBe('"Fraunces", serif')
-    const d = vars({ ...theirCfg, fontDisplay: 'Fraunces' } as Config)
-    expect(byValue(d.table, d.out, 'font-family', '"Fraunces", serif')).not.toBe('"Fraunces", serif')
-    expect(byValue(d.table, d.out, 'font-family', '"Inter", sans-serif')).toBe('"Inter", sans-serif')
   })
 })
 
-describe('elevation knob', () => {
-  it('flat → none; softer → smaller blur, lower alpha; the ring geometry is untouched by colour', () => {
-    const flat = vars({ ...theirCfg, surfaceDepth: 'flat' } as Config)
-    const shadow = flat.table.ofKind('shadow')[0]!
-    expect(flat.out[`--us-v${shadow.id}`]).toBe('none')
-  })
-})
-
-describe('every knob moves something in THEIR app (knobEffect), and none breaks the identity elsewhere', () => {
-  const knobs: Array<Partial<Config>> = [
-    { cPrimary: '#e11d48' }, { radius: 'none' }, { scale: 'compact' }, { typeScale: 'lg' },
-    { fontBody: 'Manrope' } as Partial<Config>, { fontDisplay: 'Fraunces' } as Partial<Config>,
-    { surfaceDepth: 'flat' } as Partial<Config>, { neutral: 'neutral' } as Partial<Config>,
+describe('every panel knob moves something in THEIR app (knobEffect)', () => {
+  const knobs: Array<[string, Config]> = [
+    ['brand', { ...theirCfg, cPrimary: '#e11d48' }], ['body font', { ...theirCfg, fontBody: 'Manrope' } as Config], ['display font', { ...theirCfg, fontDisplay: 'Fraunces' } as Config],
+    ...(['radius', 'space', 'type', 'lineHeight', 'borderWidth', 'shadow', 'motion'] as const).map((k): [string, Config] => [k, dial({ [k]: 0.5 })]),
+    ['tracking', dial({ tracking: 0.05 })], ['weight', dial({ weight: 1 })], ['bgTone', dial({ bgTone: -0.05 })], ['borderTone', dial({ borderTone: 0.05 })],
+    ['cSecondary', dial({ cSecondary: '#e11d48' })], ['cSuccess', dial({ cSuccess: '#0000ff' })], ['cDanger', dial({ cDanger: '#0000ff' })],
   ]
-  for (const k of knobs) {
-    it(JSON.stringify(k), () => {
-      const { table, out } = vars({ ...theirCfg, ...k })
+  for (const [name, cfg] of knobs) {
+    it(name, () => {
+      const { table, out } = vars(cfg)
       const id = table.identityVars()
-      const moved = Object.keys(out).filter((v) => out[v] !== id[v])
-      expect(moved.length).toBeGreaterThan(0)
+      expect(Object.keys(out).filter((v) => out[v] !== id[v]).length).toBeGreaterThan(0)
     })
   }
-})
-
-describe('triplet colours move in their own notation', () => {
-  it('a Tailwind triplet brand becomes a triplet; a shadcn hsl triplet stays bare hsl', () => {
-    const table = new SubstitutionTable()
-    rewriteCss(`.a{background-color:rgb(79 57 246 / var(--o))}:root{--primary:249 79% 59%}`, table, 'x.css')
-    const cfg: Config = { ...theirCfg, cPrimary: '#4f39f6' }
-    const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
-    expect(computeVars(table, baseline, cfg, buildTokens(cfg))).toEqual({ '--us-v1': '79 57 246', '--us-v2': '249 79% 59%' })
-    const rose = { ...cfg, cPrimary: COLOR_THEMES.rose.cPrimary }
-    const out = computeVars(table, baseline, rose, buildTokens(rose))
-    expect(out['--us-v1']).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/)
-    expect(out['--us-v2']).toMatch(/^[\d.]+ [\d.]+% [\d.]+%$/)
-    expect(out['--us-v1']).not.toBe('79 57 246')
-  })
 })

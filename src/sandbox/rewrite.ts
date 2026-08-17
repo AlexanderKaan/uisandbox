@@ -141,11 +141,21 @@ const NAMED_COLORS = new Set([
 /** Colour-carrying properties. `border`/`outline` shorthands carry one too. */
 const COLOR_PROP = /^(color|background|background-color|background-image|border|border-(top|right|bottom|left|block|inline)(-(start|end))?|border(-\w+)?-color|outline|outline-color|box-shadow|text-shadow|fill|stroke|text-decoration|text-decoration-color|text-emphasis-color|caret-color|accent-color|column-rule|column-rule-color|scrollbar-color|-webkit-text-fill-color|-webkit-text-stroke-color)$/
 const RADIUS_PROP = /^(border-radius|border-(top|bottom)-(left|right)-radius|border-(start|end)-(start|end)-radius)$/
+const BORDER_WIDTH_PROP = /^(border-width|border-(top|right|bottom|left|block|inline)(-(start|end))?-width|outline-width|column-rule-width)$/
+/** Shorthands whose FIRST length is a border width. */
+const BORDER_SHORTHAND = /^(border|border-(top|right|bottom|left|block|inline)(-(start|end))?|outline|column-rule)$/
+const DURATION_PROP = /^(transition|transition-duration|animation|animation-duration)$/
+const DURATION = /(?<![\w.#-])(\d*\.?\d+)(ms|s)(?![\w%])/g
 const SPACE_PROP = /^(padding|margin|padding-(top|right|bottom|left|block|inline)(-(start|end))?|margin-(top|right|bottom|left|block|inline)(-(start|end))?|gap|row-gap|column-gap|grid-gap|grid-row-gap|grid-column-gap)$/
 
 /** A custom property's ROLE is only knowable from its name. */
 const CUSTOM_ROLE: Array<[RegExp, Kind]> = [
   [/radius|rounded/i, 'radius'],
+  [/line-?height|leading/i, 'line-height'],
+  [/letter-?spacing|tracking/i, 'letter-spacing'],
+  [/font-?weight|(^|-)weight(-|$)/i, 'font-weight'],
+  [/border-?width|stroke-?width|(^|-)bw(-|$)/i, 'border-width'],
+  [/duration|(^|-)dur(-|$)|transition|(^|-)ease-?time/i, 'duration'],
   [/font-?family|typeface|(^|-)ff(-|$)|(^|-)font(-|$)|font-(sans|serif|mono|display|heading|body)/i, 'font-family'],
   [/font-?size|text-(xs|sm|base|md|lg|xl|\dxl)|(^|-)fs-|type-scale/i, 'font-size'],
   [/spac(e|ing)|gap|padding|margin|(^|-)pad|inset|size-\d/i, 'space'],
@@ -223,6 +233,34 @@ function findLengths(m: string, kind: Kind, opts: { skipPill?: boolean } = {}): 
   return s
 }
 
+/** Unitless numbers (`1.5`) and lengths, never `normal`. */
+function findLineHeights(m: string): Splice[] {
+  const s: Splice[] = []
+  for (const x of m.matchAll(/(?<![\w.#-])(\d*\.?\d+)(px|rem|em|%)?(?![\w%])/g)) {
+    if (x[2] === '%') continue
+    const n = parseFloat(x[1]!)
+    if (n <= 0) continue
+    s.push({ start: x.index, end: x.index + x[0].length, kind: 'line-height', raw: x[0] })
+  }
+  return s
+}
+/** 100–900 or the two keywords that mean a number. */
+function findWeights(m: string): Splice[] {
+  const s: Splice[] = []
+  for (const x of m.matchAll(/(?<![\w-])(?:([1-9]00)|(bold|normal))(?![\w-])/gi)) {
+    s.push({ start: x.index, end: x.index + x[0].length, kind: 'font-weight', raw: x[0] })
+  }
+  return s
+}
+function findDurations(m: string): Splice[] {
+  const s: Splice[] = []
+  for (const x of m.matchAll(DURATION)) {
+    if (parseFloat(x[1]!) === 0) continue
+    s.push({ start: x.index, end: x.index + x[0].length, kind: 'duration', raw: x[0] })
+  }
+  return s
+}
+
 /** Nested function-colours produce overlapping matches; keep the outermost. */
 function dropOverlaps(s: Splice[]): Splice[] {
   s.sort((a, b) => a.start - b.start || b.end - a.end)
@@ -238,12 +276,19 @@ function dropOverlaps(s: Splice[]): Splice[] {
 
 const KEYWORD_ONLY = /^(inherit|initial|unset|revert|revert-layer|none|auto|transparent|currentcolor|0)$/i
 
-/** `font: italic 600 14px/1.4 "Inter", sans-serif` → the size and the family. */
+/** `font: italic 600 14px/1.4 "Inter", sans-serif` → weight, size, line-height and family. */
 function fontShorthand(value: string, m: string): Splice[] {
-  const x = m.match(/(?<![\w.-])(\d*\.?\d+)(px|rem|em|%)(\/[\w.%]+)?\s/)
+  const x = m.match(/(?<![\w.-])(\d*\.?\d+)(px|rem|em|%)(\/([\w.%]+))?\s/)
   if (!x || x.index === undefined) return []
   const s: Splice[] = []
+  const before = m.slice(0, x.index)
+  const w = before.match(/(?<![\w-])(?:([1-9]00)|(bold))(?![\w-])/i)
+  if (w && w.index !== undefined) s.push({ start: w.index, end: w.index + w[0].length, kind: 'font-weight', raw: w[0] })
   if (x[2] !== '%') s.push({ start: x.index, end: x.index + x[1]!.length + x[2]!.length, kind: 'font-size', raw: x[1]! + x[2]! })
+  if (x[4] && /^\d*\.?\d+(px|rem|em)?$/.test(x[4]) && x[4] !== 'normal') {
+    const lhStart = x.index + x[1]!.length + x[2]!.length + 1
+    s.push({ start: lhStart, end: lhStart + x[4].length, kind: 'line-height', raw: x[4] })
+  }
   // Skip whitespace in the ORIGINAL value — the mask blanks quoted families too.
   let famStart = x.index + x[0].length
   while (famStart < value.length && /\s/.test(value[famStart]!)) famStart++
@@ -287,12 +332,26 @@ export function splicesFor(prop: string, value: string): Splice[] {
         if (/\d(px|rem|em)|\b0\b/.test(bare)) return [{ start: 0, end: value.length, kind: 'shadow', raw: value }]
         return []
       }
+      if (kind === 'line-height') return findLineHeights(m)
+      if (kind === 'font-weight') return findWeights(m)
+      if (kind === 'duration') return findDurations(m)
+      if (kind === 'letter-spacing') return findLengths(m, 'letter-spacing')
       return findLengths(m, kind, { skipPill: kind === 'radius' })
     }
     return []
   }
 
   if (prop === 'font') return fontShorthand(value, m)
+  if (prop === 'line-height') return findLineHeights(m)
+  if (prop === 'letter-spacing' || prop === 'word-spacing') return findLengths(m, 'letter-spacing')
+  if (prop === 'font-weight') return findWeights(m)
+  if (BORDER_WIDTH_PROP.test(prop)) return findLengths(m, 'border-width')
+  if (DURATION_PROP.test(prop)) return findDurations(m)
+  if (BORDER_SHORTHAND.test(prop)) {
+    // `1px solid #e5e7eb`: the width AND the colour
+    const w = findLengths(m, 'border-width').slice(0, 1)
+    return [...w, ...findColors(value, m, true)]
+  }
   if (prop === 'font-family') return /var\(/i.test(m) ? [] : [{ start: 0, end: value.length, kind: 'font-family', raw: value }]
   if (prop === 'font-size') return findLengths(m, 'font-size')
   if (RADIUS_PROP.test(prop)) return findLengths(m, 'radius', { skipPill: true })

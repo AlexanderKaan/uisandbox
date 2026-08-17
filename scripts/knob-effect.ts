@@ -7,7 +7,8 @@ import { DEFAULT_CONFIG } from '../src/tokens/defaults'
 import { COLOR_THEMES } from '../src/tokens/stylesAndThemes'
 import { rewriteCss, rewriteHtml, scanDeclarations } from '../src/sandbox/rewrite'
 import { SubstitutionTable } from '../src/sandbox/table'
-import { computeVars } from '../src/sandbox/mapping'
+import { computeVars, familiesOf } from '../src/sandbox/mapping'
+import { DEFAULT_DIALS, DIALS, type Dials } from '../src/sandbox/dials'
 import { brandDeclared, brandFromTable, radiusFromTable, bodySizeFromTable, fontsFromTable } from '../src/sandbox/baseline'
 import type { Config } from '../src/tokens/types'
 import { execSync } from 'node:child_process'
@@ -18,20 +19,14 @@ import { join, extname } from 'node:path'
 const zips = process.argv.slice(2)
 const walk = (d: string): string[] => readdirSync(d).flatMap((f) => { const p = join(d, f); return statSync(p).isDirectory() ? (/node_modules|\.git/.test(f) ? [] : walk(p)) : [p] })
 
+const d = (patch: Partial<Dials>): Partial<Config> => ({ sb: { ...DEFAULT_DIALS, ...patch } })
 const KNOBS: Array<[string, Partial<Config>]> = [
   ['brand→rose', { cPrimary: COLOR_THEMES.rose.cPrimary }],
-  ['radius→none', { radius: 'none' }], ['radius→round', { radius: 'round' }],
-  ['scale→compact', { scale: 'compact' }], ['scale→comfortable', { scale: 'comfortable' }],
-  ['typeScale→xl', { typeScale: 'xl' }],
   ['fontBody→Manrope', { fontBody: 'Manrope' } as Partial<Config>], ['fontDisplay→Fraunces', { fontDisplay: 'Fraunces' } as Partial<Config>],
-  ['elevation→flat', { surfaceDepth: 'flat' } as Partial<Config>], ['elevation→deep', { surfaceDepth: 'deep' } as Partial<Config>],
-  ['neutral→neutral', { neutral: 'neutral' } as Partial<Config>],
-  ['harmony→complement', { harmony: 'complement' } as Partial<Config>], ['spread→150', { spread: 150 } as Partial<Config>],
-  ['conformance→aaa', { conformance: 'aaa' } as Partial<Config>],
-  ['labelCase→caps', { labelCase: 'caps' } as Partial<Config>],
-  ['surface→filled', { surface: 'filled' } as Partial<Config>], ['surface→flat', { surface: 'flat' } as Partial<Config>],
-  ['canvas→white', { canvas: 'white' } as Partial<Config>], ['canvas→brand', { canvas: 'brand' } as Partial<Config>],
-  ['borders→strong', { borders: 'strong' } as Partial<Config>], ['borders→faint', { borders: 'faint' } as Partial<Config>],
+  ['neutral→auto', { neutral: 'auto' } as Partial<Config>],
+  ...DIALS.map((spec): [string, Partial<Config>] => [`${spec.key}→${spec.max === 2 || spec.max === 2.5 || spec.max === 3 ? spec.min : spec.max}`, d({ [spec.key]: spec.max === 2 || spec.max === 2.5 || spec.max === 3 ? spec.min : spec.max })]),
+  ['cSecondary', d({ cSecondary: '#e11d48' })], ['cAccent', d({ cAccent: '#e11d48' })],
+  ['cSuccess', d({ cSuccess: '#2563eb' })], ['cWarning', d({ cWarning: '#2563eb' })], ['cDanger', d({ cDanger: '#2563eb' })], ['cInfo', d({ cInfo: '#e11d48' })],
 ]
 const UNTOKENISED: Record<string, number> = {}
 const rows: string[] = []
@@ -60,7 +55,8 @@ for (const zip of zips) {
   const r = radiusFromTable(table); if (r) cfg = { ...cfg, radius: r }
   const t = bodySizeFromTable(table); if (t) cfg = { ...cfg, typeScale: t }
   const f = fontsFromTable(table); if (f.body) cfg = { ...cfg, fontBody: f.body, fontDisplay: f.display ?? f.body }
-  const baseline = { cfg, tokens: buildTokens(cfg) }
+  cfg = { ...cfg, neutral: 'neutral' }
+  const baseline = { cfg, tokens: buildTokens(cfg), families: familiesOf(table, cfg.cPrimary) }
   const id = table.identityVars()
   const line: string[] = [zip.split('/').pop()!.replace('.zip', '').padEnd(28) + String(table.entries.length).padStart(4)]
   for (const [name, patch] of KNOBS) {
@@ -73,7 +69,7 @@ for (const zip of zips) {
   }
   rows.push(line.join(' '))
 }
-console.log('fixture'.padEnd(28) + ' vals ' + KNOBS.map(([n]) => n.slice(0, 4)).join(' '))
+console.log('fixture'.padEnd(28) + ' vals ' + KNOBS.map(([n]) => n.slice(0, 4).padStart(4)).join(' '))
 for (const r of rows) console.log(r)
 console.log('\nPer knob, share of sheet values that move (all fixtures):')
 for (const [name, a] of Object.entries(agg).sort((x, y) => y[1].moved / y[1].total - x[1].moved / x[1].total)) console.log(name.padEnd(24), (100 * a.moved / a.total).toFixed(1).padStart(5) + '%', `(${a.moved}/${a.total})`)

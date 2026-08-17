@@ -33,7 +33,7 @@ export function decode(hash: string): Config | null {
     if ((parsed.radius as string) === 'pill') {
       parsed.radius = 'round'
     }
-    return { ...DEFAULT_CONFIG, ...parsed }
+    return { ...DEFAULT_CONFIG, ...parsed, sb: { ...DEFAULT_CONFIG.sb, ...(parsed.sb ?? {}) } }
   } catch {
     return null
   }

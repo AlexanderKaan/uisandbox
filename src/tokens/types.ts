@@ -190,7 +190,11 @@ export type SurfaceDepth = 'flat' | 'soft' | 'deep'
 
 export type Hex = string
 
+import type { Dials } from '../sandbox/dials'
+
 export interface Config {
+  /** The sandbox's own dials — continuous, centred on THEIR code (see sandbox/dials.ts). */
+  sb: Dials
   /* Orthogonal preset axes (#184 May 2026): Style = form/shape language
    * only, ColorTheme = 3 brand hex values only. The two are picked
    * independently in the panel; helpers in stylesAndThemes.ts apply the

@@ -244,3 +244,40 @@ files, nested zips, tar.gz.
     labelled by origin (file · route found on a page · pinned); "pin current
     route" in its foot. A tab strip stops working around a dozen; a grouped
     list with search never does.
+
+## The knobs, rebuilt for someone else's app (2026-08-17, after notes/knobs-research.md)
+
+44. **Dials, ×1 = your code.** `sandbox/dials.ts` (inside `Config.sb`, so it
+    rides the reducer, undo and share-hash): radius · spacing · text size ·
+    line-height · letter-spacing (+em) · weight (±steps) · border width ·
+    background tone · border tone · elevation · motion — continuous, with the
+    old preset names as snap points and "as in your code" at the centre. The
+    mapping reads the dial, not a token ratio (`scaleLength`, `mapShadow(x)`),
+    which also removes the Scale→headings coupling.
+45. **Colour roles from THEIR sheet.** `familiesOf(table, brand)`: brand by
+    hue window; status by OKLCH hue windows (green/red/amber/blue); the two
+    largest remaining hue clusters = secondary, accent; each family has a
+    CENTRE (most-used member). A picker row appears only when the family
+    exists; the pick moves every member by centre→pick delta (`mapByDelta`);
+    the centre becomes the pick exactly.
+46. **Neutrals by USE**: background tone moves light greys painted as
+    backgrounds, border tone moves greys used in border/outline props, ink is
+    left alone. Baseline `neutral` is 'neutral' in the sandbox (greys don't
+    follow the brand unless "Grey tint: Follows brand" is chosen).
+47. **New sheet kinds**: line-height (unitless too, and in the `font`
+    shorthand), letter-spacing, font-weight (numbers, bold/normal, in `font`),
+    border-width (own props and the first length of `border`/`outline`
+    shorthands), duration (`transition`/`animation` and their `-duration`).
+48. **Display font speaks by selector** — most apps set one family and let
+    headings inherit, so there is no heading literal to move; the knob injects
+    `h1–h6,[class*=title|heading|hero|display]{font-family: … !important}`
+    (also into the patched export). The one honest semantic override.
+49. **Gone**: Conformance, Label case, Surface, Harmony rows, per-row locks,
+    saved slots, UIcockpit's `randomKit`; **Shuffle** now rolls only knobs that
+    exist (`sandbox/shuffle.ts`, triangular around "as is"). `Panel.tsx`,
+    `vizFactories`, `SavedKits`, `Seg` deleted.
+50. **The badge**: a quiet dot at rest ("as in your code"), amber once turned
+    ("changed"); the orange "your code didn't decide this" is gone — in the
+    sandbox every knob at rest IS their code.
+Measured (`scripts/knob-effect.ts`, 10 builds, 1,835 values): every knob moves
+values on real builds; the sheet-only meter cannot see the display-font rule.

@@ -5,7 +5,10 @@ import type { Config } from './types'
 // C1: new visitors land on a CHROMATIC kit (Cobalt), never greyscale — the first
 // impression must read "designed", not "blank template". Mono is still one click
 // away in the Brand flyout as the neutral reset/baseline.
+import { DEFAULT_DIALS } from '../sandbox/dials'
+
 export const DEFAULT_CONFIG: Config = {
+  sb: DEFAULT_DIALS,
   colorTheme: 'cobalt',        // friendly Apple system blue (#0A84FF) — the always-works brand
   color: 'tone',               // chromatic mode (brand hue drives primary/links/focus + auto-tints neutrals)
   radius: 'soft',

@@ -22,7 +22,7 @@ import { buildTokens } from '../tokens/buildTokens'
 import { ALL_FONTS, CUSTOM_FONT_PREFIX, SYSTEM_FONT } from '../tokens/fonts'
 import type { Config } from '../tokens/types'
 import { formatCssColor, parseCssColor } from './cssColor'
-import { fontRole, toPx, type Baseline } from './mapping'
+import { familiesOf, fontRole, toPx, type Baseline } from './mapping'
 import type { SubstitutionTable } from './table'
 
 export interface BaselineReport {
@@ -150,6 +150,9 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
     notes.push(`The source scan failed (${(err as Error).message}); the knobs start from the stylesheet census only.`)
   }
 
+  // Their greys are their greys: the brand knob moves the brand family only.
+  // ('auto' — greys taking a whisper of the brand — stays available as a knob.)
+  cfg = { ...cfg, neutral: 'neutral' }
   const v = (inferred?.values ?? {}) as Record<string, unknown>
   const declared = brandDeclared(table)
   if (declared) {
@@ -174,7 +177,7 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
   else if (fonts.body) cfg = { ...cfg, fontDisplay: fonts.body }
   if (fonts.body || fonts.display) notes.push(`Fonts from the stylesheets: body ${fonts.body ?? '—'}, display ${fonts.display ?? fonts.body ?? '—'}.`)
 
-  const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
+  const baseline: Baseline = { cfg, tokens: buildTokens(cfg), families: familiesOf(table, cfg.cPrimary) }
   const derived = inferred ? derivedFromAudit(inferred) : {}
   const report: BaselineReport = {
     baseline,

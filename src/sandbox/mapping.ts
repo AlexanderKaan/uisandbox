@@ -26,6 +26,7 @@
 import type { Config, Tokens } from '../tokens/types'
 import { formatLike, hueDelta, parseCssColor, type Okla } from './cssColor'
 import { cssValue, varName, type Entry, type SubstitutionTable } from './table'
+import type { Dials } from './dials'
 
 type Vars = Record<string, string | number>
 
@@ -52,30 +53,64 @@ const fromPx = (px: number, unit: string, original?: string): string => {
 }
 
 // ─────────────────────────── colour families ───────────────────────────
+//
+// Beyond the brand, the roles are THEIRS: the sheet's own chromatic hues,
+// clustered — the largest non-brand cluster is `secondary`, the next `accent`;
+// the classic status hues (green/red/amber/blue) are their own families when
+// they are not the brand's neighbours. Each family has a CENTRE (its most-used
+// colour); a picker for that family moves every member by the delta between
+// centre and pick — same maths as the brand.
 
-export type Family = 'brand' | 'secondary' | 'accent' | 'neutral' | 'keep'
-
-const FAMILY_TOKEN: Record<Exclude<Family, 'neutral' | 'keep'>, string> = {
-  brand: '--k-primary',
-  secondary: '--k-secondary',
-  accent: '--k-accent',
+export type Family = 'brand' | 'secondary' | 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'keep'
+export interface Families {
+  /** entry id → family */
+  of: Map<number, Family>
+  /** family → its centre colour (most-used member) */
+  centre: Partial<Record<Family, Okla>>
 }
 const NEUTRAL_CHROMA = 0.035
 const FAMILY_HUE_WINDOW = 32
+// OKLCH hues: red ≈ 20–30, amber ≈ 60–85, green ≈ 140–160, blue ≈ 240–260
+const STATUS: Array<[Family, number, number]> = [['success', 110, 175], ['danger', 335, 40], ['warning', 45, 100], ['info', 215, 265]]
+const inHue = (h: number, lo: number, hi: number) => (lo <= hi ? h >= lo && h <= hi : h >= lo || h <= hi)
 
-/** Which family a colour belongs to, judged against the BASELINE tokens. */
-export function classifyColor(c: Okla, base: Vars): Family {
-  if (c.a === 0) return 'keep'
-  if (c.C < NEUTRAL_CHROMA) return 'neutral'
-  let best: Family = 'keep'
-  let bestD = FAMILY_HUE_WINDOW
-  for (const fam of ['brand', 'secondary', 'accent'] as const) {
-    const t = parseCssColor(str(base[FAMILY_TOKEN[fam]]))
-    if (!t || t.C < NEUTRAL_CHROMA) continue
-    const d = Math.abs(hueDelta(c.H, t.H))
-    if (d < bestD) { bestD = d; best = fam }
+/** Classify every colour entry of the sheet against the brand hex, once. */
+export function familiesOf(table: SubstitutionTable, brandHex: string): Families {
+  const brand = parseCssColor(brandHex)
+  const of = new Map<number, Family>()
+  const chroma: Array<{ e: Entry; c: Okla }> = []
+  const rest: Array<{ e: Entry; c: Okla }> = []
+  for (const e of table.ofKind('color')) {
+    const c = parseCssColor(e.value)
+    if (!c || c.a === 0) { of.set(e.id, 'keep'); continue }
+    if (c.C < NEUTRAL_CHROMA) { of.set(e.id, 'neutral'); continue }
+    if (brand && Math.abs(hueDelta(c.H, brand.H)) <= FAMILY_HUE_WINDOW) { of.set(e.id, 'brand'); chroma.push({ e, c }); continue }
+    rest.push({ e, c })
   }
-  return best
+  const centre: Partial<Record<Family, Okla>> = {}
+  if (brand) centre.brand = brand
+  // status by hue window
+  const remaining: typeof rest = []
+  for (const x of rest) {
+    const st = STATUS.find(([, lo, hi]) => inHue(x.c.H, lo, hi))
+    if (st) of.set(x.e.id, st[0]); else remaining.push(x)
+  }
+  // secondary / accent: the two largest hue clusters (30° bins) among what is left
+  const bins = new Map<number, typeof rest>()
+  for (const x of remaining) { const b = Math.round(x.c.H / 30) % 12; if (!bins.has(b)) bins.set(b, []); bins.get(b)!.push(x) }
+  const ranked = [...bins.values()].sort((a, b) => b.reduce((n, x) => n + x.e.count, 0) - a.reduce((n, x) => n + x.e.count, 0))
+  ranked.forEach((cluster, i) => { const fam: Family = i === 0 ? 'secondary' : i === 1 ? 'accent' : 'keep'; for (const x of cluster) of.set(x.e.id, fam) })
+  // centres = most-used member per family
+  const best = new Map<Family, { c: Okla; n: number }>()
+  for (const e of table.ofKind('color')) {
+    const fam = of.get(e.id)
+    if (!fam || fam === 'keep' || fam === 'neutral' || fam === 'brand') continue
+    const c = parseCssColor(e.value)!
+    const cur = best.get(fam)
+    if (!cur || e.count > cur.n) best.set(fam, { c, n: e.count })
+  }
+  for (const [fam, v] of best) centre[fam] = v.c
+  return { of, centre }
 }
 
 /** Shift lightness by `dL`, scaled so 0 and 1 never move (a tint stays a tint). */
@@ -85,31 +120,34 @@ function shiftL(L: number, from: number, dL: number): number {
   return clamp(L + dL * clamp(w, 0, 1.5), 0, 1)
 }
 
-function mapChromatic(c: Okla, fam: Exclude<Family, 'neutral' | 'keep'>, base: Vars, now: Vars): Okla {
-  const key = FAMILY_TOKEN[fam]
-  const b = parseCssColor(str(base[key]))
-  const n = parseCssColor(str(now[key]))
-  if (!b || !n) return c
-  // THE brand colour itself (their #4f39f6 is what --k-primary was built from)
-  // becomes the new token exactly — a visitor who picks Rose expects Rose, not
-  // Rose-shifted-by-the-engine's-AA-nudge. Everything near it moves by delta.
-  // Only once the knob has actually moved: at rest a near-brand literal
-  // (#0d47a1 beside a #10489e brand) must stay exactly itself.
+/** Move `c` by the delta from family centre `b` to its new value `n`. */
+function mapByDelta(c: Okla, b: Okla, n: Okla): Okla {
   const moved = !(Math.abs(b.L - n.L) < 1e-4 && Math.abs(b.C - n.C) < 1e-4 && Math.abs(hueDelta(b.H, n.H)) < 1e-3)
-  if (moved && Math.abs(c.L - b.L) < 0.03 && Math.abs(c.C - b.C) < 0.03 && Math.abs(hueDelta(c.H, b.H)) < 4) return { ...n, a: c.a }
+  if (!moved) return c
+  // The centre itself becomes the pick exactly — a visitor who picks Rose
+  // expects Rose. Everything near it moves by delta.
+  if (Math.abs(c.L - b.L) < 0.03 && Math.abs(c.C - b.C) < 0.03 && Math.abs(hueDelta(c.H, b.H)) < 4) return { ...n, a: c.a }
   const H = c.H + hueDelta(b.H, n.H)
   const C = clamp(c.C * (n.C / Math.max(b.C, 0.01)), 0, 0.4)
   const L = shiftL(c.L, b.L, n.L - b.L)
   return { L, C, H: ((H % 360) + 360) % 360, a: c.a }
 }
 
-function mapNeutral(c: Okla, base: Vars, now: Vars): Okla {
+/** How a neutral is USED decides which dial moves it. */
+type NeutralUse = 'bg' | 'border' | 'ink'
+function neutralUse(e: Entry): NeutralUse {
+  let bg = 0, border = 0, ink = 0
+  for (const s of e.sites) {
+    if (/^(border|outline|column-rule|--.*(border|outline|divider|stroke))/.test(s.prop) && !/-radius|-width/.test(s.prop)) border++
+    else if (/^(background|--.*(bg|background|surface|canvas))/.test(s.prop)) bg++
+    else ink++
+  }
+  return border >= bg && border >= ink ? 'border' : bg >= ink ? 'bg' : 'ink'
+}
+
+function mapNeutral(c: Okla, e: Entry, base: Vars, now: Vars, sb: Dials): Okla {
   const bTint = parseCssColor(str(base['--k-fg-muted']))
   const nTint = parseCssColor(str(now['--k-fg-muted']))
-  const bBg = parseCssColor(str(base['--k-bg']))
-  const nBg = parseCssColor(str(now['--k-bg']))
-  const bFg = parseCssColor(str(base['--k-fg']))
-  const nFg = parseCssColor(str(now['--k-fg']))
   let { L, C, H } = c
   if (bTint && nTint) {
     const dC = nTint.C - bTint.C
@@ -122,44 +160,23 @@ function mapNeutral(c: Okla, base: Vars, now: Vars): Okla {
       H = c.C < 0.004 ? nTint.H : (((H + dH) % 360) + 360) % 360
     }
   }
-  if (bBg && nBg && bFg && nFg) {
-    // Light greys ride the page (--k-bg), dark greys ride the ink (--k-fg).
-    const w = clamp((L - 0.5) / 0.5, 0, 1)
-    const dL = w * (nBg.L - bBg.L) + (1 - w) * (nFg.L - bFg.L)
-    if (dL !== 0) L = shiftL(L, w >= 0.5 ? bBg.L : bFg.L, dL)
-  }
+  // The dials: Background moves LIGHT neutrals painted as backgrounds; Border
+  // tone moves neutrals used as borders/outlines. Ink is left alone.
+  const use = neutralUse(e)
+  if (use === 'bg' && sb.bgTone !== 0 && L >= 0.6) L = shiftL(L, L, sb.bgTone)
+  if (use === 'border' && sb.borderTone !== 0) L = shiftL(L, L, sb.borderTone)
   return { L, C, H, a: c.a }
 }
 
 // ─────────────────────────── shadows ───────────────────────────
 
-/** Sum of blur radii and mean alpha of a shadow list — enough to say "how much". */
-function shadowMeasure(shadow: string): { blur: number; alpha: number } | null {
-  if (!shadow || /^none$/i.test(shadow.trim())) return { blur: 0, alpha: 0 }
-  const layers = shadow.split(/,(?![^(]*\))/)
-  let blur = 0
-  let alpha = 0
-  let n = 0
-  for (const layer of layers) {
-    const lengths = [...layer.matchAll(/(-?\d*\.?\d+)(px|rem|em)/g)].map((m) => (m[2] === 'px' ? parseFloat(m[1]!) : parseFloat(m[1]!) * 16))
-    // x y blur spread — blur is the third length when present
-    blur += Math.abs(lengths[2] ?? 0) + Math.abs(lengths[1] ?? 0) * 0.5
-    const a = layer.match(/\/\s*([\d.]+)\s*\)|,\s*([\d.]+)\s*\)$/)
-    alpha += a ? parseFloat(a[1] ?? a[2] ?? '1') : 1
-    n++
-  }
-  return { blur, alpha: n ? alpha / n : 0 }
-}
-
-function mapShadow(value: string, base: Vars, now: Vars): string {
-  const b = shadowMeasure(str(base['--k-shadow-md']))
-  const n = shadowMeasure(str(now['--k-shadow-md']))
-  if (!b || !n) return value
-  if (n.blur === 0 && n.alpha === 0) return 'none'
-  if (b.blur === 0) return value
-  const rL = n.blur / b.blur
-  const rA = b.alpha > 0 ? n.alpha / b.alpha : 1
-  if (Math.abs(rL - 1) < 1e-6 && Math.abs(rA - 1) < 1e-6) return value
+function mapShadow(value: string, x: number): string {
+  if (x === 1) return value
+  if (x <= 0) return 'none'
+  // Geometry grows with the square root, alpha linearly — a "deeper" shadow is
+  // mostly darker and a little wider, which is what elevation looks like.
+  const rL = Math.sqrt(x)
+  const rA = x
   let out = value.replace(/(-?\d*\.?\d+)(px|rem|em)/g, (_m, num: string, unit: string) => {
     const v = parseFloat(num)
     // Inset/spread of 0 stays 0; a 1px hairline ring should not shrink away.
@@ -172,21 +189,14 @@ function mapShadow(value: string, base: Vars, now: Vars): string {
 
 // ─────────────────────────── type ───────────────────────────
 
-function mapFontSize(value: string, base: Vars, now: Vars): string {
+/** A length × factor, spelling and unit kept; unitless numbers scale too. */
+function scaleLength(value: string, x: number): string {
+  if (x === 1) return value
   const v = toPx(value)
-  const bBody = toPx(str(base['--k-type-body']))
-  const nBody = toPx(str(now['--k-type-body']))
-  const bH1 = toPx(str(base['--k-type-h1']))
-  const nH1 = toPx(str(now['--k-type-h1']))
-  if (!v || !bBody || !nBody || !bH1 || !nH1) return value
-  const bStep = bH1.px / bBody.px
-  const nStep = nH1.px / nBody.px
-  if (v.px <= 0 || bStep <= 1 || nStep <= 1) return value
-  const k = Math.log(v.px / bBody.px) / Math.log(bStep)
-  // Below body (captions, labels) only the body size scales — a step ratio has
-  // no business shrinking a 12px caption to 9px because headings got taller.
-  const px = k >= 0 ? nBody.px * Math.pow(nStep, k) : v.px * (nBody.px / bBody.px)
-  return fromPx(px, v.unit, value)
+  if (v) return fromPx(v.px * x, v.unit, value)
+  const n = value.trim().match(/^(\d*\.?\d+)$/)
+  if (n) return String(Math.round(parseFloat(n[1]!) * x * 1000) / 1000)
+  return value
 }
 
 // ─────────────────────────── the sheet ───────────────────────────
@@ -194,6 +204,8 @@ function mapFontSize(value: string, base: Vars, now: Vars): string {
 export interface Baseline {
   cfg: Config
   tokens: Tokens
+  /** The sheet's own colour families, classified once against the brand. */
+  families?: Families
 }
 
 /** Font entries are classified once, from where they are used. */
@@ -213,21 +225,35 @@ export function fontRole(e: Entry): FontRole {
 export function computeVars(table: SubstitutionTable, baseline: Baseline, cfg: Config, tokens: Tokens): Record<string, string> {
   const base = baseline.tokens.vars as Vars
   const now = tokens.vars as Vars
+  const fams = baseline.families ?? familiesOf(table, baseline.cfg.cPrimary)
   const out: Record<string, string> = {}
   for (const e of table.entries) {
-    out[varName(e.id)] = cssValue(mapEntry(e, base, now, baseline.cfg, cfg))
+    out[varName(e.id)] = cssValue(mapEntry(e, base, now, baseline.cfg, cfg, fams))
   }
   return out
 }
 
-export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: Config): string {
+const FAMILY_DIAL: Partial<Record<Family, keyof Dials>> = { secondary: 'cSecondary', accent: 'cAccent', success: 'cSuccess', warning: 'cWarning', danger: 'cDanger', info: 'cInfo' }
+
+export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: Config, fams: Families): string {
+  const sb = cfg.sb
   switch (e.kind) {
     case 'color': {
       const c = parseCssColor(e.value)
       if (!c) return e.value
-      const fam = classifyColor(c, base)
+      const fam = fams.of.get(e.id) ?? 'keep'
       if (fam === 'keep') return e.value
-      const mapped = fam === 'neutral' ? mapNeutral(c, base, now) : mapChromatic(c, fam, base, now)
+      let mapped: Okla
+      if (fam === 'neutral') mapped = mapNeutral(c, e, base, now, sb)
+      else if (fam === 'brand') {
+        const b = parseCssColor(str(base['--k-primary'])), n = parseCssColor(str(now['--k-primary']))
+        mapped = b && n ? mapByDelta(c, b, n) : c
+      } else {
+        const pick = sb[FAMILY_DIAL[fam]!] as string | undefined
+        const centre = fams.centre[fam]
+        const n = pick ? parseCssColor(pick) : null
+        mapped = centre && n ? mapByDelta(c, centre, n) : c
+      }
       if (same(mapped, c)) return e.value
       const printed = formatLike(e.value, mapped)
       // The same pixels in another spelling are not a change (a black hairline
@@ -236,26 +262,33 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       if (back && sameRgb(back, c)) return e.value
       return printed
     }
-    case 'radius': {
-      const v = toPx(e.value)
-      const b = toPx(str(base['--k-radius-md']))
-      const n = toPx(str(now['--k-radius-md']))
-      if (!v || !b || !n) return e.value
-      if (b.px === n.px) return e.value
-      if (b.px === 0) return fromPx(n.px, v.unit, e.value)
-      return fromPx(v.px * (n.px / b.px), v.unit, e.value)
+    case 'radius': return scaleLength(e.value, sb.radius)
+    case 'space': return scaleLength(e.value, sb.space)
+    case 'font-size': return scaleLength(e.value, sb.type)
+    case 'line-height': return scaleLength(e.value, sb.lineHeight)
+    case 'border-width': return scaleLength(e.value, sb.borderWidth)
+    case 'duration': {
+      if (sb.motion === 1) return e.value
+      const m = e.value.match(/^(\d*\.?\d+)(ms|s)$/)
+      if (!m) return e.value
+      const n = parseFloat(m[1]!) * sb.motion
+      return `${Math.round(n * (m[2] === 'ms' ? 1 : 1000)) / (m[2] === 'ms' ? 1 : 1000)}${m[2]}`
     }
-    case 'space': {
-      const v = toPx(e.value)
-      const b = toPx(str(base['--k-space']))
-      const n = toPx(str(now['--k-space']))
-      if (!v || !b || !n || b.px === 0 || b.px === n.px) return e.value
-      return fromPx(v.px * (n.px / b.px), v.unit, e.value)
+    case 'letter-spacing': {
+      if (sb.tracking === 0) return e.value
+      const v = e.value.trim().match(/^(-?\d*\.?\d+)(px|rem|em)$/)
+      if (!v) return e.value
+      const unit = v[2]!
+      const add = unit === 'px' ? sb.tracking * 16 : sb.tracking
+      return `${Math.round((parseFloat(v[1]!) + add) * 1000) / 1000}${unit}`
     }
-    case 'font-size':
-      return mapFontSize(e.value, base, now)
-    case 'shadow':
-      return mapShadow(e.value, base, now)
+    case 'font-weight': {
+      if (sb.weight === 0) return e.value
+      const w = /^bold$/i.test(e.value) ? 700 : /^normal$/i.test(e.value) ? 400 : parseInt(e.value, 10)
+      if (!Number.isFinite(w)) return e.value
+      return String(clamp(Math.round(w / 100) * 100 + sb.weight * 100, 100, 900))
+    }
+    case 'shadow': return mapShadow(e.value, sb.shadow)
     case 'font-family': {
       const role = fontRole(e)
       if (role === 'mono') return e.value

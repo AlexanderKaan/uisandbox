@@ -14,7 +14,9 @@
  * now on the built CSS the browser actually paints.
  */
 
-export type Kind = 'color' | 'radius' | 'font-size' | 'font-family' | 'space' | 'shadow'
+export type Kind =
+  | 'color' | 'radius' | 'font-size' | 'font-family' | 'space' | 'shadow'
+  | 'line-height' | 'letter-spacing' | 'font-weight' | 'border-width' | 'duration'
 
 export interface Site {
   file: string
