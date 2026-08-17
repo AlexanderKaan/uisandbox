@@ -67,9 +67,12 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, dispatch, on
     const onDown = (e: MouseEvent) => { if (!(e.target as HTMLElement).closest('.fmrow, .fmrow__pop')) close() }
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
     const onMove = () => close()
+    // The panel scrolling under an anchored flyout moves the anchor away, so
+    // close; a scroll INSIDE the flyout (a long font list) is browsing, not leaving.
+    const onScroll = (e: Event) => { if (!(e.target instanceof Element && e.target.closest('.fmrow__pop'))) close() }
     document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey)
-    window.addEventListener('resize', onMove); document.addEventListener('scroll', onMove, true)
-    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onMove); document.removeEventListener('scroll', onMove, true) }
+    window.addEventListener('resize', onMove); document.addEventListener('scroll', onScroll, true)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); window.removeEventListener('resize', onMove); document.removeEventListener('scroll', onScroll, true) }
   }, [openKey])
 
   const atRest = (Object.keys(base) as (keyof Config)[]).every((k) => k === 'sb' ? JSON.stringify(cfg.sb) === JSON.stringify(base.sb) : cfg[k] === base[k])
