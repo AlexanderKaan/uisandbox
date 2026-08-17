@@ -383,3 +383,23 @@ Scorecard: docsify 100/100/100 (1 random gradient) · Landing Page 100/100/100
 (395 values from a CDN Tailwind, 1:1) · 4-minutes 100/39/100 · three.js
 100/100/100 on the index and on a WebGL example · 50projects 100/100/100 ·
 Sortable 100/100/100 (291 CDN values, 1:1).
+
+## Sweep 8 — six more, unseen (2026-08-17)
+
+reveal.js (16 decks) · Leaflet (63 debug pages, dist not shipped) · Bootstrap
+Icons site (2,080 pages, 11,227 elements) · NES.css docs (CDN NES.css, GitHub
+avatars) · SVG-Loaders · anime.js (36 examples).
+
+68. **The 1:1 check freezes motion and lets images land** before comparing
+    (`transition/animation-duration: 0s !important` in both hidden frames,
+    wait for `img.complete` up to 4 s) and **leaves `<img>` out of the
+    pairing**: NES.css's lazy GitHub avatars fade on the network's clock; two
+    loads are two moments, and images are "outside" the knobs anyway.
+69. **Shell warning**: no visible text counts only on a small DOM (< 40
+    elements) — anime.js's creature is 172 text-less animated divs.
+70. Honest: Leaflet's debug pages need `dist/leaflet-src.js`, which the repo
+    does not ship — 2 elements, and the stage says "Is this the built app?".
+
+Scorecard: reveal.js 100/75/100 · Bootstrap Icons 100/100/100 (11,227 el.
+1:1) · NES.css 97/100/100 (2,443 el. 1:1 after the image rule) · SVG-Loaders
+100/100/100 · anime.js 100/100/100 · Leaflet: build missing, flagged.

@@ -115,7 +115,10 @@ export function compareDocuments(raw: Document, sandbox: Document, props: readon
 }
 
 /** Our injected style block is not part of their page. */
-const isOurs = (el: Element) => el.id === 'us-vars'
+const isOurs = (el: Element) => el.id === 'us-vars' || el.id === 'us-still' || el.id === 'us-fonts' || el.id === 'us-hook'
+  // Images arrive on the network's clock and fade in on their own; their box
+  // is "outside" the knobs anyway (coverage.ts counts them so). Not compared.
+  || el.tagName === 'IMG'
 
 /** Load a URL in an invisible iframe, resolve with its document once fonts settled. */
 export function loadHidden(url: string, parent: HTMLElement, width: number, height: number): Promise<{ frame: HTMLIFrameElement; doc: Document }> {
@@ -134,7 +137,18 @@ export function loadHidden(url: string, parent: HTMLElement, width: number, heig
         const pending = () => Array.from(doc.querySelectorAll('link[rel~="stylesheet"]')).some((l) => !(l as HTMLLinkElement).sheet)
         while (pending() && Date.now() - t0 < 4000) await new Promise((r) => setTimeout(r, 100))
         await doc.fonts?.ready
-        await new Promise((r) => setTimeout(r, 200))
+        // …and let images land: a lazy-loader that flips a class per image
+        // (NES.css docs) makes two loads differ by which images are in yet.
+        const t1 = Date.now()
+        while (Array.from(doc.images).some((i) => !i.complete) && Date.now() - t1 < 4000) await new Promise((r) => setTimeout(r, 100))
+        // Freeze motion in BOTH frames before comparing: two loads are two
+        // moments of the same fade (NES.css's lazy images: alpha .055 vs .098),
+        // and a comparison of moments is not a comparison of stylesheets.
+        const still = doc.createElement('style')
+        still.id = 'us-still'
+        still.textContent = '*,*::before,*::after{transition-duration:0s!important;transition-delay:0s!important;animation-duration:0s!important;animation-delay:0s!important}'
+        ;(doc.head ?? doc.documentElement).appendChild(still)
+        await new Promise((r) => setTimeout(r, 250))
         resolve({ frame, doc })
       } catch (err) { reject(err) }
     }
