@@ -142,3 +142,39 @@ all verify 1:1 with 0 differences; the brand knob reaches insertRule'd rules liv
 28. **A `<meta http-equiv=refresh>` page is not a screen** (Bootstrap's docs
     /about redirects to getbootstrap.com and the frame left the origin); the
     stage says so when a frame navigates away.
+
+## Hold-out round 4 (2026-08-17, Tailwind Play CDN · Svelte + Vue scoped · lazy routes · the round-trip)
+
+29. **Channel triplets are colours.** Tailwind v3 and the Play CDN write every
+    colour as `rgb(124 58 237 / var(--tw-bg-opacity))`; Bootstrap declares
+    `--bs-primary-rgb: 13,110,253`; shadcn `--primary: 222.2 47.4% 11.2%`.
+    All were skipped as "already tokenised" — the brand of a Tailwind site was
+    unreachable. Now the channels are the literal, kept in their own notation
+    (`rgb-triplet` with its separator, bare `hsl:` marker that never reaches
+    CSS), and mapped values print back in that notation.
+30. **New variables are defined in the frame the instant the observer rewrites
+    a runtime `<style>`** (`defineNewVars`, shared with the CSSOM hook). In the
+    gap before React's next render every rewritten rule was invalid, and the
+    baseline sampled "Times" as the body font. Same fix as #20, other path.
+31. **The paint decides a weak brand once**: area-weighted chromatic
+    backgrounds (buttons/links ×3, full-page backgrounds excluded), only when
+    the code does not DECLARE a brand and only on the first screen — the tag's
+    text colour lost to the button on Svelte and Vue; a later screen whose only
+    button is the secondary must not re-decide (MUI /settings did, once).
+32. **Their files, patched in place** (`rewriteCss` in `values` mode; Export →
+    "Your files, patched"): the same scanner writes the CURRENT value at the
+    exact span, so a `12px` radius becomes `0px` while a `12px` padding becomes
+    `9px` — the find-and-replace list could not tell them apart. A chosen font's
+    `@import` is prepended (after `@charset`), or the patched site would fall
+    back to sans-serif. Runtime literals set from JS stay on the patch list for
+    the developer.
+33. **A colour that comes back the same 8-bit rgb+alpha in another spelling is
+    identity** (`rgba(0,0,0,.05)` was reported "moved" to `rgb(0 0 0 / .05)`).
+34. **The round-trip holds**: knobs turned (rose · radius none · compact ·
+    Manrope) → patched files → the "next release" loaded raw → census diff
+    against the knob-turned sandbox: 0 differences on 61 elements × 8 props;
+    the patched build reads its own brand and font back. What you see is what
+    you get. (`scripts/roundtrip-acme.ts` regenerates the patched fixture.)
+35. Two NUL bytes had crept into `table.ts` key strings — consistent for `add`,
+    so invisible until `find`. Cleaned; a reminder that a diff of bytes is a
+    thing worth looking at when a lookup "cannot" fail.

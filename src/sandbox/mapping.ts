@@ -24,8 +24,8 @@
  * knobs bend it. That is what "we don't redesign, we tokenise" has to mean.
  */
 import type { Config, Tokens } from '../tokens/types'
-import { formatCssColor, hueDelta, parseCssColor, type Okla } from './cssColor'
-import { varName, type Entry, type SubstitutionTable } from './table'
+import { formatLike, hueDelta, parseCssColor, type Okla } from './cssColor'
+import { cssValue, varName, type Entry, type SubstitutionTable } from './table'
 
 type Vars = Record<string, string | number>
 
@@ -215,7 +215,7 @@ export function computeVars(table: SubstitutionTable, baseline: Baseline, cfg: C
   const now = tokens.vars as Vars
   const out: Record<string, string> = {}
   for (const e of table.entries) {
-    out[varName(e.id)] = mapEntry(e, base, now, baseline.cfg, cfg)
+    out[varName(e.id)] = cssValue(mapEntry(e, base, now, baseline.cfg, cfg))
   }
   return out
 }
@@ -229,7 +229,12 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       if (fam === 'keep') return e.value
       const mapped = fam === 'neutral' ? mapNeutral(c, base, now) : mapChromatic(c, fam, base, now)
       if (same(mapped, c)) return e.value
-      return formatCssColor(mapped)
+      const printed = formatLike(e.value, mapped)
+      // The same pixels in another spelling are not a change (a black hairline
+      // "moved" to rgb(0 0 0 / .05) — the L shift rounded away).
+      const back = parseCssColor(printed)
+      if (back && sameRgb(back, c)) return e.value
+      return printed
     }
     case 'radius': {
       const v = toPx(e.value)
@@ -261,6 +266,9 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
     }
   }
 }
+
+/** Equal once quantised to 8-bit sRGB (what the screen can show). */
+const sameRgb = (a: Okla, b: Okla) => formatLike('#000000', { ...a, a: 1 }) === formatLike('#000000', { ...b, a: 1 }) && Math.abs(a.a - b.a) < 0.002
 
 const same = (a: Okla, b: Okla) =>
   Math.abs(a.L - b.L) < 1e-4 &&

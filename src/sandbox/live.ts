@@ -13,7 +13,7 @@
  * in the CSSOM; reaching them means wrapping insertRule inside the frame.
  */
 import { rewriteCss, rewriteInlineStyle } from './rewrite'
-import type { SubstitutionTable } from './table'
+import { defineNewVars, type SubstitutionTable } from './table'
 
 /** Watch a document; call `onGrow` whenever the sheet gained entries. Returns a stop(). */
 export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: () => void): () => void {
@@ -25,6 +25,7 @@ export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: ()
     if (!raw || !/[#\d]|rgb|hsl|oklch/i.test(raw) || /var\(--us-v/.test(raw)) return
     const n = before()
     const out = rewriteInlineStyle(raw, table, 'inline (runtime)')
+    defineNewVars(doc, table, n)
     if (out !== raw) {
       muted = true
       el.setAttribute('style', out)
@@ -37,6 +38,7 @@ export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: ()
     if (!css.trim() || el.id === 'us-vars' || /var\(--us-v/.test(css)) return
     const n = before()
     const out = rewriteCss(css, table, '<style> (runtime)')
+    defineNewVars(doc, table, n) // BEFORE the rewritten text lands
     if (out !== css) {
       muted = true
       el.textContent = out

@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import { Check, Copy, Download, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
 import type { SubstitutionTable } from '../sandbox/table'
-import { genSheetCss, genSheetJson, genPatch } from '../export/genSheet'
+import { genSheetCss, genSheetJson, genPatch, genPatchedFiles } from '../export/genSheet'
+import type { ServedFile } from '../sandbox/project'
+import { useEffect } from 'react'
 import { genCss } from '../export/genCss'
 import { genJson } from '../export/genJson'
 import { genTailwind } from '../export/genTailwind'
@@ -15,6 +17,9 @@ interface ExportDialogProps {
   table: SubstitutionTable
   vars: Record<string, string>
   projectName: string
+  /** Their original files — the patched export writes the values into these. */
+  files: Map<string, ServedFile>
+  fontCss: string
   onClose: () => void
 }
 
@@ -27,8 +32,11 @@ interface Item { id: string; group: string; label: string; file: string; make: (
  *   THE TOKENS   — the --k-* system the knobs describe (CSS/JSON/Tailwind/
  *                  shadcn) and, for iOS, Swift constants + an asset catalog
  */
-export function ExportDialog({ cfg, table, vars, projectName, onClose }: ExportDialogProps) {
+export function ExportDialog({ cfg, table, vars, projectName, files, fontCss, onClose }: ExportDialogProps) {
+  const [patched, setPatched] = useState<Array<{ path: string; text: string }> | null>(null)
+  useEffect(() => { let on = true; void genPatchedFiles(files, table, vars, fontCss).then((p) => { if (on) setPatched(p) }); return () => { on = false } }, [files, table, vars, fontCss])
   const items = useMemo<Item[]>(() => [
+    { id: 'files', group: 'Your files, patched', label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet', file: 'patched-files.txt', make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first — then your CSS/HTML appear here with the new values written in place. */' },
     { id: 'sheet-css', group: 'Your values', label: 'CSS variables', file: 'sandbox-values.css', make: () => genSheetCss(table, vars) },
     { id: 'sheet-changed', group: 'Your values', label: 'CSS — changed only', file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
     { id: 'sheet-patch', group: 'Your values', label: 'Patch list (find → replace)', file: 'sandbox-patch.txt', make: () => genPatch(table, vars) },
@@ -39,7 +47,7 @@ export function ExportDialog({ cfg, table, vars, projectName, onClose }: ExportD
     { id: 'tokens-shadcn', group: 'The tokens', label: 'shadcn', file: 'shadcn.css', make: () => genShadcn(cfg) },
     { id: 'ios-swift', group: 'iOS', label: 'DesignTokens.swift', file: 'DesignTokens.swift', make: () => genSwift(cfg) },
     { id: 'ios-assets', group: 'iOS', label: 'Asset catalog (colour sets)', file: 'DesignTokens.xcassets.txt', make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n') },
-  ], [cfg, table, vars])
+  ], [cfg, table, vars, patched])
   const [active, setActive] = useState(items[0]!.id)
   const [copied, setCopied] = useState(false)
   const item = items.find((i) => i.id === active) ?? items[0]!
@@ -54,8 +62,9 @@ export function ExportDialog({ cfg, table, vars, projectName, onClose }: ExportD
     setTimeout(() => URL.revokeObjectURL(a.href), 2000)
   }
   const downloadAll = () => {
-    const files = items.map((i) => ({ name: i.file, data: i.make() }))
+    const files = items.filter((i) => i.id !== 'files').map((i) => ({ name: i.file, data: i.make() }))
     for (const f of genAssetCatalog(cfg)) files.push({ name: f.path, data: f.content })
+    for (const f of patched ?? []) files.push({ name: `patched/${f.path}`, data: f.text })
     download(`${projectName.replace(/[^\w.-]+/g, '-')}-uisandbox.zip`, zipSync(files.map((f) => ({ name: f.name, text: f.data }))))
   }
 

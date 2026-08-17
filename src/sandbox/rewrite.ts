@@ -24,7 +24,7 @@
  * declaration's value, so what the browser cannot parse stays exactly as broken
  * as it was, and what it can parse keeps its bytes.
  */
-import { SubstitutionTable, type Kind, type Site } from './table'
+import { SubstitutionTable, cssValue, varName, type Kind, type Site } from './table'
 
 // ─────────────────────────── the scanner ───────────────────────────
 
@@ -182,9 +182,23 @@ function masked(value: string): string {
   return out
 }
 
+/** `rgb(124 58 237 / var(--tw-bg-opacity))` → the channels `124 58 237` are the
+ *  literal (Tailwind v3 and the Play CDN write every colour this way; shadcn's
+ *  `hsl(var(--primary) / 0.5)` is the other way round and stays theirs). */
+const CHANNELS_THEN_VAR = /^(rgba?|hsla?)\(\s*((?:\d*\.?\d+%?)(?:\s*,\s*|\s+)(?:\d*\.?\d+%?)(?:\s*,\s*|\s+)(?:\d*\.?\d+%?))\s*(?:\/|,)\s*var\(/i
+
 function findColors(value: string, m: string, allowNamed: boolean): Splice[] {
   const s: Splice[] = []
-  for (const x of m.matchAll(FUNC_COLOR)) s.push({ start: x.index, end: x.index + x[0].length, kind: 'color', raw: value.slice(x.index, x.index + x[0].length) })
+  for (const x of m.matchAll(FUNC_COLOR)) {
+    const raw = value.slice(x.index, x.index + x[0].length)
+    const ch = raw.match(CHANNELS_THEN_VAR)
+    if (ch) {
+      const off = raw.indexOf(ch[2]!)
+      s.push({ start: x.index + off, end: x.index + off + ch[2]!.length, kind: 'color', raw: (ch[1]!.toLowerCase().startsWith('hsl') ? 'hsl:' : '') + ch[2]! })
+      continue
+    }
+    s.push({ start: x.index, end: x.index + x[0].length, kind: 'color', raw })
+  }
   for (const x of m.matchAll(HEX)) s.push({ start: x.index, end: x.index + x[0].length, kind: 'color', raw: x[0] })
   if (allowNamed) {
     for (const x of m.matchAll(NAMED)) {
@@ -255,6 +269,11 @@ export function splicesFor(prop: string, value: string): Splice[] {
     // A custom property: colours always; lengths only when the name says the role.
     const s = findColors(value, m, false)
     if (s.length) return s
+    // Bare channel triplets — Bootstrap `--bs-primary-rgb: 13,110,253`,
+    // Tailwind `--color-x: 66 80 175`, shadcn `--primary: 222.2 47.4% 11.2%` —
+    // are colours by convention, wrapped at the point of use.
+    if (/^\d{1,3}(\s*,\s*|\s+)\d{1,3}(\s*,\s*|\s+)\d{1,3}$/.test(bare)) return [{ start: 0, end: value.length, kind: 'color', raw: value }]
+    if (/^-?\d*\.?\d+(deg)?\s+\d*\.?\d+%\s+\d*\.?\d+%$/.test(bare)) return [{ start: 0, end: value.length, kind: 'color', raw: 'hsl:' + value }]
     for (const [rx, kind] of CUSTOM_ROLE) {
       if (!rx.test(prop)) continue
       if (kind === 'font-family') {
@@ -299,7 +318,24 @@ const SKIP_AT = new Set(['font-face', 'keyframes', '-webkit-keyframes', 'propert
  * the same literal across files shares one variable) and replaced by its
  * `var()`; the returned text is otherwise byte-identical to the input.
  */
-export function rewriteCss(css: string, table: SubstitutionTable, file: string): string {
+export interface RewriteOptions {
+  /** `vars` (default): literal → `var(--us-vN)`, registering on the table.
+   *  `values`: literal → the CURRENT value from `vars` — their file, patched
+   *  in place, byte-precise. Nothing is registered; unknown literals stay. */
+  mode?: 'vars' | 'values'
+  vars?: Record<string, string>
+}
+
+export function rewriteCss(css: string, table: SubstitutionTable, file: string, opts: RewriteOptions = {}): string {
+  const values = opts.mode === 'values'
+  const lookup = (kind: Kind, raw: string): string | null => {
+    const e = table.find(kind, raw)
+    if (!e) return null
+    const cur = opts.vars?.[varName(e.id)]
+    if (cur === undefined) return null
+    // Same value → leave their bytes exactly as they are.
+    return cur === cssValue(e.value) ? null : cur
+  }
   const decls = scanDeclarations(css)
   // Splice from the end so earlier offsets stay valid.
   const edits: Array<{ start: number; end: number; text: string }> = []
@@ -313,6 +349,21 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string):
     // inner colours, so the registered shadow value already contains the var()s.
     const inner = splices.filter((s) => !(s.start === 0 && s.end === value.length))
     const outer = splices.filter((s) => s.start === 0 && s.end === value.length)
+    if (values) {
+      // Patch mode: only inner literals (an outer shadow entry's value is made
+      // of the inner ones); the `hsl:` marker never reaches the file.
+      const reps = dropOverlaps(inner).map((s) => ({ s, to: lookup(s.kind, s.raw) })).filter((x): x is { s: Splice; to: string } => x.to !== null)
+      if (!reps.length && !outer.length) continue
+      let text = value
+      for (const { s, to } of reps.reverse()) text = text.slice(0, s.start) + to + text.slice(s.end)
+      if (!reps.length && outer.length) {
+        const to = lookup(outer[0]!.kind, outer[0]!.raw)
+        if (to === null) continue
+        text = to
+      }
+      edits.push({ start: d.valueStart, end: d.valueEnd, text })
+      continue
+    }
     // Register left-to-right so ids follow reading order; splice right-to-left
     // so offsets stay valid.
     const refs = dropOverlaps(inner).map((s) => ({ s, ref: table.add(s.kind, s.raw, site) }))
@@ -328,7 +379,9 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string):
     const foreignVar = /var\(--(?!us-v)/i
     if (outer.length && !foreignVar.test(text)) {
       const o = outer[0]!
-      text = table.add(o.kind, text, site)
+      // The outer splice registers the SUBSTITUTED text (a shadow keeps its
+      // inner var()s); a notation marker on the raw (`hsl:`) travels with it.
+      text = table.add(o.kind, (o.raw.startsWith('hsl:') ? 'hsl:' : '') + text, site)
     }
     edits.push({ start: d.valueStart, end: d.valueEnd, text })
   }
@@ -341,9 +394,9 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string):
 }
 
 /** A `style="…"` attribute is a declaration list without the braces. */
-export function rewriteInlineStyle(style: string, table: SubstitutionTable, file: string): string {
+export function rewriteInlineStyle(style: string, table: SubstitutionTable, file: string, opts: RewriteOptions = {}): string {
   const wrapped = `x{${style}}`
-  const out = rewriteCss(wrapped, table, file)
+  const out = rewriteCss(wrapped, table, file, opts)
   return out.slice(2, -1)
 }
 
@@ -364,15 +417,17 @@ export function stripLinkIntegrity(html: string): string {
   return html.replace(/<link\b[^>]*>/gi, (tag) => (/\bintegrity\s*=/i.test(tag) ? tag.replace(/\s+integrity\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, '') : tag))
 }
 
-export function rewriteHtml(html: string, table: SubstitutionTable, file: string): string {
-  let out = stripLinkIntegrity(html)
+export function rewriteHtml(html: string, table: SubstitutionTable, file: string, opts: RewriteOptions = {}): string {
+  // In patch mode their HTML keeps its integrity attributes: the CSS on disk
+  // will be theirs again, and the hash is theirs to update.
+  let out = opts.mode === 'values' ? html : stripLinkIntegrity(html)
   out = out.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (_m, open: string, css: string, close: string) =>
-    open + rewriteCss(css, table, file) + close)
+    open + rewriteCss(css, table, file, opts) + close)
   out = out.replace(/(<[a-zA-Z][^>]*?\sstyle=)("([^"]*)"|'([^']*)')/g, (m, pre: string, _q: string, dq?: string, sq?: string) => {
     const raw = dq ?? sq ?? ''
     if (!raw.trim()) return m
     const quote = dq !== undefined ? '"' : "'"
-    const rewritten = rewriteInlineStyle(raw, table, file)
+    const rewritten = rewriteInlineStyle(raw, table, file, opts)
     return pre + quote + rewritten + quote
   })
   return out

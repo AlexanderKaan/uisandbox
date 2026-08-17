@@ -12,7 +12,8 @@
  * iframe is painting with.
  */
 import type { Entry, SubstitutionTable } from '../sandbox/table'
-import { varName } from '../sandbox/table'
+import { cssValue, varName } from '../sandbox/table'
+import { rewriteCss, rewriteHtml } from '../sandbox/rewrite'
 
 export interface SheetRow {
   entry: Entry
@@ -26,8 +27,9 @@ export function sheetRows(table: SubstitutionTable, vars: Record<string, string>
   const perKind: Record<string, number> = {}
   return table.entries.map((entry) => {
     perKind[entry.kind] = (perKind[entry.kind] ?? 0) + 1
-    const current = vars[varName(entry.id)] ?? entry.value
-    return { entry, name: `--sb-${entry.kind}-${perKind[entry.kind]}`, current, changed: current !== entry.value }
+    const original = cssValue(entry.value)
+    const current = vars[varName(entry.id)] ?? original
+    return { entry, name: `--sb-${entry.kind}-${perKind[entry.kind]}`, current, changed: current !== original }
   })
 }
 
@@ -35,7 +37,7 @@ export function genSheetCss(table: SubstitutionTable, vars: Record<string, strin
   const rows = sheetRows(table, vars).filter((r) => !opts.changedOnly || r.changed)
   const lines = rows.map((r) => {
     const where = r.entry.sites.slice(0, 3).map((s) => `${s.file}${s.selector ? ` ${s.selector}` : ''} { ${s.prop} }`).join(' · ')
-    const was = r.changed ? ` (was ${r.entry.value})` : ''
+    const was = r.changed ? ` (was ${cssValue(r.entry.value)})` : ''
     return `  /* ×${r.entry.count}${was} — ${where}${r.entry.count > 3 ? ' …' : ''} */\n  ${r.name}: ${r.current};`
   })
   return `/* UISandbox — your values, as they stand in the sandbox.\n * ${rows.length} variables${opts.changedOnly ? ' (changed only)' : ''}; every one replaced a literal in your CSS.\n */\n:root {\n${lines.join('\n')}\n}\n`
@@ -45,7 +47,7 @@ export function genSheetJson(table: SubstitutionTable, vars: Record<string, stri
   const rows = sheetRows(table, vars).map((r) => ({
     name: r.name,
     kind: r.entry.kind,
-    original: r.entry.value,
+    original: cssValue(r.entry.value),
     current: r.current,
     changed: r.changed,
     count: r.entry.count,
@@ -62,7 +64,7 @@ export function genPatch(table: SubstitutionTable, vars: Record<string, string>)
     const files = new Set(r.entry.sites.map((s) => s.file))
     for (const f of files) {
       if (!byFile.has(f)) byFile.set(f, [])
-      byFile.get(f)!.push({ from: r.entry.value, to: r.current, kind: r.entry.kind, count: r.entry.sites.filter((s) => s.file === f).length })
+      byFile.get(f)!.push({ from: cssValue(r.entry.value), to: r.current, kind: r.entry.kind, count: r.entry.sites.filter((s) => s.file === f).length })
     }
   }
   if (!byFile.size) return '# Nothing changed — the sandbox is still 1:1 with your code.\n'
@@ -73,4 +75,40 @@ export function genPatch(table: SubstitutionTable, vars: Record<string, string>)
     out.push('')
   }
   return out.join('\n')
+}
+
+/**
+ * Their stylesheets and pages with the sandbox's values written IN PLACE —
+ * byte-precise, from the same scanner that tokenised them, so a `12px` that
+ * was a radius becomes `0px` while the `12px` that was padding becomes `9px`.
+ * A find-and-replace list cannot tell those apart; this can. Only files with
+ * at least one change are returned.
+ */
+export async function genPatchedFiles(
+  files: Map<string, { blob: Blob; type: string }>,
+  table: SubstitutionTable,
+  vars: Record<string, string>,
+  /** `@import`/`@font-face` for a font the knobs chose — a patched sheet that
+   *  names Manrope must also LOAD Manrope, or the site gets sans-serif. */
+  fontCss = '',
+): Promise<Array<{ path: string; text: string }>> {
+  const out: Array<{ path: string; text: string }> = []
+  const families = [...fontCss.matchAll(/family=([^:&'"]+)|font-family:'([^']+)'/g)].map((m) => (m[1] ?? m[2] ?? '').replace(/\+/g, ' ')).filter(Boolean)
+  for (const [path, f] of files) {
+    if (/\.css$/i.test(path)) {
+      const css = await f.blob.text()
+      let patched = rewriteCss(css, table, path, { mode: 'values', vars })
+      if (patched !== css && fontCss && families.some((fam) => patched.includes(fam))) {
+        // @import must precede every rule; keep an existing @charset first.
+        const m = patched.match(/^@charset[^;]*;\s*/i)
+        patched = m ? m[0] + fontCss + '\n' + patched.slice(m[0].length) : fontCss + '\n' + patched
+      }
+      if (patched !== css) out.push({ path, text: patched })
+    } else if (/\.html?$/i.test(path)) {
+      const html = await f.blob.text()
+      const patched = rewriteHtml(html, table, path, { mode: 'values', vars })
+      if (patched !== html) out.push({ path, text: patched })
+    }
+  }
+  return out
 }

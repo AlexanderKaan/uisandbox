@@ -17,11 +17,14 @@ import { customFontUrl } from '../tokens/customFonts'
 import { Intake } from './Intake'
 import { Stage } from './Stage'
 import { ExportDialog } from './ExportDialog'
+import { genPatch, genPatchedFiles } from '../export/genSheet'
 
 interface Loaded {
   project: SandboxProject
   report: BaselineReport
   screen: Screen
+  /** The rendered page has had its one chance to decide the brand. */
+  brandSeen?: boolean
 }
 
 export function App() {
@@ -66,8 +69,10 @@ export function App() {
   fontCssRef.current = fontCss
   // Debug/agent hook: the live state, readable from the console.
   useEffect(() => {
-    ;(window as unknown as { __us?: unknown }).__us = loaded ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, identity: loaded.project.table.identityVars() } : null
-  }, [loaded, cfg, vars])
+    ;(window as unknown as { __us?: unknown }).__us = loaded
+      ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
+      : null
+  }, [loaded, cfg, vars, dispatch, fontCss])
   const changedCount = useMemo(() => {
     if (!loaded) return 0
     const id = loaded.project.table.identityVars()
@@ -119,12 +124,15 @@ export function App() {
     if (!untouched) return
     const fromTable = refineFromTable(cur.project.table, base)
     const mid = { ...base, ...(fromTable ?? {}) }
-    const fromDoc = refineFromDocument(doc, mid)
+    // The paint may decide the brand once per project, and never over a declared one.
+    const brandFromPaint = !cur.report.brandDeclared && !cur.brandSeen
+    cur.brandSeen = true
+    const fromDoc = refineFromDocument(doc, mid, { brand: brandFromPaint })
     if (!fromTable && !fromDoc) return
     const cfg2 = { ...mid, ...(fromDoc ?? {}) }
     cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2) }
     if (fromTable) cur.report.notes.push(`Corrected from rules your JS inserted at runtime: ${Object.entries(fromTable).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
-    if (fromDoc) cur.report.notes.push(`Fonts corrected from the rendered page: body ${cfg2.fontBody}, display ${cfg2.fontDisplay}.`)
+    if (fromDoc) cur.report.notes.push(`Corrected from the rendered page: ${Object.entries(fromDoc).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     dispatch({ type: 'REPLACE', cfg: cfg2 })
     setLoaded({ ...cur })
   }, [dispatch])
@@ -151,7 +159,7 @@ export function App() {
     applyVars()
     stopObserver.current?.()
     const doc = frameRef.current?.contentDocument
-    if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => setSheetVersion((v) => v + 1))
+    if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => { setSheetVersion((v) => v + 1); refineBaseline() })
     refineBaseline()
     discoverScreens()
     // A router renders after load; look once more.
@@ -282,7 +290,7 @@ export function App() {
         {!loaded && <Intake onArchive={onArchive} busy={busy} error={error} />}
       </div>
       {showExport && loaded && (
-        <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} onClose={() => setShowExport(false)} />
+        <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
       )}
     </div>
   )

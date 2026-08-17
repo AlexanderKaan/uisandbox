@@ -171,3 +171,18 @@ describe('every knob moves something in THEIR app (knobEffect), and none breaks 
     })
   }
 })
+
+describe('triplet colours move in their own notation', () => {
+  it('a Tailwind triplet brand becomes a triplet; a shadcn hsl triplet stays bare hsl', () => {
+    const table = new SubstitutionTable()
+    rewriteCss(`.a{background-color:rgb(79 57 246 / var(--o))}:root{--primary:249 79% 59%}`, table, 'x.css')
+    const cfg: Config = { ...theirCfg, cPrimary: '#4f39f6' }
+    const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
+    expect(computeVars(table, baseline, cfg, buildTokens(cfg))).toEqual({ '--us-v1': '79 57 246', '--us-v2': '249 79% 59%' })
+    const rose = { ...cfg, cPrimary: COLOR_THEMES.rose.cPrimary }
+    const out = computeVars(table, baseline, rose, buildTokens(rose))
+    expect(out['--us-v1']).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/)
+    expect(out['--us-v2']).toMatch(/^[\d.]+ [\d.]+% [\d.]+%$/)
+    expect(out['--us-v1']).not.toBe('79 57 246')
+  })
+})

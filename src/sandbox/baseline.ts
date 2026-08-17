@@ -21,12 +21,14 @@ import { scanArchive } from '../audit/intake/readZip'
 import { buildTokens } from '../tokens/buildTokens'
 import { ALL_FONTS, CUSTOM_FONT_PREFIX, SYSTEM_FONT } from '../tokens/fonts'
 import type { Config } from '../tokens/types'
-import { parseCssColor } from './cssColor'
+import { formatCssColor, parseCssColor } from './cssColor'
 import { fontRole, toPx, type Baseline } from './mapping'
 import type { SubstitutionTable } from './table'
 
 export interface BaselineReport {
   baseline: Baseline
+  /** The code names its brand (`--bs-primary`) — the paint never overrides that. */
+  brandDeclared: boolean
   /** Row label → derived / changed / default, for the panel badges. */
   provenance: (cfg: Config) => Record<string, ProvenanceState>
   /** Plain words about what was read — the visitor should know what we saw. */
@@ -49,9 +51,9 @@ export function brandDeclared(table: SubstitutionTable): string | null {
   let best: { hex: string; n: number } | null = null
   for (const e of table.ofKind('color')) {
     const c = parseCssColor(e.value)
-    if (!c || c.a < 0.99 || c.C < 0.05 || !/^#[0-9a-f]{6}$/i.test(e.value)) continue
-    const n = e.sites.filter((s) => BRAND_NAME.test(s.prop)).length
-    if (n && (!best || n > best.n)) best = { hex: e.value, n }
+    if (!c || c.a < 0.99 || c.C < 0.05) continue
+    const n = e.sites.filter((s) => BRAND_NAME.test(s.prop) || BRAND_NAME.test(s.prop.replace(/-(rgb|hsl|channels)$/i, ''))).length
+    if (n && (!best || n > best.n)) best = { hex: formatCssColor({ ...c, a: 1 }), n }
   }
   return best?.hex ?? null
 }
@@ -65,12 +67,9 @@ export function brandFromTable(table: SubstitutionTable): string | null {
     // Weight backgrounds over text: a brand is what a button is painted with.
     const bg = e.sites.filter((s) => /background/.test(s.prop)).length
     const score = e.count + bg * 2
-    if (!best || score > best.score) best = { hex: e.value, score }
+    if (!best || score > best.score) best = { hex: formatCssColor({ ...c, a: 1 }), score }
   }
-  if (!best) return null
-  const c = parseCssColor(best.hex)!
-  // Config wants a 6-digit hex.
-  return c.a >= 0.99 && /^#[0-9a-f]{6}$/i.test(best.hex) ? best.hex : null
+  return best?.hex ?? null
 }
 
 /** The family a knob should show for a font-family stack: a known name, System, or Custom. */
@@ -176,6 +175,7 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
   const derived = inferred ? derivedFromAudit(inferred) : {}
   const report: BaselineReport = {
     baseline,
+    brandDeclared: Boolean(declared),
     notes,
     audit,
     // Reads report.baseline.cfg at CALL time, so a later correction from the
@@ -205,7 +205,7 @@ const DEFAULT_FONT = configFromAudit({}).fontBody
  * `next/font` class on <body>, and only the browser knows. Returns the fields
  * that differ from the current baseline, or null.
  */
-export function refineFromDocument(doc: Document, cfg: Config): Partial<Config> | null {
+export function refineFromDocument(doc: Document, cfg: Config, opts: { brand?: boolean } = {}): Partial<Config> | null {
   const win = doc.defaultView
   if (!win || !doc.body) return null
   const mode = (els: Element[]) => {
@@ -222,6 +222,30 @@ export function refineFromDocument(doc: Document, cfg: Config): Partial<Config> 
     return [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
   }
   const out: Partial<Config> = {}
+  // A brand is what the interface is PAINTED with: buttons, links, an app bar —
+  // area-weighted, so one big CTA or header outranks ten tiny chips, and full-
+  // page backgrounds (> 60 % of the viewport) don't count. When the code's
+  // most-used colour never fills anything but another chromatic colour does
+  // (a tag's text vs the primary button — twice on small sites), the paint
+  // wins. Never over a brand the code DECLARES (`--bs-primary`), and only on
+  // the first screen (`opts.brand`): a later screen whose only button is the
+  // secondary must not re-decide.
+  if (opts.brand) {
+    const vw = win.innerWidth || 1200, vh = win.innerHeight || 800
+    const fills = new Map<string, number>()
+    for (const el of Array.from(doc.querySelectorAll('body *')).slice(0, 1500)) {
+      const cs = win.getComputedStyle(el)
+      const c = parseCssColor(cs.backgroundColor)
+      if (!c || c.a < 0.9 || c.C < 0.08 || c.L < 0.2 || c.L > 0.85) continue
+      const r = el.getBoundingClientRect()
+      if (r.width < 8 || r.height < 8 || r.width * r.height > vw * vh * 0.6) continue
+      const hex = formatCssColor({ ...c, a: 1 })
+      const weight = r.width * r.height * (/^(BUTTON|A)$/.test(el.tagName) || el.getAttribute('role') === 'button' ? 3 : 1)
+      fills.set(hex, (fills.get(hex) ?? 0) + weight)
+    }
+    const top = [...fills.entries()].sort((a, b) => b[1] - a[1])[0]
+    if (top && top[0].toLowerCase() !== cfg.cPrimary.toLowerCase() && !fills.has(cfg.cPrimary.toLowerCase())) out.cPrimary = top[0] as Config['cPrimary']
+  }
   const bodyFam = mode(Array.from(doc.querySelectorAll('p, li, td, th, span, a, label, dd, dt, small, div, section, article, main, body')).slice(0, 600))
   if (bodyFam) {
     const k = knobFont(bodyFam)

@@ -143,3 +143,30 @@ describe('rewriteHtml', () => {
     expect(out).toBe(`<html><head><style>.a{color:var(--us-v1)}</style></head><body><div style="background: var(--us-v2); padding: var(--us-v3)" data-x="#000">#000</div><p style=''></p></body></html>`)
   })
 })
+
+describe('bare channel triplets (Tailwind v3 / Play CDN, Bootstrap, shadcn)', () => {
+  it('rgb(r g b / var(--alpha)) tokenises the channels and keeps their alpha variable', () => {
+    const t = sheet()
+    const out = rewriteCss(`.a{background-color:rgb(124 58 237 / var(--tw-bg-opacity))}.b{color:rgba(13,110,253,var(--bs-text-opacity))}`, t, 'x.css')
+    expect(out).toBe(`.a{background-color:rgb(var(--us-v1) / var(--tw-bg-opacity))}.b{color:rgba(var(--us-v2),var(--bs-text-opacity))}`)
+    expect(t.identityVars()).toEqual({ '--us-v1': '124 58 237', '--us-v2': '13, 110, 253' })
+  })
+  it('custom properties holding a triplet are colours; bare hsl keeps its notation', () => {
+    const t = sheet()
+    rewriteCss(`:root{--bs-primary-rgb:13,110,253;--primary:222.2 47.4% 11.2%;--tw-x:66 80 175}`, t, 'x.css')
+    expect(t.identityVars()).toEqual({ '--us-v1': '13, 110, 253', '--us-v2': '222.2 47.4% 11.2%', '--us-v3': '66 80 175' })
+    expect(t.entries.map((e) => e.kind)).toEqual(['color', 'color', 'color'])
+  })
+})
+
+describe('values mode — their file, patched in place', () => {
+  it('writes the current value at the exact span; a 12px radius and a 12px padding go their own ways', () => {
+    const t = sheet()
+    const css = `.a{color:#4F39F6;border-radius:12px;padding:12px;margin:0 12px}`
+    rewriteCss(css, t, 'x.css')
+    const out = rewriteCss(css, t, 'x.css', { mode: 'values', vars: { '--us-v1': '#e11d48', '--us-v2': '0px', '--us-v3': '9px' } })
+    expect(out).toBe(`.a{color:#e11d48;border-radius:0px;padding:9px;margin:0 9px}`)
+    // Nothing changed → their bytes exactly
+    expect(rewriteCss(css, t, 'x.css', { mode: 'values', vars: t.identityVars() })).toBe(css)
+  })
+})

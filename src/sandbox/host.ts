@@ -11,7 +11,7 @@
  */
 import { injectVars, type SandboxProject } from './project'
 import { rewriteCss } from './rewrite'
-import { varName } from './table'
+import { defineNewVars } from './table'
 
 interface Owned {
   project: SandboxProject
@@ -52,14 +52,7 @@ function rewriteRuleFor(rule: string, win: Window, sidHint?: string): string {
   const before = table.entries.length
   const out = rewriteCss(rule, table, 'insertRule (runtime)')
   if (table.entries.length > before) {
-    try {
-      const doc = win.document
-      let el = doc.getElementById('us-vars')
-      if (!el) { el = doc.createElement('style'); el.id = 'us-vars'; (doc.head ?? doc.documentElement).prepend(el) }
-      const add = table.entries.slice(before).map((e) => `${varName(e.id)}:${e.value}`).join(';')
-      const inner = (el.textContent ?? '').replace(/^\s*:root\s*\{/, '').replace(/\}\s*$/, '')
-      el.textContent = `:root{${inner}${inner ? ';' : ''}${add}}`
-    } catch { /* the frame may be mid-navigation; the next render writes the full block */ }
+    try { defineNewVars(win.document, table, before) } catch { /* mid-navigation; the next render writes the full block */ }
     for (const fn of growListeners) fn(o.project)
   }
   return out
