@@ -19,6 +19,8 @@ interface Props {
   base: Config
   families?: Families
   scheme?: Scheme
+  /** Families their sheet carries (knob names) — the picker's "In your code". */
+  codeFonts?: string[]
   dispatch: Dispatch<ConfigAction>
   onCollapse: () => void
   onRandomize: () => void
@@ -43,7 +45,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, scheme, dispatch, onCollapse, onRandomize, onReset }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], dispatch, onCollapse, onRandomize, onReset }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -184,7 +186,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, dispatch, on
   const fontRow = (key: 'fontDisplay' | 'fontBody', label: string): Row => ({
     key, sec: key === 'fontDisplay' ? 'Type' : undefined, label, changed: cfg[key] !== base[key],
     value: cfg[key].replace(/^Custom: /, ''),
-    body: () => <FontPicker inline value={cfg[key]} groups={key === 'fontDisplay' ? DISPLAY_GROUPS : BODY_FONTS} onChange={(f) => { set({ [key]: f }); close() }} />,
+    body: () => <FontPicker inline value={cfg[key]} inCode={codeFonts} groups={key === 'fontDisplay' ? DISPLAY_GROUPS : BODY_FONTS} onChange={(f) => { set({ [key]: f }); close() }} />,
     wide: true,
   })
   rows.push(fontRow('fontDisplay', 'Display font'), fontRow('fontBody', 'Body font'))

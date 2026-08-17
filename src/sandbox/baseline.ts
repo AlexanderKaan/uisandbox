@@ -91,6 +91,20 @@ export function knobFont(stack: string): string {
 const ICON_FONT = /awesome|icon|glyph|material symbols|fontello|ionicons|feather|dashicons|simple-line/i
 const SITE_SELECTOR = /^(html|body|:root)(\s*,\s*(html|body|:root))*$/i
 
+/** Every family their sheet carries, as knob names, most-used first — the
+ *  picker's "In your code" group. Icon fonts and the system stack are not a
+ *  choice, so not listed. */
+export function codeFonts(table: SubstitutionTable): string[] {
+  const seen = new Map<string, number>()
+  for (const e of table.ofKind('font-family')) {
+    if (ICON_FONT.test(e.value)) continue
+    const name = knobFont(e.value)
+    if (name === SYSTEM_FONT) continue
+    seen.set(name, (seen.get(name) ?? 0) + e.count)
+  }
+  return [...seen.entries()].sort((a, b) => b[1] - a[1]).map(([n]) => n)
+}
+
 /** The body/display families: what `body`/`html` declares wins; else the most-used. */
 export function fontsFromTable(table: SubstitutionTable): { body: string | null; display: string | null } {
   let body: { v: string; n: number; site: boolean } | null = null

@@ -19,58 +19,63 @@ export const isCustomFont = (name: string): boolean => name.startsWith(CUSTOM_FO
 export const customFontFamily = (name: string): string =>
   isCustomFont(name) ? name.slice(CUSTOM_FONT_PREFIX.length) : name
 
-/** All Google Fonts in alphabetical order — one combined group keeps the
- *  picker scannable. Categorical sub-grouping (grotesk/humanist/geometric)
- *  was nice meta-info but most users don't need that distinction. */
-/* Two faces were removed after `npm run audit:fonts` measured glyph confusion
- * and a side-by-side render confirmed it:
+/**
+ * The list is not our taste; it is ALTERNATIVES for what their code has. Someone
+ * whose app is set in Lato asks "what is close to this, what is different, and
+ * what will not break my layout" — so the faces are grouped by CHARACTER, the
+ * way a replacement is chosen, not alphabetically. Every face is a Google
+ * variable font (or multi-weight) with a wght axis, so the Weight dial works
+ * and one import fits all.
  *
- *   Manrope  — I/l at 98%. Capital i and lowercase L are the same vertical
- *              stroke; "Il1" renders as "ll1". For a system whose content is
- *              names, postcodes and case numbers that is disqualifying.
- *   DM Sans  — I/l at 90% and 0/O at 50%, same failure one notch less extreme.
+ * "In your code" — the families the sheet itself carries — is not here: the
+ * picker gets it from the project (SandboxPanel → FontPicker `inCode`).
  *
- * The rest of the list holds, and the metric calibrates itself on two faces it
- * had no way to know about: Lexend, designed for reading proficiency, scores
- * best of every sans (49%), and Public Sans, the US government's own face, sits
- * solidly in the clear band (68%). */
-const GOOGLE_SANS = [
-  'Albert Sans',
-  'Archivo',
-  'Figtree',
-  'Geist',
-  'Hanken Grotesk',
-  'IBM Plex Sans',
-  'Inter',
-  'Lexend',
-  'Outfit',
-  'Plus Jakarta Sans',
-  'Public Sans',
-]
+ * I/l confusion, re-measured on this list (glyphs I and l rendered at 64px,
+ * pixel overlap of the union; controls: Manrope 98 % and Public Sans 68 %
+ * match the old audit exactly, Lexend best at 14 %): Manrope 98, Inter 86,
+ * Plus Jakarta 82, Roboto Flex 81, Albert Sans 81, DM Sans 80, Source Sans 75,
+ * IBM Plex Mono 74, Nunito Sans 72, Hanken 69, Geist 68, Public Sans 68,
+ * Geist Mono 68, Outfit 62, Urbanist 62, Fraunces 59, Source Serif 55,
+ * JetBrains Mono 51, Figtree 50, Playfair 49, Lora 49, Fira Code 43,
+ * Newsreader 42, IBM Plex Sans 20, Lexend 14. Manrope and DM Sans were once
+ * dropped for a case-number dashboard; here they are back, because "replace
+ * Poppins on my marketing site" is a real question and the sandbox shows their
+ * app, not ours. The two above 85 % carry a hint in the picker, not a ban —
+ * and that includes Inter, whose l has no tail by default.
+ */
+export const GROTESK = ['Inter', 'Geist', 'Public Sans', 'IBM Plex Sans', 'Roboto Flex']
+export const HUMANIST = ['Source Sans 3', 'Nunito Sans', 'Figtree', 'Albert Sans', 'Hanken Grotesk', 'Lexend']
+export const GEOMETRIC = ['Outfit', 'Plus Jakarta Sans', 'Manrope', 'Urbanist', 'DM Sans']
+const GOOGLE_SANS = [...GROTESK, ...HUMANIST, ...GEOMETRIC]
 
-// Display serifs — only interface-usable ones (multi-weight, readable at heading
-// sizes). Instrument Serif was dropped: single-weight 400, hairline high-contrast,
-// only legible as huge hero/logo type — not a usable interface face.
-const GOOGLE_SERIF = ['Fraunces', 'Newsreader']
+// Display serifs — interface-usable ones (multi-weight, readable at heading
+// sizes). Instrument Serif stays out: single-weight, hairline, only a logo face.
+const GOOGLE_SERIF = ['Fraunces', 'Newsreader', 'Playfair Display', 'Lora', 'Source Serif 4']
 
-// Monospace faces — the technical/terminal signal (Vercel sets headings in Geist
-// Mono, Linear/Raycast use mono for IDs & numerics). All three are multi-weight on
-// Google Fonts so the generic weight spec works. Selectable as display OR body.
-const GOOGLE_MONO = ['Geist Mono', 'IBM Plex Mono', 'JetBrains Mono']
+// Monospace faces — the technical signal (Vercel sets headings in Geist Mono,
+// Linear/Raycast use mono for IDs and numerics). Selectable as display OR body.
+const GOOGLE_MONO = ['Geist Mono', 'JetBrains Mono', 'IBM Plex Mono', 'Fira Code']
 export const MONO_FONTS: string[] = GOOGLE_MONO
 
-/** Body fonts — sans only (serifs are display-only by design choice).
- *  System sits in its own group at top; Google fonts in one combined group. */
+/** Faces the audit flags for I/l confusion — shown as a hint in the picker. */
+export const IL_HINT: Record<string, string> = { Manrope: 'Capital I and lowercase l are the same stroke (98 % overlap)', Inter: 'Capital I and lowercase l are near-identical (86 % overlap)' }
+
+/** Body fonts — System, the sans groups by character, then mono. */
 export const BODY_FONTS: FontGroup[] = [
   { group: 'System', fonts: [SYSTEM_FONT] },
-  { group: 'Google fonts', fonts: GOOGLE_SANS },
+  { group: 'Grotesk', fonts: GROTESK },
+  { group: 'Humanist', fonts: HUMANIST },
+  { group: 'Geometric', fonts: GEOMETRIC },
   { group: 'Mono', fonts: GOOGLE_MONO },
 ]
 
-/** Display fonts — includes serifs + mono. Same shape: System + combined Google. */
+/** Display fonts — the same, plus serifs. */
 export const DISPLAY_GROUPS: FontGroup[] = [
   { group: 'System', fonts: [SYSTEM_FONT] },
-  { group: 'Google fonts', fonts: [...GOOGLE_SANS, ...GOOGLE_SERIF].sort() },
+  { group: 'Grotesk', fonts: GROTESK },
+  { group: 'Humanist', fonts: HUMANIST },
+  { group: 'Geometric', fonts: GEOMETRIC },
+  { group: 'Serif', fonts: GOOGLE_SERIF },
   { group: 'Mono', fonts: GOOGLE_MONO },
 ]
 

@@ -7,7 +7,7 @@ import { shuffle } from '../sandbox/shuffle'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
-import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
+import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
 import { disown, ensureWorker, own, onSheetGrow, onMissing, missingFor } from '../sandbox/host'
@@ -304,6 +304,7 @@ export function App() {
                 base={loaded.report.baseline.cfg}
                 families={loaded.report.baseline.families}
                 scheme={loaded.project.scheme}
+                codeFonts={codeFonts(loaded.project.table)}
                 dispatch={dispatch}
                 onCollapse={() => setPanelOpen(false)}
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}

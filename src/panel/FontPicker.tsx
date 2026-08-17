@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { ChevronDown, Upload, AlertCircle } from 'lucide-react'
 import {
   customFontFamily,
+  IL_HINT,
   isCustomFont,
   SERIF_FONTS,
   SYSTEM_FONT,
@@ -24,6 +25,23 @@ interface FontPickerProps {
    *  no sample), statically positioned to fill a parent popover. Used by the
    *  flat menu's flyout. */
   inline?: boolean
+  /** The families THEIR code carries — shown first, as "In your code", so a
+   *  switch away is a switch back too (a Custom: name is theirs, not an upload). */
+  inCode?: string[]
+}
+
+/** The list's Google faces, loaded once into the HOST document (weight 400
+ *  only) so every option renders in its own letter. Their own families are not
+ *  fetched: those live in the frame, and a name is not proof of a Google face. */
+const loadedLists = new Set<string>()
+function preloadListFonts(groups: FontGroup[]): void {
+  const names = groups.flatMap((g) => g.fonts).filter((f) => f !== SYSTEM_FONT && !isCustomFont(f) && !loadedLists.has(f))
+  if (!names.length) return
+  for (const n of names) loadedLists.add(n)
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?${names.map((n) => `family=${n.replace(/\s+/g, '+')}:wght@400`).join('&')}&display=swap`
+  document.head.appendChild(link)
 }
 
 /**
@@ -35,9 +53,17 @@ interface FontPickerProps {
  *   3. Custom uploads — .woff2/.woff/.ttf/.otf loaded via FontFace API,
  *      session-only (no storage, no upload to server)
  */
-export function FontPicker({ value, groups, onChange, sample, sampleSize = 'display', inline = false }: FontPickerProps) {
+export function FontPicker({ value, groups, onChange, sample, sampleSize = 'display', inline = false, inCode = [] }: FontPickerProps) {
   const [open, setOpen] = useState(false)
   const showMenu = inline || open
+  useEffect(() => { if (showMenu) preloadListFonts(groups) }, [showMenu, groups])
+  // Their families first; a face that is also in our list is theirs to keep there.
+  const listed = new Set(inCode)
+  const shown: FontGroup[] = [
+    ...groups.slice(0, 1),
+    ...(inCode.length ? [{ group: 'In your code', fonts: inCode }] : []),
+    ...groups.slice(1).map((g) => ({ ...g, fonts: g.fonts.filter((f) => !listed.has(f)) })).filter((g) => g.fonts.length),
+  ]
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -175,7 +201,7 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
               Google fonts. Custom sits HIGH so when a user opens a second
               font field they immediately see what they've already uploaded
               — no re-upload needed, no scrolling required to discover it. */}
-          {groups.map((g, gi) => (
+          {shown.map((g, gi) => (
             <div key={g.group} className="fp__group">
               <div className="fp__group-label">{g.group}</div>
               {g.fonts.map((f) => (
@@ -190,8 +216,10 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
                     setOpen(false)
                   }}
                   style={{ fontFamily: fontStyle(f) }}
+                  title={IL_HINT[f]}
                 >
-                  {f}
+                  {triggerLabel(f)}
+                  {IL_HINT[f] && <span className="fp__hint" aria-hidden>Il</span>}
                 </button>
               ))}
               {/* After the FIRST group (System), inject the Custom list (if any)

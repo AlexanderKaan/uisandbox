@@ -425,3 +425,19 @@ Scorecard: Monaco 100/100/100 (1,252 el. 1:1) · CodeMirror home 100/100/100
 (demo pages: build missing, flagged) · dom-examples 100/50/100 (their JS sets
 font sizes at runtime — 1:1) · SpinKit 100/100/100 · Hover.css 100/100/100
 (288 el. 1:1) · Spectrum 100/100/100 (4,580 el. 1:1).
+
+## Fonts — alternatives, not taste (2026-08-18)
+
+73. **The font list is alternatives for what their code has**, grouped by
+    character — Grotesk · Humanist · Geometric · Serif · Mono — the way a
+    replacement is chosen, not alphabetically; every face is a Google
+    variable font with a wght axis so the Weight dial works. **"In your code"**
+    comes first: every family the sheet carries (icon fonts and the system
+    stack excluded, most-used first), so a switch away is a switch back too.
+    The list's faces are loaded once into the host (weight 400) so each option
+    renders in its own letter. Manrope and DM Sans are back (a marketing site
+    is not a case-number dashboard); I/l was re-measured on the whole list
+    (fonts.ts) and the two above 85 % — Manrope 98, Inter 86 — carry a hint,
+    not a ban.
+74. A scroll inside a flyout is browsing, not leaving: only the panel
+    scrolling under an anchored popover closes it.
