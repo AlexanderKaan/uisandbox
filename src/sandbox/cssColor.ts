@@ -62,9 +62,28 @@ export function parseCssColor(input: string): Okla | null {
   return { L, C: Math.max(0, C), H: ((H % 360) + 360) % 360, a: clamp01(a) }
 }
 
+/** Linear sRGB of an OKLCH triple, unclamped — to know whether it fits. */
+function linear(L: number, C: number, H: number): [number, number, number] {
+  const h = (H * Math.PI) / 180, a = C * Math.cos(h), b = C * Math.sin(h)
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b, m_ = L - 0.1055613458 * a - 0.0638541728 * b, s_ = L - 0.0894841775 * a - 1.291485548 * b
+  const l = l_ ** 3, m = m_ ** 3, sv = s_ ** 3
+  return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * sv, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * sv, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * sv]
+}
+/** Bring a colour into sRGB by REDUCING CHROMA at the same lightness and hue —
+ *  the hue must survive a rotation, which per-channel clipping does not give
+ *  (a lime rotated +90° clipped 12° off its target). Binary search on C. */
+export function toGamut(c: Okla): Okla {
+  const fits = (C: number) => linear(c.L, C, c.H).every((v) => v >= -0.0005 && v <= 1.0005)
+  if (fits(c.C)) return c
+  let lo = 0, hi = c.C
+  for (let i = 0; i < 18; i++) { const mid = (lo + hi) / 2; if (fits(mid)) lo = mid; else hi = mid }
+  return { ...c, C: lo }
+}
+
 /** Print in the SAME notation the original used — a triplet stays a triplet
  *  (with its separator), a bare hsl stays bare hsl; alpha is theirs to keep. */
-export function formatLike(original: string, c: Okla): string {
+export function formatLike(original: string, c0: Okla): string {
+  const c = toGamut(c0)
   const shape = colorShape(original)
   if (shape === 'css') return formatCssColor(c)
   const [r, g, b] = (oklchToRgb(clamp01(c.L), Math.max(0, c.C), c.H) as [number, number, number]).map((v) => Math.round(Math.min(255, Math.max(0, v)))) as [number, number, number]
@@ -88,7 +107,8 @@ export function formatLike(original: string, c: Okla): string {
 }
 
 /** Print as the plainest legal CSS: hex when opaque, `rgb(r g b / a)` otherwise. */
-export function formatCssColor(c: Okla): string {
+export function formatCssColor(c0: Okla): string {
+  const c = toGamut(c0)
   const [r, g, b] = (oklchToRgb(clamp01(c.L), Math.max(0, c.C), c.H) as [number, number, number]).map((v) =>
     Math.round(Math.min(255, Math.max(0, v))),
   ) as [number, number, number]

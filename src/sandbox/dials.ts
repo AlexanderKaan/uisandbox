@@ -23,6 +23,11 @@ export interface Dials {
   bgTone: number      // Δ lightness of light backgrounds (−0.1 … 0.06)
   shadow: number      // × blur/alpha of shadows  (0 … 2.5)
   motion: number      // × durations              (0 … 2.5)
+  /** Global colour dials — every colour, family or not (chart palettes,
+   *  gradients, illustration tints, inline SVG fills). */
+  hue: number         // ° rotation of every chromatic colour (−180 … 180)
+  sat: number         // × chroma of every colour  (0 … 2)
+  contrast: number    // ± lightness stretch around the middle (−0.3 … 0.3)
   /** Overrides for the colour families the sheet contains, as #rrggbb. */
   cSecondary?: string
   cAccent?: string
@@ -35,10 +40,11 @@ export interface Dials {
 export const DEFAULT_DIALS: Dials = {
   radius: 1, space: 1, type: 1, lineHeight: 1, tracking: 0, weight: 0,
   borderWidth: 1, borderTone: 0, bgTone: 0, shadow: 1, motion: 1,
+  hue: 0, sat: 1, contrast: 0,
 }
 
 export interface Snap { at: number; label: string }
-export interface DialSpec { key: keyof Dials; label: string; min: number; max: number; step: number; unit: '×' | 'em' | 'steps' | 'ΔL'; snaps: Snap[]; section: 'Type' | 'Shape' | 'Colour' }
+export interface DialSpec { key: keyof Dials; label: string; min: number; max: number; step: number; unit: '×' | 'em' | 'steps' | 'ΔL' | '°'; snaps: Snap[]; section: 'Type' | 'Shape' | 'Colour' }
 
 /** The dials the panel shows, in order, with the old preset names as snap points. */
 export const DIALS: DialSpec[] = [
@@ -51,6 +57,9 @@ export const DIALS: DialSpec[] = [
   { key: 'borderWidth', label: 'Border width', min: 0, max: 3, step: 0.25, unit: '×', section: 'Shape', snaps: [{ at: 0, label: 'None' }, { at: 1, label: 'as is' }, { at: 2, label: 'Heavy' }] },
   { key: 'shadow', label: 'Elevation', min: 0, max: 2.5, step: 0.05, unit: '×', section: 'Shape', snaps: [{ at: 0, label: 'Flat' }, { at: 0.5, label: 'Soft' }, { at: 1, label: 'as is' }, { at: 1.8, label: 'Deep' }] },
   { key: 'motion', label: 'Motion', min: 0, max: 2.5, step: 0.05, unit: '×', section: 'Shape', snaps: [{ at: 0, label: 'Off' }, { at: 0.6, label: 'Snappy' }, { at: 1, label: 'as is' }, { at: 1.6, label: 'Slow' }] },
+  { key: 'hue', label: 'Hue', min: -180, max: 180, step: 1, unit: '°', section: 'Colour', snaps: [{ at: -90, label: '−90°' }, { at: -30, label: '−30°' }, { at: 0, label: 'as is' }, { at: 30, label: '+30°' }, { at: 90, label: '+90°' }, { at: 180, label: 'Opposite' }] },
+  { key: 'sat', label: 'Saturation', min: 0, max: 2, step: 0.02, unit: '×', section: 'Colour', snaps: [{ at: 0, label: 'Grey' }, { at: 0.6, label: 'Muted' }, { at: 1, label: 'as is' }, { at: 1.4, label: 'Vivid' }] },
+  { key: 'contrast', label: 'Contrast', min: -0.3, max: 0.3, step: 0.01, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.15, label: 'Softer' }, { at: 0, label: 'as is' }, { at: 0.15, label: 'Harder' }] },
   { key: 'bgTone', label: 'Background', min: -0.1, max: 0.06, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.05, label: 'Dimmer' }, { at: 0, label: 'as is' }, { at: 0.03, label: 'Brighter' }] },
   { key: 'borderTone', label: 'Border tone', min: -0.15, max: 0.15, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.08, label: 'Stronger' }, { at: 0, label: 'as is' }, { at: 0.06, label: 'Fainter' }] },
 ]
@@ -62,6 +71,6 @@ export const nearestSnap = (spec: DialSpec, v: number): Snap | null => {
 }
 export const fmtDial = (spec: DialSpec, v: number): string => {
   const snap = nearestSnap(spec, v)
-  const num = spec.unit === '×' ? `×${String(+v.toFixed(2))}` : spec.unit === 'em' ? `${v >= 0 ? '+' : ''}${v.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}em` : spec.unit === 'steps' ? `${v > 0 ? '+' : ''}${v}` : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1).replace(/\.0$/, '')}%`
+  const num = spec.unit === '°' ? `${v > 0 ? '+' : ''}${Math.round(v)}°` : spec.unit === '×' ? `×${String(+v.toFixed(2))}` : spec.unit === 'em' ? `${v >= 0 ? '+' : ''}${v.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}em` : spec.unit === 'steps' ? `${v > 0 ? '+' : ''}${v}` : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1).replace(/\.0$/, '')}%`
   return snap ? (snap.label === 'as is' ? 'as is' : `${snap.label} · ${num}`) : num
 }

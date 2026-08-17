@@ -46,9 +46,32 @@ export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: ()
     }
     if (table.entries.length !== n) onGrow()
   }
+  /* Inline SVG paints with PRESENTATION ATTRIBUTES — `fill="#4f39f6"`,
+     `stroke="#111"`, `stop-color` — which no stylesheet scan sees. A style
+     property outranks the attribute, so `style="fill: var(--us-vN)"` on the
+     same element puts the icon or logo under the knobs without touching the
+     attribute (raw stays raw). currentColor / none / url(#…) are left alone. */
+  const SVG_ATTRS = ['fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color']
+  const rewriteSvgAttrs = (el: Element) => {
+    if (!(el.namespaceURI === 'http://www.w3.org/2000/svg')) return
+    const style = (el as SVGElement).style
+    const n = before()
+    for (const a of SVG_ATTRS) {
+      const v = el.getAttribute(a)
+      if (!v || /^(none|currentcolor|inherit|transparent|url\(|context-)/i.test(v.trim())) continue
+      if (style.getPropertyValue(a).includes('var(--us-v')) continue
+      const ref = table.add('color', v, { file: 'inline svg', prop: `svg ${a}` })
+      muted = true
+      style.setProperty(a, ref)
+      muted = false
+    }
+    if (table.entries.length !== n) { defineNewVars(doc, table, n); onGrow() }
+  }
   const sweep = (root: ParentNode) => {
     if (root instanceof Element && root.hasAttribute('style')) rewriteStyleAttr(root)
     root.querySelectorAll?.('[style]').forEach(rewriteStyleAttr)
+    if (root instanceof Element && root.namespaceURI === 'http://www.w3.org/2000/svg') rewriteSvgAttrs(root)
+    root.querySelectorAll?.('svg, svg *').forEach(rewriteSvgAttrs)
     if (root instanceof HTMLStyleElement) rewriteStyleEl(root)
     root.querySelectorAll?.('style').forEach((s) => rewriteStyleEl(s as HTMLStyleElement))
   }
@@ -56,12 +79,12 @@ export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: ()
   const mo = new MutationObserver((records) => {
     if (muted) return
     for (const r of records) {
-      if (r.type === 'attributes' && r.target instanceof Element) rewriteStyleAttr(r.target)
+      if (r.type === 'attributes' && r.target instanceof Element) { if (r.attributeName === 'style') rewriteStyleAttr(r.target); else rewriteSvgAttrs(r.target) }
       else if (r.type === 'childList') r.addedNodes.forEach((n) => { if (n instanceof Element) sweep(n) })
       else if (r.type === 'characterData' && r.target.parentElement instanceof HTMLStyleElement) rewriteStyleEl(r.target.parentElement)
     }
   })
-  mo.observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'], characterData: true })
+  mo.observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'fill', 'stroke', 'stop-color'], characterData: true })
   // What is already there — inline styles the static rewrite could not see
   // (an SVG chart drawn on load) or a <style> appended before we attached.
   sweep(doc.documentElement)

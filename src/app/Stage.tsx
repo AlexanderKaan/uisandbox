@@ -4,6 +4,7 @@ import { ScreenPicker } from './ScreenPicker'
 import type { SandboxProject, Screen } from '../sandbox/project'
 import { identitySid, rawSid, sandboxUrl } from '../sandbox/host'
 import { compareDocuments, loadHidden, type VerifyResult } from '../sandbox/verify'
+import { pct, type Coverage } from '../sandbox/coverage'
 
 interface StageProps {
   project: SandboxProject
@@ -17,6 +18,8 @@ interface StageProps {
   changedCount: number
   /** A doubt about the render worth saying out loud (a shell, not the app). */
   warning?: string | null
+  /** How much of what is painted the knobs reach — measured on the frame. */
+  coverage?: Coverage | null
 }
 
 const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
@@ -26,7 +29,8 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
   { id: 'phone', label: '390', w: 390 },
 ]
 
-export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning }: StageProps) {
+export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, coverage }: StageProps) {
+  const [showCov, setShowCov] = useState(false)
   const [width, setWidth] = useState<string>('fit')
   const [verify, setVerify] = useState<VerifyResult | { busy: true } | null>(null)
   const [showVerify, setShowVerify] = useState(false)
@@ -93,6 +97,14 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             if (!away) onLoaded()
           }}
         />
+        {showCov && coverage && (
+          <div className="card popcard popcard--low verify" role="dialog" aria-label="Reach">
+            <h3>What the knobs reach on this screen</h3>
+            <div>Of {coverage.elements} visible elements: <b>{coverage.colours.hit}/{coverage.colours.total}</b> painted colours (text, backgrounds, borders), <b>{coverage.fonts.hit}/{coverage.fonts.total}</b> text families, <b>{coverage.sizes.hit}/{coverage.sizes.total}</b> text sizes and <b>{coverage.radii.hit}/{coverage.radii.total}</b> corner radii come from your CSS literals and follow the knobs.</div>
+            <div style={{ marginTop: 6 }}>Outside any knob: {coverage.outside.images} image{coverage.outside.images === 1 ? '' : 's'}, {coverage.outside.canvas} canvas, {coverage.outside.video} video, {coverage.outside.backgroundImages} background image{coverage.outside.backgroundImages === 1 ? '' : 's'} — pixels no CSS value can move.</div>
+            <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowCov(false)}>Close</button></div>
+          </div>
+        )}
         {warning && !leftSandbox && (
           <div className="card popcard popcard--low verify" role="status"><h3>Is this the built app?</h3><div>{warning}</div></div>
         )}
@@ -132,6 +144,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
       <div className="stage__foot">
         <span><b>{project.name}</b>{project.root ? ` · root ${project.root}/` : ''} · {project.screens.length} screen{project.screens.length === 1 ? '' : 's'} · {project.table.entries.length} values tokenised from {Math.round(project.cssBytes / 1024)} KB of CSS</span>
         <span className="stage__spacer" />
+        {coverage && (
+          <button type="button" className={`chip ${pct(coverage.colours) < 80 ? 'chip--warn' : ''}`} onClick={() => setShowCov((v) => !v)} title="How much of what you see the knobs reach — measured on this screen">
+            reach {pct(coverage.colours)}% colours · {pct(coverage.fonts)}% type · {pct(coverage.radii)}% radii{coverage.outside.images + coverage.outside.canvas + coverage.outside.backgroundImages ? ` · ${coverage.outside.images + coverage.outside.canvas + coverage.outside.backgroundImages} outside` : ''}
+          </button>
+        )}
         {changedCount > 0 ? <span className="chip chip--warn"><span className="chip__dot" />{changedCount} value{changedCount === 1 ? '' : 's'} moved</span> : <span className="chip chip--ok"><span className="chip__dot" />identity — nothing turned</span>}
         <button type="button" className="chip" onClick={runVerify} title="Measure: compare the untouched page with the tokenised page, element by element">
           <ShieldCheck size={12} strokeWidth={2} /> {verify && !('busy' in verify) ? (verify.ok ? '1:1 verified' : verify.refusal ? '1:1 unmeasured' : '1:1 differs') : 'Check 1:1'}

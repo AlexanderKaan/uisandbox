@@ -155,3 +155,26 @@ describe('every panel knob moves something in THEIR app (knobEffect)', () => {
     })
   }
 })
+
+describe('global colour dials reach every colour, family or not', () => {
+  it('hue rotates chromatic colours (also `keep` ones) and never greys; saturation and contrast touch all', () => {
+    const table = new SubstitutionTable()
+    rewriteCss(`.a{color:#4f39f6}.b{color:#7c3aed}.c{color:#8b5cf6}.k{color:#a3e635}.g{color:#6b7280}.s{background-image:url("data:image/svg+xml,%3cpath fill='%23a3e635'/%3e")}`, table, 'x.css')
+    const cfg: Config = { ...theirCfg, cPrimary: '#4f39f6' }
+    const baseline: Baseline = { cfg, tokens: buildTokens(cfg), families: familiesOf(table, cfg.cPrimary) }
+    const rot = { ...cfg, sb: { ...DEFAULT_DIALS, hue: 90 } }
+    const out = computeVars(table, baseline, rot, buildTokens(rot))
+    const lime = parseCssColor('#a3e635')!
+    const limeNow = parseCssColor(out['--us-v4']!)!
+    expect(Math.abs(hueDelta(lime.H + 90, limeNow.H))).toBeLessThan(2)
+    expect(out['--us-v5']).toBe('#6b7280') // grey untouched by hue
+    expect(out['--us-v6']).not.toBe(table.identityVars()['--us-v6']) // the SVG's lime moved too
+    const grey = { ...cfg, sb: { ...DEFAULT_DIALS, sat: 0 } }
+    const g = computeVars(table, baseline, grey, buildTokens(grey))
+    expect(parseCssColor(g['--us-v1']!)!.C).toBeLessThan(0.01)
+    const harder = { ...cfg, sb: { ...DEFAULT_DIALS, contrast: 0.3 } }
+    const h = computeVars(table, baseline, harder, buildTokens(harder))
+    // #6b7280 sits just above the middle (L .55) — a harder contrast pushes it away from the middle, i.e. lighter
+    expect(parseCssColor(h['--us-v5']!)!.L).toBeGreaterThan(parseCssColor('#6b7280')!.L)
+  })
+})

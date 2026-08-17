@@ -74,6 +74,18 @@ const FAMILY_HUE_WINDOW = 32
 const STATUS: Array<[Family, number, number]> = [['success', 110, 175], ['danger', 335, 40], ['warning', 45, 100], ['info', 215, 265]]
 const inHue = (h: number, lo: number, hi: number) => (lo <= hi ? h >= lo && h <= hi : h >= lo || h <= hi)
 
+/** The family of one loose colour (an SVG fill inside a data URI), by the same rules. */
+export function familyOfColor(c: Okla, fams: Families): Family {
+  if (c.a === 0) return 'keep'
+  if (c.C < NEUTRAL_CHROMA) return 'neutral'
+  const b = fams.centre.brand
+  if (b && Math.abs(hueDelta(c.H, b.H)) <= FAMILY_HUE_WINDOW) return 'brand'
+  const st = STATUS.find(([, lo, hi]) => inHue(c.H, lo, hi))
+  if (st) return st[0]
+  for (const fam of ['secondary', 'accent'] as const) { const ce = fams.centre[fam]; if (ce && Math.abs(hueDelta(c.H, ce.H)) <= FAMILY_HUE_WINDOW) return fam }
+  return 'keep'
+}
+
 /** Classify every colour entry of the sheet against the brand hex, once. */
 export function familiesOf(table: SubstitutionTable, brandHex: string): Families {
   const brand = parseCssColor(brandHex)
@@ -233,6 +245,32 @@ export function computeVars(table: SubstitutionTable, baseline: Baseline, cfg: C
   return out
 }
 
+/** The global colour dials: every colour, family or not. */
+function applyGlobal(c: Okla, sb: Dials): Okla {
+  let { L, C, H } = c
+  if (sb.hue !== 0 && C >= NEUTRAL_CHROMA) H = ((H + sb.hue) % 360 + 360) % 360
+  if (sb.sat !== 1) C = clamp(C * sb.sat, 0, 0.4)
+  if (sb.contrast !== 0) L = clamp(0.5 + (L - 0.5) * (1 + sb.contrast * 2), 0, 1)
+  return { L, C, H, a: c.a }
+}
+
+/** One colour through its family mapping, then the global dials. */
+function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, sb: Dials, fams: Families): Okla {
+  let mapped: Okla
+  if (fam === 'keep') mapped = c
+  else if (fam === 'neutral') mapped = e ? mapNeutral(c, e, base, now, sb) : c
+  else if (fam === 'brand') {
+    const b = parseCssColor(str(base['--k-primary'])), n = parseCssColor(str(now['--k-primary']))
+    mapped = b && n ? mapByDelta(c, b, n) : c
+  } else {
+    const pick = sb[FAMILY_DIAL[fam]!] as string | undefined
+    const centre = fams.centre[fam]
+    const n = pick ? parseCssColor(pick) : null
+    mapped = centre && n ? mapByDelta(c, centre, n) : c
+  }
+  return applyGlobal(mapped, sb)
+}
+
 const FAMILY_DIAL: Partial<Record<Family, keyof Dials>> = { secondary: 'cSecondary', accent: 'cAccent', success: 'cSuccess', warning: 'cWarning', danger: 'cDanger', info: 'cInfo' }
 
 export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: Config, fams: Families): string {
@@ -242,18 +280,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       const c = parseCssColor(e.value)
       if (!c) return e.value
       const fam = fams.of.get(e.id) ?? 'keep'
-      if (fam === 'keep') return e.value
-      let mapped: Okla
-      if (fam === 'neutral') mapped = mapNeutral(c, e, base, now, sb)
-      else if (fam === 'brand') {
-        const b = parseCssColor(str(base['--k-primary'])), n = parseCssColor(str(now['--k-primary']))
-        mapped = b && n ? mapByDelta(c, b, n) : c
-      } else {
-        const pick = sb[FAMILY_DIAL[fam]!] as string | undefined
-        const centre = fams.centre[fam]
-        const n = pick ? parseCssColor(pick) : null
-        mapped = centre && n ? mapByDelta(c, centre, n) : c
-      }
+      const mapped = mapColor(c, fam, e, base, now, sb, fams)
       if (same(mapped, c)) return e.value
       const printed = formatLike(e.value, mapped)
       // The same pixels in another spelling are not a change (a black hairline
@@ -289,6 +316,21 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       return String(clamp(Math.round(w / 100) * 100 + sb.weight * 100, 100, 900))
     }
     case 'shadow': return mapShadow(e.value, sb.shadow)
+    case 'svg': {
+      // Colours inside a data-URI SVG, percent-encoded (`%23fff`) or bare;
+      // each goes through the same colour path, then back into the URI.
+      let changed = false
+      const out = e.value.replace(/(%23|#)([0-9a-f]{3,8})\b/gi, (m0, hash: string, hex: string) => {
+        const c = parseCssColor('#' + hex)
+        if (!c) return m0
+        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams)
+        if (same(mapped, c)) return m0
+        changed = true
+        const printed = formatLike('#000000', { ...mapped, a: 1 })
+        return hash + printed.slice(1)
+      })
+      return changed ? out : e.value
+    }
     case 'font-family': {
       const role = fontRole(e)
       if (role === 'mono') return e.value

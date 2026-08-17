@@ -17,6 +17,8 @@
 export type Kind =
   | 'color' | 'radius' | 'font-size' | 'font-family' | 'space' | 'shadow'
   | 'line-height' | 'letter-spacing' | 'font-weight' | 'border-width' | 'duration'
+  /** A `url("data:image/svg+xml,…")` whose SVG carries colours (Bootstrap's chevrons, checks, close buttons). */
+  | 'svg'
 
 export interface Site {
   file: string

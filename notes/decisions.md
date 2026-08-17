@@ -281,3 +281,29 @@ files, nested zips, tar.gz.
     sandbox every knob at rest IS their code.
 Measured (`scripts/knob-effect.ts`, 10 builds, 1,835 values): every knob moves
 values on real builds; the sheet-only meter cannot see the display-font rule.
+
+## Reach (2026-08-17)
+
+51. **The per-knob percentage was a share of the whole sheet, not of what the
+    knob can touch.** Split (`scripts/kind-share.ts`): every size dial already
+    reached 100 % of its kind; colour was the gap — neutrals 49 % of colours
+    (ink untouched), `keep` 8 % (chart palettes, gradients, illustration tints).
+52. **Three global colour dials** — Hue (° for every chromatic colour, family
+    or not), Saturation (× chroma), Contrast (± lightness stretch around the
+    middle, greys and ink included) — applied AFTER the family mapping. 100 %
+    of colours are now under some knob. Gamut by chroma reduction (`toGamut`),
+    never per-channel clipping: a lime rotated +90° must land on its hue.
+53. **CSS-drawn icons follow**: `url("data:image/svg+xml,…%23fff…")` becomes one
+    `svg` entry whose colours are mapped through the same colour path and
+    re-encoded (Bootstrap's chevrons, checks, close buttons: 19 on the home).
+54. **Inline SVG presentation attributes** (`fill`, `stroke`, `stop-color`) are
+    put under the knobs by the live observer with a `style` property that
+    outranks the attribute (raw stays raw); currentColor/none/url(#) skipped.
+55. **`@keyframes` are in** — var()-valued colours interpolate; a hard-coded
+    pulse must not stay behind after a brand change.
+56. **The reach meter** (`sandbox/coverage.ts`): on the rendered frame, painted
+    colours/families/sizes/radii of visible elements are checked against the
+    sheet's CURRENT values; images, canvas, video and raster backgrounds are
+    counted as "outside". A chip in the stage foot, details on click. Icons per
+    kind: icon fonts ✓ · inline SVG currentColor ✓ · inline SVG hard fills ✓
+    (observer) · SVG as <img>/sprite file ✗ (an image) · data-URI SVG in CSS ✓.

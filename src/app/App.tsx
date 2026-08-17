@@ -13,6 +13,7 @@ import { computeVars, familiesOf } from '../sandbox/mapping'
 import { disown, ensureWorker, own, onSheetGrow } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
+import { measureCoverage, type Coverage } from '../sandbox/coverage'
 import { googleFontsImport, isCustomFont, customFontFamily, SYSTEM_FONT } from '../tokens/fonts'
 import { customFontUrl } from '../tokens/customFonts'
 import { Intake } from './Intake'
@@ -166,6 +167,17 @@ export function App() {
     setLoaded({ ...cur })
   }, [])
   const [thin, setThin] = useState<string | null>(null)
+  const [coverage, setCoverage] = useState<Coverage | null>(null)
+  const coverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const remeasure = useCallback(() => {
+    if (coverTimer.current) clearTimeout(coverTimer.current)
+    coverTimer.current = setTimeout(() => {
+      const cur = loadedRef.current
+      const doc = frameRef.current?.contentDocument
+      if (!cur || !doc?.body) return
+      try { setCoverage(measureCoverage(doc, cur.project.table, varsRef.current)) } catch { /* mid-navigation */ }
+    }, 900)
+  }, [])
   const onFrameLoaded = useCallback(() => {
     applyVars()
     stopObserver.current?.()
@@ -182,12 +194,13 @@ export function App() {
         setThin(shell ? `This screen rendered ${els} element${els === 1 ? '' : 's'}, ${rules} style rules and ${text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
       }, 1200)
     }
-    if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => { setSheetVersion((v) => v + 1); refineBaseline() })
+    if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => { setSheetVersion((v) => v + 1); refineBaseline(); remeasure() })
     refineBaseline()
     discoverScreens()
+    remeasure()
     // A router renders after load; look once more.
     setTimeout(discoverScreens, 800)
-  }, [applyVars, loaded, refineBaseline, discoverScreens])
+  }, [applyVars, loaded, refineBaseline, discoverScreens, remeasure])
   useEffect(() => () => { stopObserver.current?.() }, [])
   // Runtime rules (insertRule) that grew the sheet — coalesced, then re-map.
   useEffect(() => {
@@ -296,6 +309,7 @@ export function App() {
               onPin={pinCurrent}
               changedCount={changedCount}
               warning={thin}
+              coverage={coverage}
             />
             {showNotes && (
               <div className="card popcard" role="dialog" aria-label="What was read">

@@ -82,7 +82,7 @@ describe('rewriteCss', () => {
   })
   it('CONTROL: a sheet with nothing to tokenise comes back byte-identical', () => {
     const t = sheet()
-    const css = `@import url(x.css);\n/* c */\n.a{display:flex;width:50%;transform:translateX(10px)}\n@media (min-width:640px){.b{grid-template-columns:repeat(2,1fr)}}\n@keyframes k{from{color:#000}to{color:#fff}}\n@font-face{font-family:"X";src:url(x.woff2)}`
+    const css = `@import url(x.css);\n/* c */\n.a{display:flex;width:50%;transform:translateX(10px)}\n@media (min-width:640px){.b{grid-template-columns:repeat(2,1fr)}}\n@keyframes k{from{opacity:0}to{opacity:1}}\n@font-face{font-family:"X";src:url(x.woff2)}`
     expect(rewriteCss(css, t, 'c.css')).toBe(css)
     expect(t.entries).toEqual([])
   })
@@ -174,5 +174,17 @@ describe('values mode — their file, patched in place', () => {
     expect(out).toBe(`.a{color:#e11d48;border-radius:0px;padding:9px;margin:0 9px}`)
     // Nothing changed → their bytes exactly
     expect(rewriteCss(css, t, 'x.css', { mode: 'values', vars: t.identityVars() })).toBe(css)
+  })
+})
+
+describe('keyframes and data-URI SVGs are in', () => {
+  it('a hard-coded pulse follows the brand; a CSS-drawn chevron becomes one svg entry', () => {
+    const t = sheet()
+    const css = `@keyframes pulse{from{background:#4f39f6}to{background:#4338ca}}.chev{--bs-x:url("data:image/svg+xml,%3csvg%3e%3cpath stroke='%23343a40'/%3e%3c/svg%3e");background-image:url("data:image/svg+xml,%3cpath fill='%23fff'/%3e")}`
+    const out = rewriteCss(css, t, 'x.css')
+    expect(t.ofKind('color').map((e) => e.value)).toEqual(['#4f39f6', '#4338ca'])
+    expect(t.ofKind('svg').length).toBe(2)
+    expect(out).toContain('@keyframes pulse{from{background:var(--us-v1)}to{background:var(--us-v2)}}')
+    expect(out).toContain('--bs-x:var(--us-v3)')
   })
 })

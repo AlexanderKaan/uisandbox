@@ -297,10 +297,24 @@ function fontShorthand(value: string, m: string): Splice[] {
   return s
 }
 
+/** `url("data:image/svg+xml,…")` with a colour inside — an inline icon drawn in CSS. */
+const SVG_URL = /url\((?:"(data:image\/svg\+xml[^"]*)"|'(data:image\/svg\+xml[^']*)'|(data:image\/svg\+xml[^)]*))\)/gi
+const SVG_HAS_COLOR = /%23[0-9a-f]{3,8}|#[0-9a-f]{3,8}|(fill|stroke|stop-color)=['"]?(?!none|currentcolor)[a-z]{3,}/i
+function findSvgUrls(value: string): Splice[] {
+  const s: Splice[] = []
+  for (const x of value.matchAll(SVG_URL)) {
+    const uri = x[1] ?? x[2] ?? x[3] ?? ''
+    if (!SVG_HAS_COLOR.test(uri)) continue
+    s.push({ start: x.index, end: x.index + x[0].length, kind: 'svg', raw: x[0] })
+  }
+  return s
+}
+
 /** Which literals in one declaration's value are design values, and of what kind. */
 export function splicesFor(prop: string, value: string): Splice[] {
   const m = masked(value)
   const bare = m.trim().toLowerCase()
+  const svgs = /data:image\/svg\+xml/i.test(value) ? findSvgUrls(value) : []
   if (KEYWORD_ONLY.test(bare)) return []
   // A CSS-wide keyword INSIDE a value (`font: 600 14px inherit`) makes the
   // whole declaration invalid, and the browser drops it at parse time. With a
@@ -312,7 +326,7 @@ export function splicesFor(prop: string, value: string): Splice[] {
 
   if (prop.startsWith('--')) {
     // A custom property: colours always; lengths only when the name says the role.
-    const s = findColors(value, m, false)
+    const s = [...svgs, ...findColors(value, m, false)]
     if (s.length) return s
     // Bare channel triplets — Bootstrap `--bs-primary-rgb: 13,110,253`,
     // Tailwind `--color-x: 66 80 175`, shadcn `--primary: 222.2 47.4% 11.2%` —
@@ -364,13 +378,16 @@ export function splicesFor(prop: string, value: string): Splice[] {
     const inner = findColors(value, m, true)
     return [...inner, { start: 0, end: value.length, kind: 'shadow', raw: value }]
   }
-  if (COLOR_PROP.test(prop)) return findColors(value, m, true)
+  if (COLOR_PROP.test(prop) || /^(mask|mask-image|-webkit-mask|-webkit-mask-image|list-style|list-style-image|content)$/.test(prop)) return [...svgs, ...findColors(value, m, true)]
   return []
 }
 
 // ─────────────────────────── the rewrite ───────────────────────────
 
-const SKIP_AT = new Set(['font-face', 'keyframes', '-webkit-keyframes', 'property', 'counter-style', 'page', 'import', 'charset', 'namespace'])
+// Keyframes are IN: var()-valued colours interpolate in every modern engine,
+// and a hard-coded pulse or gradient sweep is exactly the kind of thing a
+// brand change must not leave behind.
+const SKIP_AT = new Set(['font-face', 'property', 'counter-style', 'page', 'import', 'charset', 'namespace'])
 
 /**
  * Rewrite one stylesheet in place. Every literal is registered on `table` (so
