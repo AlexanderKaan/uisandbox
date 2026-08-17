@@ -131,12 +131,22 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .app__body:not(:has(.panel)) .stage { padding-left: 44px; }
 .app__body { position: relative; }
 .stage__bar { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.stage__tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; max-width: 60vw; overflow-x: auto; }
-.stage__tab { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--app-fg-muted); white-space: nowrap; }
-.stage__tab:hover { background: var(--app-hover); color: var(--app-fg); }
-.stage__tab--on { background: var(--app-fg); color: var(--app-bg); }
-.stage__tab--route:not(.stage__tab--on) { color: var(--app-fg-faint); font-style: italic; }
-.stage__tab--on:hover { background: var(--app-fg); color: var(--app-bg); }
+.spick { position: relative; }
+.spick__btn { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 12px; max-width: min(46vw, 520px); background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; font-size: 12.5px; font-weight: 600; color: var(--app-fg); }
+.spick__btn:hover { background: var(--app-hover); }
+.spick__cur { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+.spick__n { color: var(--app-fg-faint); font-weight: 500; font-size: 11px; flex: none; }
+.spick__menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 60; width: min(440px, 80vw); max-height: min(70vh, 520px); padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.spick__search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--app-border); color: var(--app-fg-faint); }
+.spick__input { flex: 1; border: 0; background: transparent; outline: none; font-size: 13px; color: var(--app-fg); }
+.spick__list { flex: 1; min-height: 0; overflow: auto; padding: 5px; }
+.spick__item { font-size: 12.5px; }
+.spick__item--hi { background: var(--app-hover); }
+.spick__leaf { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spick__tag { margin-left: auto; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--app-fg-faint); border: 1px solid var(--app-border); border-radius: 999px; padding: 0 6px; }
+.spick__empty { padding: 12px; color: var(--app-fg-muted); font-size: 12px; }
+.spick__foot { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-top: 1px solid var(--app-border); }
+.spick__hint { font-size: 11px; color: var(--app-fg-faint); }
 .stage__frame {
   flex: 1; min-height: 0; position: relative;
   background: #fff;

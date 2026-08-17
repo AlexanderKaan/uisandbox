@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { ExternalLink, Pin, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ScreenPicker } from './ScreenPicker'
 import type { SandboxProject, Screen } from '../sandbox/project'
 import { identitySid, rawSid, sandboxUrl } from '../sandbox/host'
 import { compareDocuments, loadHidden, type VerifyResult } from '../sandbox/verify'
@@ -60,14 +61,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
   return (
     <section className="stage">
       <div className="stage__bar">
-        <div className="stage__tabs" role="tablist" aria-label="Screens">
-          {project.screens.map((s) => (
-            <button key={s.path} role="tab" aria-selected={s.path === screen.path} className={`stage__tab ${s.path === screen.path ? 'stage__tab--on' : ''} ${s.source && s.source !== 'file' ? 'stage__tab--route' : ''}`} onClick={() => onScreen(s)} title={s.source === 'link' ? `${s.path} — a route found on the page` : s.source === 'pinned' ? `${s.path} — pinned` : s.path}>
-              {s.label}
-            </button>
-          ))}
-          <button type="button" className="stage__tab" onClick={onPin} title="Pin the route the frame is on now as a screen"><Pin size={11} strokeWidth={2} /></button>
-        </div>
+        <ScreenPicker screens={project.screens} current={screen} onPick={onScreen} onPin={onPin} />
         <div className="seg" role="group" aria-label="Viewport width">
           {WIDTHS.map((x) => (
             <button key={x.id} className={`seg__opt ${x.id === width ? 'seg__opt--on' : ''}`} onClick={() => setWidth(x.id)}>{x.label}</button>

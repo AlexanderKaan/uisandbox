@@ -237,3 +237,10 @@ files, nested zips, tar.gz.
     gets a warning card at the bottom of the frame ("Is this the built app?").
     MagicMirror — a Raspberry-Pi HMI whose modules come from the server —
     renders a black page with 41 empty elements; the card says so.
+
+43. **Screens: one searchable, folder-grouped picker** (`ScreenPicker`) instead
+    of a tab strip — the same shape for 3 screens and for Bootstrap's 114.
+    Type to filter, arrows + Enter, `[` / `]` step from anywhere; each entry
+    labelled by origin (file · route found on a page · pinned); "pin current
+    route" in its foot. A tab strip stops working around a dozen; a grouped
+    list with search never does.
