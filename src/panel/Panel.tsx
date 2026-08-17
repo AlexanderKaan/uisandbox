@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useState, type Dispatch, type ReactNode, type Ref } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useRef, useState, type Dispatch, type ReactNode, type Ref } from 'react'
+import { createPortal } from 'react-dom'
 import { Check, ChevronRight, Lock, LockOpen, PanelLeftClose, RotateCcw, Shuffle } from 'lucide-react'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { BODY_FONTS, DISPLAY_GROUPS, customFontFamily, isCustomFont, type FontGroup } from '../tokens/fonts'
@@ -26,8 +27,11 @@ interface PanelProps {
   onCollapse: () => void
   /** Roll a fresh guardrail-aware kit (the "Shuffle" footer button). */
   onRandomize: () => void
-  /** Restore every knob to the curated default kit (the "Reset" footer button). */
+  /** Restore every knob to the resting kit (the "Reset" footer button). */
   onReset: () => void
+  /** What "Reset" returns to. In the sandbox this is THEIR stand (the baseline
+   *  derived from their code), not our house default. */
+  resetTo?: Config
   /** Per-knob locks (by row key) — a pinned knob is skipped by Shuffle. */
   lockedKeys: Set<string>
   onToggleLock: (key: string) => void
@@ -192,22 +196,51 @@ function Provenance({ state }: { state?: ProvenanceState }) {
   return <span className="fmrow__prov fmrow__prov--default">your code didn&rsquo;t decide this</span>
 }
 
-export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset, lockedKeys, onToggleLock, rootRef, gripRef, provenance }: PanelProps) {
+export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset, resetTo, lockedKeys, onToggleLock, rootRef, gripRef, provenance }: PanelProps) {
   // Already on the curated default? → dim the Reset button (nothing to undo to).
-  const atDefault = (Object.keys(DEFAULT_CONFIG) as (keyof Config)[]).every((k) => cfg[k] === DEFAULT_CONFIG[k])
+  const restCfg = resetTo ?? DEFAULT_CONFIG
+  const atDefault = (Object.keys(restCfg) as (keyof Config)[]).every((k) => cfg[k] === restCfg[k])
   const set = <K extends keyof Config>(field: K, value: Config[K]) =>
     dispatch({ type: 'SET', patch: { [field]: value } as Partial<Config> })
 
   // One open flyout at a time (keyed by control). Click a row → its options
   // float over the canvas; pick → applies + closes.
   const [openKey, setOpenKey] = useState<string | null>(null)
-  const close = () => setOpenKey(null)
+  /* Where the open row sits on screen. The flyout is PORTALLED to <body> and
+     fixed-positioned beside its row, so the menu column may scroll (a short
+     viewport) without clipping it — an absolutely positioned child of a
+     scrolling column can never escape that column's overflow. */
+  const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
+  const popRef = useRef<HTMLDivElement>(null)
+  // Keep the flyout on screen: a row near the bottom opens UPWARD as far as needed.
+  useLayoutEffect(() => {
+    const el = popRef.current
+    if (!el || !anchor) return
+    const h = el.offsetHeight
+    const maxTop = window.innerHeight - h - 12
+    if (anchor.top > maxTop) el.style.top = `${Math.max(12, maxTop)}px`
+  }, [anchor, openKey])
+  const close = () => { setOpenKey(null); setAnchor(null) }
+  const toggle = (key: string, rowEl: HTMLElement | null) => {
+    if (openKey === key) { close(); return }
+    const r = rowEl?.getBoundingClientRect()
+    setAnchor(r ? { top: r.top - 6, left: r.right + 10 } : null)
+    setOpenKey(key)
+  }
+  // Scrolling or resizing moves the row out from under the flyout: close it.
+  useEffect(() => {
+    if (!openKey) return
+    const onMove = () => close()
+    window.addEventListener('resize', onMove)
+    document.addEventListener('scroll', onMove, true)
+    return () => { window.removeEventListener('resize', onMove); document.removeEventListener('scroll', onMove, true) }
+  }, [openKey])
 
   // Dismiss the open flyout on outside-click / Escape.
   useEffect(() => {
     if (!openKey) return
     const onDown = (e: MouseEvent) => {
-      if (!(e.target as HTMLElement).closest('.fmrow')) close()
+      if (!(e.target as HTMLElement).closest('.fmrow, .fmrow__pop')) close()
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
@@ -547,7 +580,7 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
                     <button
                       type="button"
                       className="menu__item fmrow__head"
-                      onClick={() => setOpenKey((k) => (k === r.key ? null : r.key))}
+                      onClick={(e) => toggle(r.key, (e.currentTarget as HTMLElement).closest('.fmrow'))}
                       aria-expanded={openKey === r.key}
                     >
                       <span className="fmrow__label">{r.label}<Provenance state={provenance?.[r.label]} /></span>
@@ -557,8 +590,8 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
                       </span>
                       <ChevronRight size={14} strokeWidth={2} className="fmrow__chev" />
                     </button>
-                    {openKey === r.key && (
-                      <div className={`menu fmrow__pop ${r.kind === 'font' ? 'fmrow__pop--font' : ''}`} role="menu">
+                    {openKey === r.key && createPortal(
+                      <div ref={popRef} className={`menu fmrow__pop ${r.kind === 'font' ? 'fmrow__pop--font' : ''}`} role="menu" style={anchor ? { position: 'fixed', top: anchor.top, left: anchor.left } : undefined}>
                         {r.kind !== 'font' ? (
                           <OptionList
                             opts={r.opts ?? []}
@@ -575,7 +608,8 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
                           />
                         )}
                         {r.footer}
-                      </div>
+                      </div>,
+                      document.body,
                     )}
                   </>
                 )}
@@ -598,7 +632,7 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
           className="btn btn--ghost panel__reset"
           onClick={onReset}
           disabled={atDefault}
-          title={atDefault ? 'Already on the default kit' : 'Reset every knob to the default kit'}
+          title={atDefault ? 'Every knob is on the resting stand' : resetTo ? 'Reset every knob to the stand your code implied' : 'Reset every knob to the default kit'}
         >
           <RotateCcw size={15} strokeWidth={1.75} />
           <span>Reset</span>

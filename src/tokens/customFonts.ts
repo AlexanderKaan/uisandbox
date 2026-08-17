@@ -82,3 +82,10 @@ export function subscribeCustomFonts(fn: () => void): () => void {
     listeners.delete(fn)
   }
 }
+
+/** The blob URL of an uploaded font, so another same-origin document (the
+ *  sandbox frame) can declare its own @font-face for it. */
+export function customFontUrl(prefixedName: string): string | null {
+  const family = prefixedName.startsWith(CUSTOM_FONT_PREFIX) ? prefixedName.slice(CUSTOM_FONT_PREFIX.length) : prefixedName
+  return fonts.get(family)?.blobUrl ?? null
+}

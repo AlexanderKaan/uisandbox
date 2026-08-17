@@ -233,7 +233,8 @@ function fontShorthand(value: string, m: string): Splice[] {
   // Skip whitespace in the ORIGINAL value — the mask blanks quoted families too.
   let famStart = x.index + x[0].length
   while (famStart < value.length && /\s/.test(value[famStart]!)) famStart++
-  if (famStart < value.length) s.push({ start: famStart, end: value.length, kind: 'font-family', raw: value.slice(famStart) })
+  const fam = value.slice(famStart)
+  if (famStart < value.length && !/var\(/i.test(fam)) s.push({ start: famStart, end: value.length, kind: 'font-family', raw: fam })
   return s
 }
 

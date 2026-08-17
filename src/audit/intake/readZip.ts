@@ -27,7 +27,7 @@ const EOCD64 = 0x06064b50
 const EOCD64_LOCATOR = 0x07064b50
 const CENTRAL = 0x02014b50
 
-interface ZipEntry {
+export interface ZipEntry {
   path: string
   size: number
   compSize: number
@@ -124,34 +124,42 @@ async function readCentralDirectory(file: Blob): Promise<ZipEntry[] | null> {
   return out
 }
 
-/** Inflate one entry. Stored and deflate are the only two methods in the wild. */
-async function readEntry(file: Blob, entry: ZipEntry): Promise<string | null> {
+/** Inflate one entry to bytes. Stored and deflate are the only two methods in the wild. */
+async function readEntryBlob(file: Blob, entry: ZipEntry): Promise<Blob | null> {
   // The local header repeats the name and extra fields, and its lengths can
   // differ from the central directory's — the data starts after ITS pair.
   const head = await slice(file, entry.offset, entry.offset + 30)
   const start = entry.offset + 30 + u16(head, 26) + u16(head, 28)
   const body = file.slice(start, start + entry.compSize)
-  if (entry.method === 0) return body.text()
+  if (entry.method === 0) return body
   if (entry.method !== 8) return null
   try {
     const stream = body.stream().pipeThrough(new DecompressionStream('deflate-raw'))
-    return await new Response(stream).text()
+    return await new Response(stream).blob()
   } catch {
     return null
   }
 }
 
-/** True for anything that looks like a zip archive the picker handed us. */
-export const isZip = (file: File) =>
-  /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed'
+async function readEntry(file: Blob, entry: ZipEntry): Promise<string | null> {
+  const blob = await readEntryBlob(file, entry)
+  return blob ? blob.text() : null
+}
 
 /**
- * Read a zipped project into the same shape the folder picker produces.
- *
- * Throws a message meant for a human when the archive is not one — the door
- * shows it verbatim, because "that did not work" teaches a visitor nothing.
+ * The archive as a lazy, wrapper-stripped directory: every real entry by its
+ * project-relative path, and a reader per entry. The audit reads TEXT from a
+ * capped selection; the sandbox serves EVERY file (images, fonts, JS) as bytes.
+ * Both go through this one central-directory parse — one zip reader.
  */
-export async function readZipFile(file: File): Promise<ScanResult> {
+export interface Archive {
+  rootName: string
+  entries: ZipEntry[]
+  readBlob(entry: ZipEntry): Promise<Blob | null>
+  readText(entry: ZipEntry): Promise<string | null>
+}
+
+export async function openZip(file: File): Promise<Archive> {
   const entries = await readCentralDirectory(file)
   if (!entries) throw new Error('That file is not a readable .zip archive.')
 
@@ -173,18 +181,68 @@ export async function readZipFile(file: File): Promise<ScanResult> {
   const strip = (p: string) => (wrapped ? p.slice(first!.length + 1) : p)
 
   const named = real.map((e) => ({ ...e, path: strip(e.path) })).filter((e) => e.path)
+  return {
+    rootName,
+    entries: named,
+    readBlob: (e) => readEntryBlob(file, e),
+    readText: (e) => readEntry(file, e),
+  }
+}
 
+/** True for anything that looks like a zip archive the picker handed us. */
+export const isZip = (file: File) =>
+  /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed'
+
+/**
+ * Read a zipped project into the same shape the folder picker produces.
+ *
+ * Throws a message meant for a human when the archive is not one — the door
+ * shows it verbatim, because "that did not work" teaches a visitor nothing.
+ */
+export async function readZipFile(file: File): Promise<ScanResult> {
+  const archive = await openZip(file)
+  return scanArchive(archive)
+}
+
+/** The audit's view of an archive: the capped, prioritised text selection. */
+export async function scanArchive(archive: Archive): Promise<ScanResult> {
+  const { entries: named, rootName } = archive
   let pkg: unknown | null = null
   const pkgEntry = named.find((e) => e.path === 'package.json')
   if (pkgEntry) {
-    try { pkg = JSON.parse((await readEntry(file, pkgEntry)) || '') } catch { /* malformed → skip */ }
+    try { pkg = JSON.parse((await archive.readText(pkgEntry)) || '') } catch { /* malformed → skip */ }
   }
 
   const { take, skipped } = selectFiles(named)
   const files: ScanFile[] = []
   for (const entry of take) {
-    const content = await readEntry(file, entry)
+    const content = await archive.readText(entry)
     if (content !== null) files.push({ path: entry.path, content })
   }
   return { files, pkg, skipped, rootName }
+}
+
+/**
+ * A picked or dropped FOLDER, in the same Archive shape as a zip — so the
+ * project builder and the audit have one input type. Paths lose the picked
+ * folder's own name, exactly as the zip reader strips its wrapper.
+ */
+export function archiveFromFiles(files: File[], name = 'your project'): Archive {
+  const rel = (f: File) => {
+    const p = (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name
+    const i = p.indexOf('/')
+    return i >= 0 ? p.slice(i + 1) : p
+  }
+  const first = (files[0] as (File & { webkitRelativePath?: string }) | undefined)?.webkitRelativePath?.split('/')[0]
+  const byPath = new Map<string, File>()
+  for (const f of files) byPath.set(rel(f), f)
+  const entries: ZipEntry[] = [...byPath.entries()]
+    .filter(([p]) => p && !p.startsWith('__MACOSX/') && !/(^|\/)\._/.test(p))
+    .map(([p, f]) => ({ path: p, size: f.size, compSize: f.size, method: 0, offset: 0 }))
+  return {
+    rootName: first || name,
+    entries,
+    readBlob: async (e) => byPath.get(e.path) ?? null,
+    readText: async (e) => (await byPath.get(e.path)?.text()) ?? null,
+  }
 }

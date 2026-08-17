@@ -13,7 +13,7 @@ import type { Config } from '../tokens/types'
  * Empty slot = key absent.
  */
 
-const KEY = (slot: number) => `uicockpit:kit:${slot}`
+const KEY = (slot: number) => `uisandbox:kit:${slot}`
 export const SLOT_IDS = [1, 2, 3] as const
 export type SlotId = (typeof SLOT_IDS)[number]
 
@@ -79,7 +79,7 @@ export function useSavedKits(): SavedKitsApi {
   // Cross-tab sync — if user saves in tab A, tab B sees it on next render
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key?.startsWith('uicockpit:kit:')) setSlots(loadAll())
+      if (e.key?.startsWith('uisandbox:kit:')) setSlots(loadAll())
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)

@@ -1,0 +1,228 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Download, Info, PanelLeftOpen, Redo2, Undo2, X } from 'lucide-react'
+import { Panel } from '../panel/Panel'
+import { useConfig } from '../state/useConfig'
+import { randomKit } from '../state/randomKit'
+import { openZip, type Archive } from '../audit/intake/readZip'
+import { buildProject, type SandboxProject, type Screen } from '../sandbox/project'
+import { deriveBaseline, type BaselineReport } from '../sandbox/baseline'
+import { computeVars } from '../sandbox/mapping'
+import { disown, ensureWorker, own } from '../sandbox/host'
+import { varsStyleTag } from '../sandbox/project'
+import { observeFrame } from '../sandbox/live'
+import { googleFontsImport, isCustomFont, customFontFamily, SYSTEM_FONT } from '../tokens/fonts'
+import { customFontUrl } from '../tokens/customFonts'
+import { Intake } from './Intake'
+import { Stage } from './Stage'
+import { ExportDialog } from './ExportDialog'
+
+interface Loaded {
+  project: SandboxProject
+  report: BaselineReport
+  screen: Screen
+}
+
+export function App() {
+  const { cfg, tokens, dispatch, undo, redo, canUndo, canRedo } = useConfig()
+  const [loaded, setLoaded] = useState<Loaded | null>(null)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
+  const [showExport, setShowExport] = useState(false)
+  const [showNotes, setShowNotes] = useState(false)
+  const [locked, setLocked] = useState<Set<string>>(new Set())
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  // Bumped when the live observer adds entries to the sheet (runtime styles).
+  const [sheetVersion, setSheetVersion] = useState(0)
+  const stopObserver = useRef<(() => void) | null>(null)
+
+  // The live sheet — pure function of (table, baseline, cfg). One source: the
+  // iframe writer below, the HTML injector in host.ts and the export all read it.
+  const vars = useMemo(
+    () => (loaded ? computeVars(loaded.project.table, loaded.report.baseline, cfg, tokens) : {}),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [loaded, cfg, tokens, sheetVersion],
+  )
+  const varsRef = useRef(vars)
+  varsRef.current = vars
+  const fontCss = useMemo(() => {
+    if (!loaded) return ''
+    const base = loaded.report.baseline.cfg
+    const chosen = [cfg.fontDisplay, cfg.fontBody].filter((f, i) => f !== (i === 0 ? base.fontDisplay : base.fontBody) && f !== SYSTEM_FONT)
+    if (!chosen.length) return ''
+    const google = chosen.filter((f) => !isCustomFont(f))
+    const custom = chosen.filter(isCustomFont)
+    const parts: string[] = []
+    if (google.length) parts.push(googleFontsImport(google[0]!, google[1] ?? google[0]!))
+    for (const f of custom) {
+      const url = customFontUrl(f)
+      if (url) parts.push(`@font-face{font-family:'${customFontFamily(f)}';src:url(${url});font-weight:100 900;font-display:swap}`)
+    }
+    return parts.join('\n')
+  }, [cfg.fontDisplay, cfg.fontBody, loaded])
+  const fontCssRef = useRef(fontCss)
+  fontCssRef.current = fontCss
+  const changedCount = useMemo(() => {
+    if (!loaded) return 0
+    const id = loaded.project.table.identityVars()
+    return Object.keys(vars).filter((k) => vars[k] !== id[k]).length
+  }, [vars, loaded])
+
+  // Write the sheet into the frame's document on every change (same origin,
+  // served by our worker) — the whole point: no reload, no flash, live.
+  const applyVars = useCallback(() => {
+    const doc = frameRef.current?.contentDocument
+    if (!doc) return
+    let el = doc.getElementById('us-vars')
+    if (!el) {
+      el = doc.createElement('style')
+      el.id = 'us-vars'
+      ;(doc.head ?? doc.documentElement).prepend(el)
+    }
+    const css = varsStyleTag(varsRef.current)
+    const inner = css.slice(css.indexOf('>') + 1, css.lastIndexOf('<'))
+    if (el.textContent !== inner) el.textContent = inner
+    // A font the knob chose has to LOAD in their document: Google Fonts by
+    // @import, an uploaded font by its blob URL (same origin, so it resolves).
+    let fonts = doc.getElementById('us-fonts')
+    if (!fonts) {
+      fonts = doc.createElement('style')
+      fonts.id = 'us-fonts'
+      el.after(fonts)
+    }
+    const fcss = fontCssRef.current
+    if (fonts.textContent !== fcss) fonts.textContent = fcss
+  }, [])
+  useEffect(() => { applyVars() }, [vars, fontCss, applyVars])
+
+  // After each load: apply the sheet, then watch what their JS styles at runtime.
+  const onFrameLoaded = useCallback(() => {
+    applyVars()
+    stopObserver.current?.()
+    const doc = frameRef.current?.contentDocument
+    if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => setSheetVersion((v) => v + 1))
+  }, [applyVars, loaded])
+  useEffect(() => () => { stopObserver.current?.() }, [])
+
+  const onArchive = async (archive: Archive) => {
+    setError(null)
+    try {
+      setBusy('Registering the sandbox worker…')
+      await ensureWorker()
+      setBusy('Reading files…')
+      const project = await buildProject(archive, {
+        onProgress: (d, t) => { if (d % 25 === 0 || d === t) setBusy(`Reading files… ${d}/${t}`) },
+      })
+      if (!project.screens.length) throw new Error('No index.html found. Drop the BUILT site (dist/, build/, out/) — a source folder alone cannot be rendered.')
+      setBusy('Deriving the knobs from your code…')
+      const report = await deriveBaseline(archive, project.table)
+      if (loaded) disown(loaded.project)
+      own(project, () => varsRef.current)
+      dispatch({ type: 'REPLACE', cfg: report.baseline.cfg })
+      setLoaded({ project, report, screen: project.screens[0]! })
+      setShowNotes(true)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  // `?load=<url-to-zip>` opens an archive fetched from a URL (same-origin or
+  // CORS-enabled) — for demos, tests and agents; the drop zone stays the door.
+  const loadedFromUrl = useRef(false)
+  useEffect(() => {
+    if (loadedFromUrl.current) return
+    const url = new URLSearchParams(location.search).get('load')
+    if (!url) return
+    loadedFromUrl.current = true
+    ;(async () => {
+      try {
+        setBusy(`Fetching ${url}…`)
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`${res.status} fetching ${url}`)
+        const blob = await res.blob()
+        const name = url.split('/').pop() || 'archive.zip'
+        await onArchive(await openZip(new File([blob], name, { type: 'application/zip' })))
+      } catch (err) { setError((err as Error).message); setBusy(null) }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Keyboard: ⌘Z / ⇧⌘Z for the knobs.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return
+      e.preventDefault()
+      if (e.shiftKey) redo(); else undo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
+
+  const provenance = loaded ? loaded.report.provenance(cfg) : undefined
+
+  return (
+    <div className="app">
+      <header className="app__topbar">
+        <span className="app__brand"><span className="app__brand-mark" />UISandbox <small>your app, 1:1, then the knobs</small></span>
+        <span className="app__spacer" />
+        {loaded && (
+          <>
+            <button type="button" className="btn btn--ghost btn--icon" onClick={undo} disabled={!canUndo} title="Undo (⌘Z)"><Undo2 size={15} /></button>
+            <button type="button" className="btn btn--ghost btn--icon" onClick={redo} disabled={!canRedo} title="Redo (⇧⌘Z)"><Redo2 size={15} /></button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes((v) => !v)} title="What we read from your code"><Info size={14} /> Read</button>
+            <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowExport(true)}><Download size={14} /> Export</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { disown(loaded.project); setLoaded(null) }} title="Close this project"><X size={14} /> Close</button>
+          </>
+        )}
+      </header>
+      <div className="app__body">
+        {loaded && (
+          <>
+            {!panelOpen && (
+              <button type="button" className="btn btn--ghost btn--icon" style={{ position: 'absolute', left: 8, top: 56, zIndex: 41 }} onClick={() => setPanelOpen(true)} title="Show the knobs"><PanelLeftOpen size={16} /></button>
+            )}
+            {panelOpen && (
+              <Panel
+                cfg={cfg}
+                tokens={tokens}
+                dispatch={dispatch}
+                provenance={provenance}
+                onCollapse={() => setPanelOpen(false)}
+                onRandomize={() => dispatch({ type: 'REPLACE', cfg: randomKit(cfg, Math.random, locked) })}
+                onReset={() => dispatch({ type: 'REPLACE', cfg: loaded.report.baseline.cfg })}
+                resetTo={loaded.report.baseline.cfg}
+                lockedKeys={locked}
+                onToggleLock={(k) => setLocked((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n })}
+              />
+            )}
+            <Stage
+              project={loaded.project}
+              screen={loaded.screen}
+              onScreen={(screen) => setLoaded({ ...loaded, screen })}
+              frameRef={frameRef}
+              onLoaded={onFrameLoaded}
+              changedCount={changedCount}
+            />
+            {showNotes && (
+              <div className="card popcard" role="dialog" aria-label="What was read">
+                <h3>What we read from your code</h3>
+                <ul className="notes">
+                  {loaded.report.notes.map((n, i) => <li key={i}>{n}</li>)}
+                  <li>{loaded.project.table.entries.length} distinct values in {Math.round(loaded.project.cssBytes / 1024)} KB of CSS: {(['color', 'radius', 'font-size', 'font-family', 'space', 'shadow'] as const).map((k) => `${loaded.project.table.ofKind(k).length} ${k}`).join(' · ')}.</li>
+                  {loaded.project.candidates.length > 1 && <li>Other possible roots in the archive: {loaded.project.candidates.slice(1, 5).map((c) => c || '/').join(', ')}.</li>}
+                </ul>
+                <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes(false)}>Close</button></div>
+              </div>
+            )}
+          </>
+        )}
+        {!loaded && <Intake onArchive={onArchive} busy={busy} error={error} />}
+      </div>
+      {showExport && loaded && (
+        <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} onClose={() => setShowExport(false)} />
+      )}
+    </div>
+  )
+}

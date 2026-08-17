@@ -309,11 +309,13 @@
    5px padding, a z-index of 60 and a SECOND keyframe that duplicated the kit's.
    What is left is where this particular menu opens: beside its row, not under
    a trigger. */
-.panel .fmrow__pop {
-  position: absolute;
-  top: -6px;
-  left: calc(100% + var(--k-s-10));
+.fmrow__pop {
+  /* Portalled to <body>, fixed beside its row (Panel.tsx sets top/left inline);
+     the fallback below is only for a row whose rect could not be read. */
+  position: fixed;
   z-index: var(--k-z-popover, 60);
+  top: 80px;
+  left: 300px;
 }
 .fmrow__pop--font {
   padding: 0;

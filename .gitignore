@@ -3,3 +3,4 @@ dist/
 bench/audit-*/
 .DS_Store
 *.tsbuildinfo
+fixtures/*.zip

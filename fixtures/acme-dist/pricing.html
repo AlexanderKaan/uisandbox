@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Acme — Pricing</title>
+<link rel="stylesheet" href="/assets/index-a1b2c3.css">
+<style>
+  .hero-badge { background: #eef2ff; color: #3730a3; border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <span class="logo">Acme</span>
+  <a href="/index.html" class="nav__link">Dashboard</a>
+  <a href="/settings.html" class="nav__link">Settings</a>
+  <a href="/pricing.html" class="nav__link nav__link--on">Pricing</a>
+  <button class="btn btn--primary" style="margin-left:auto">New project</button>
+</nav>
+<main class="main">
+  <h1>Pricing <span class="hero-badge">Pro</span></h1>
+  <p class="lede">Here is what happened across your projects this week.</p>
+  <section class="grid">
+    <div class="card"><div class="card__label">Revenue</div><div class="card__value">$12,480</div><div class="card__delta card__delta--up">+8.2%</div></div>
+    <div class="card"><div class="card__label">Active users</div><div class="card__value">3,204</div><div class="card__delta card__delta--up">+2.1%</div></div>
+    <div class="card"><div class="card__label">Churn</div><div class="card__value">1.9%</div><div class="card__delta card__delta--down">−0.4%</div></div>
+    <div class="card"><div class="card__label">Tickets</div><div class="card__value">27</div><div class="card__delta">0</div></div>
+  </section>
+  <section class="panel">
+    <div class="panel__head"><h2>Recent projects</h2><button class="btn btn--ghost">View all</button></div>
+    <table class="table">
+      <thead><tr><th>Name</th><th>Owner</th><th>Status</th><th>Updated</th></tr></thead>
+      <tbody>
+        <tr><td>Marketing site</td><td>Ada</td><td><span class="tag tag--ok">Live</span></td><td>2h ago</td></tr>
+        <tr><td>Mobile app</td><td>Grace</td><td><span class="tag tag--warn">Review</span></td><td>Yesterday</td></tr>
+        <tr><td>Billing v2</td><td>Linus</td><td><span class="tag">Draft</span></td><td>3d ago</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="panel form">
+    <h2>Invite a teammate</h2>
+    <label class="field"><span>Email</span><input class="input" placeholder="name@company.com"></label>
+    <div class="row"><button class="btn btn--primary">Send invite</button><button class="btn btn--secondary">Cancel</button><button class="btn btn--danger">Remove</button></div>
+  </section>
+</main>
+<script src="/assets/app.js"></script>
+</body>
+</html>

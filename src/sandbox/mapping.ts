@@ -84,6 +84,10 @@ function mapChromatic(c: Okla, fam: Exclude<Family, 'neutral' | 'keep'>, base: V
   const b = parseCssColor(str(base[key]))
   const n = parseCssColor(str(now[key]))
   if (!b || !n) return c
+  // THE brand colour itself (their #4f39f6 is what --k-primary was built from)
+  // becomes the new token exactly — a visitor who picks Rose expects Rose, not
+  // Rose-shifted-by-the-engine's-AA-nudge. Everything near it moves by delta.
+  if (Math.abs(c.L - b.L) < 0.03 && Math.abs(c.C - b.C) < 0.03 && Math.abs(hueDelta(c.H, b.H)) < 4) return { ...n, a: c.a }
   const H = c.H + hueDelta(b.H, n.H)
   const C = clamp(c.C * (n.C / Math.max(b.C, 0.01)), 0, 0.4)
   const L = shiftL(c.L, b.L, n.L - b.L)
@@ -102,7 +106,9 @@ function mapNeutral(c: Okla, base: Vars, now: Vars): Okla {
     const dC = nTint.C - bTint.C
     const dH = hueDelta(bTint.H, nTint.H)
     if (dC !== 0 || dH !== 0) {
-      C = clamp(C + dC, 0, 0.06)
+      // Half the engine's tint delta: their greys carry their own tint already,
+      // and adding ours in full doubles it.
+      C = clamp(C + dC * 0.5, 0, 0.05)
       // A pure grey has no hue to rotate: it takes the tint's hue outright.
       H = c.C < 0.004 ? nTint.H : (((H + dH) % 360) + 360) % 360
     }
