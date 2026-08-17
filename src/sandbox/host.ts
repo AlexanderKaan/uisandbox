@@ -62,7 +62,7 @@ function rewriteRuleFor(rule: string, win: Window): string {
   }
   return out
 }
-;(window as unknown as { __usRewriteRule?: typeof rewriteRuleFor }).__usRewriteRule = rewriteRuleFor
+if (typeof window !== 'undefined') (window as unknown as { __usRewriteRule?: typeof rewriteRuleFor }).__usRewriteRule = rewriteRuleFor
 
 export const sandboxUrl = (sid: string, path: string) => `/__sb/${sid}/${path.replace(/^\//, '')}`
 export const rawSid = (id: string) => `${id}-raw`
