@@ -119,6 +119,8 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
       rewritten.set(rel, { blob: new Blob([rewriteCss(css, table, rel)], { type }), type })
     } else if (/\.html?$/i.test(rel)) {
       const html = await blob.text()
+      // Inlined <style> counts as stylesheet too (Astro, Next inline critical CSS).
+      for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) cssBytes += m[1]!.length
       // The control keeps every byte except <link integrity> — see stripLinkIntegrity.
       raw.set(rel, { blob: new Blob([stripLinkIntegrity(html)], { type }), type })
       rewritten.set(rel, { blob: new Blob([rewriteHtml(html, table, rel)], { type }), type })
@@ -127,8 +129,10 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     }
   }
 
+  // Error pages are not screens anyone wants to tune.
+  const ERROR_PAGE = /(^|\/)(404|500|_not-found|_error|offline)(\.html?|\/index\.html?)$/i
   const screens: Screen[] = [...raw.keys()]
-    .filter((p) => /\.html?$/i.test(p))
+    .filter((p) => /\.html?$/i.test(p) && !ERROR_PAGE.test(p))
     .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)))
     .map((p) => ({ path: p, label: '/' + p.replace(/(^|\/)index\.html?$/i, '').replace(/\.html?$/i, '') }))
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
@@ -142,9 +146,20 @@ export function varsStyleTag(vars: Record<string, string>): string {
   return `<style id="us-vars">:root{${body}}</style>`
 }
 
-/** Put the variables into a served HTML document, before anything else in <head>. */
+/**
+ * The CSSOM hook, as inline script — installed BEFORE their bundle runs, so a
+ * rule inserted through `CSSStyleSheet.insertRule` (styled-components and
+ * Emotion in production "speedy" mode, Lit's adopted sheets via replaceSync)
+ * passes through the SAME rewriter in the parent page. Rules with no text are
+ * the one thing the MutationObserver in live.ts cannot see.
+ */
+export function hookScriptTag(): string {
+  return `<script id="us-hook">(function(){try{var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
+}
+
+/** Put the variables (and the CSSOM hook) into a served HTML document, before anything else in <head>. */
 export function injectVars(html: string, vars: Record<string, string>): string {
-  const tag = varsStyleTag(vars)
+  const tag = varsStyleTag(vars) + hookScriptTag()
   if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag)
   if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, (m) => m + `<head>${tag}</head>`)
   return tag + html

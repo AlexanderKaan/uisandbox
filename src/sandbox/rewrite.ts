@@ -243,6 +243,12 @@ export function splicesFor(prop: string, value: string): Splice[] {
   const m = masked(value)
   const bare = m.trim().toLowerCase()
   if (KEYWORD_ONLY.test(bare)) return []
+  // A CSS-wide keyword INSIDE a value (`font: 600 14px inherit`) makes the
+  // whole declaration invalid, and the browser drops it at parse time. With a
+  // var() in it the same declaration would parse and only fail at computed-
+  // value time — which is `unset`, a different result. Leave it as broken as
+  // it was (notes/traps.md #7; measured on a styled-components build).
+  if (/(^|[\s,/(])(inherit|initial|unset|revert|revert-layer)(?=$|[\s,/)])/i.test(bare)) return []
   if (bare.startsWith('var(') && !/,/.test(bare)) return [] // already tokenised, nothing literal
 
   if (prop.startsWith('--')) {

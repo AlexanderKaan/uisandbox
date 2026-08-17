@@ -79,7 +79,10 @@ export function knobFont(stack: string): string {
   if (!first) return SYSTEM_FONT
   if (/^(system-ui|-apple-system|blinkmacsystemfont|ui-sans-serif|sans-serif|serif|monospace|ui-monospace|ui-serif|inherit)$/i.test(first)) return SYSTEM_FONT
   const known = ALL_FONTS.find((f) => f.toLowerCase() === first.toLowerCase())
-  return known ?? CUSTOM_FONT_PREFIX + first
+  // A build tool's content hash on a self-hosted family (`Atkinson-c7f4c4e8…`,
+  // `__Inter_abc123`) is not part of the name a person would recognise.
+  const label = first.replace(/[-_][0-9a-f]{6,}$/i, '').replace(/^__/, '').replace(/_[0-9a-f]{6}$/i, '')
+  return known ?? CUSTOM_FONT_PREFIX + label
 }
 
 /** Icon fonts are glyph carriers, never a typeface choice. */
@@ -171,18 +174,88 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
 
   const baseline: Baseline = { cfg, tokens: buildTokens(cfg) }
   const derived = inferred ? derivedFromAudit(inferred) : {}
-  const provenance = (live: Config) => {
-    const out = provenanceState(live as unknown as Record<string, unknown>, inferred ? ({ derived } as never) : null)
-    // Fonts came from the sheet, not the audit — badge them the same way.
-    for (const [key, label] of [['fontBody', 'Body font'], ['fontDisplay', 'Display font']] as const) {
-      const was = cfg[key]
-      const camefromUs = key === 'fontBody' ? !fonts.body : !fonts.display && !fonts.body
-      out[label] = camefromUs ? 'default' : live[key] === was ? 'derived' : 'changed'
-    }
-    if (declared || (typeof v.brandHex !== 'string' && brandFromTable(table))) out['Brand'] = live.cPrimary === cfg.cPrimary ? 'derived' : 'changed'
-    if (v.radius == null && radiusFromTable(table)) out['Box radius'] = live.radius === cfg.radius ? 'derived' : 'changed'
-    if (bodySize) out['Text size'] = live.typeScale === cfg.typeScale ? 'derived' : 'changed'
-    return out
+  const report: BaselineReport = {
+    baseline,
+    notes,
+    audit,
+    // Reads report.baseline.cfg at CALL time, so a later correction from the
+    // rendered page (refineFromDocument) keeps the badges honest.
+    provenance: (live: Config) => {
+      const base = report.baseline.cfg
+      const out = provenanceState(live as unknown as Record<string, unknown>, inferred ? ({ derived } as never) : null)
+      for (const [key, label] of [['fontBody', 'Body font'], ['fontDisplay', 'Display font']] as const) {
+        const cameFromUs = key === 'fontBody' ? !fonts.body && base.fontBody === DEFAULT_FONT : !fonts.display && !fonts.body && base.fontDisplay === DEFAULT_FONT
+        out[label] = cameFromUs ? 'default' : live[key] === base[key] ? 'derived' : 'changed'
+      }
+      if (declared || (typeof v.brandHex !== 'string' && brandFromTable(table))) out['Brand'] = live.cPrimary === base.cPrimary ? 'derived' : 'changed'
+      if (v.radius == null && radiusFromTable(table)) out['Box radius'] = live.radius === base.radius ? 'derived' : 'changed'
+      if (bodySize) out['Text size'] = live.typeScale === base.typeScale ? 'derived' : 'changed'
+      return out
+    },
   }
-  return { baseline, provenance, notes, audit }
+  return report
+}
+
+const DEFAULT_FONT = configFromAudit({}).fontBody
+
+/**
+ * The truth is the screen (notes/lessons.md): once the page has rendered, the
+ * COMPUTED font of <body> and of the first heading beat any reading of the
+ * stylesheets — a `body { font-family: Arial }` in globals.css loses to the
+ * `next/font` class on <body>, and only the browser knows. Returns the fields
+ * that differ from the current baseline, or null.
+ */
+export function refineFromDocument(doc: Document, cfg: Config): Partial<Config> | null {
+  const win = doc.defaultView
+  if (!win || !doc.body) return null
+  const mode = (els: Element[]) => {
+    const tally = new Map<string, number>()
+    for (const el of els) {
+      // Only elements that carry text of their own — the body's font is what
+      // most words are set in, not what <body> declares (Next's globals.css says
+      // Arial while every paragraph is Geist through a utility class).
+      const words = Array.from(el.childNodes).filter((n) => n.nodeType === 3).map((n) => n.textContent?.trim().length ?? 0).reduce((a, b) => a + b, 0)
+      if (words < 3) continue
+      const fam = win.getComputedStyle(el).fontFamily
+      tally.set(fam, (tally.get(fam) ?? 0) + words)
+    }
+    return [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+  }
+  const out: Partial<Config> = {}
+  const bodyFam = mode(Array.from(doc.querySelectorAll('p, li, td, th, span, a, label, dd, dt, small, div, section, article, main, body')).slice(0, 600))
+  if (bodyFam) {
+    const k = knobFont(bodyFam)
+    if (k !== cfg.fontBody) out.fontBody = k
+  }
+  const headFam = mode(Array.from(doc.querySelectorAll('h1, h2, h3, [class*="title"], [class*="heading"]')).slice(0, 100))
+  if (headFam) {
+    const k = knobFont(headFam)
+    if (k !== cfg.fontDisplay) out.fontDisplay = k
+  } else if (out.fontBody && cfg.fontDisplay === cfg.fontBody) {
+    out.fontDisplay = out.fontBody
+  }
+  return Object.keys(out).length ? out : null
+}
+
+/**
+ * A sheet that GREW after the baseline was derived (styled-components, Emotion,
+ * a Tailwind CDN — every rule arrives through the CSSOM at runtime) can now
+ * answer what the archive could not: brand, radius, text size, fonts. Only the
+ * knobs still on OUR default are touched — a value the audit decided stands.
+ */
+export function refineFromTable(table: SubstitutionTable, cfg: Config): Partial<Config> | null {
+  const def = configFromAudit({})
+  const out: Partial<Config> = {}
+  if (cfg.cPrimary === def.cPrimary) {
+    const brand = brandDeclared(table) ?? brandFromTable(table)
+    if (brand && brand.toLowerCase() !== def.cPrimary.toLowerCase()) out.cPrimary = brand as Config['cPrimary']
+  }
+  if (cfg.radius === def.radius) { const r = radiusFromTable(table); if (r && r !== def.radius) out.radius = r }
+  if (cfg.typeScale === def.typeScale) { const t = bodySizeFromTable(table); if (t && t !== def.typeScale) out.typeScale = t }
+  if (cfg.fontBody === def.fontBody || cfg.fontDisplay === def.fontDisplay) {
+    const f = fontsFromTable(table)
+    if (cfg.fontBody === def.fontBody && f.body && f.body !== def.fontBody) out.fontBody = f.body
+    if (cfg.fontDisplay === def.fontDisplay && (f.display ?? f.body) && (f.display ?? f.body) !== def.fontDisplay) out.fontDisplay = f.display ?? f.body!
+  }
+  return Object.keys(out).length ? out : null
 }

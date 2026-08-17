@@ -10,6 +10,8 @@
  *   <id>-raw   the untouched site: the CONTROL `verify.ts` measures against
  */
 import { injectVars, type SandboxProject } from './project'
+import { rewriteCss } from './rewrite'
+import { varName } from './table'
 
 interface Owned {
   project: SandboxProject
@@ -20,6 +22,47 @@ interface Owned {
 
 const owned = new Map<string, Owned>()
 let ready: Promise<ServiceWorkerRegistration> | null = null
+const growListeners = new Set<(project: SandboxProject) => void>()
+
+/** Be told when a runtime rule added entries to a project's sheet. */
+export function onSheetGrow(fn: (project: SandboxProject) => void): () => void {
+  growListeners.add(fn)
+  return () => growListeners.delete(fn)
+}
+
+/** `/__sb/<sid>/…` → sid, for a sandboxed window. */
+const sidOfWindow = (win: Window): string | null => {
+  try { return win.location.pathname.match(/^\/__sb\/([^/]+)\//)?.[1] ?? null } catch { return null }
+}
+
+/**
+ * Called from the hook inside a sandboxed frame (project.ts hookScriptTag) for
+ * every rule that goes through the CSSOM. Rewrites it against the project's
+ * sheet; when the sheet grew, the new variables are defined in THAT frame at
+ * once (identity values — the knob mapping follows on the next render), so the
+ * rule never computes against an undefined variable.
+ */
+function rewriteRuleFor(rule: string, win: Window): string {
+  const sid = sidOfWindow(win)
+  const o = sid ? owned.get(sid) : undefined
+  if (!o || o.variant !== 'rewritten') return rule
+  const table = o.project.table
+  const before = table.entries.length
+  const out = rewriteCss(rule, table, 'insertRule (runtime)')
+  if (table.entries.length > before) {
+    try {
+      const doc = win.document
+      let el = doc.getElementById('us-vars')
+      if (!el) { el = doc.createElement('style'); el.id = 'us-vars'; (doc.head ?? doc.documentElement).prepend(el) }
+      const add = table.entries.slice(before).map((e) => `${varName(e.id)}:${e.value}`).join(';')
+      const inner = (el.textContent ?? '').replace(/^\s*:root\s*\{/, '').replace(/\}\s*$/, '')
+      el.textContent = `:root{${inner}${inner ? ';' : ''}${add}}`
+    } catch { /* the frame may be mid-navigation; the next render writes the full block */ }
+    for (const fn of growListeners) fn(o.project)
+  }
+  return out
+}
+;(window as unknown as { __usRewriteRule?: typeof rewriteRuleFor }).__usRewriteRule = rewriteRuleFor
 
 export const sandboxUrl = (sid: string, path: string) => `/__sb/${sid}/${path.replace(/^\//, '')}`
 export const rawSid = (id: string) => `${id}-raw`

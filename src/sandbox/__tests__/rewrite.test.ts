@@ -104,6 +104,14 @@ describe('rewriteCss', () => {
   })
 })
 
+describe('an invalid declaration stays invalid', () => {
+  it('a CSS-wide keyword inside a shorthand is left alone (var() would turn "dropped" into "unset")', () => {
+    const t = sheet()
+    const css = `.b{font:600 14px inherit;color:#fff;padding:4px initial}`
+    expect(rewriteCss(css, t, 'x.css')).toBe(`.b{font:600 14px inherit;color:var(--us-v1);padding:4px initial}`)
+  })
+})
+
 describe('font families keep their quotes', () => {
   it('"Font Awesome 5 Free" stays quoted in the identity sheet (unquoted it is invalid CSS)', () => {
     const t = sheet()

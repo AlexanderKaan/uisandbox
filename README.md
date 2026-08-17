@@ -38,7 +38,7 @@ The claim "1:1" is measured, not felt: **Check 1:1** loads the untouched build a
 
 - **Web builds** render 1:1. Source repos are audited for the knob stand; rendering needs the build output inside the archive.
 - **Screens** = the HTML entries under the root. Routes of a single-page app (the JS router) are not enumerated yet; the frame navigates, and the worker falls back to `index.html` for extension-less paths.
-- **Runtime styles** (`style=""` set by JS, appended `<style>`) are caught live. Rules inserted through `CSSStyleSheet.insertRule` with no text (styled-components/Emotion "speedy" mode) are not yet.
+- **Runtime styles** are caught live: `style=""` set by JS and appended `<style>` by a MutationObserver; rules inserted through `CSSStyleSheet.insertRule`/`replaceSync` (styled-components, Emotion, Lit) by a hook installed before their bundle runs.
 - **Cross-origin stylesheets** (a CDN `<link>`) cannot be rewritten by the worker; their literals stay literal.
 - **iOS**: no browser renders SwiftUI. Export Swift constants + an asset catalog from the knobs; a simulator-screenshot render is a later step.
 - **MCP**: not yet — the engine is one function per step (`buildProject` · `deriveBaseline` · `computeVars` · `gen*`), so the server is a thin shell over it.

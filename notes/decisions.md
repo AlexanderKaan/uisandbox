@@ -96,3 +96,28 @@ Instrument note: in the automation browser, form controls' computed style is
 frozen at first paint (an inline `!important` cannot move it, live or sandbox) —
 the census excludes them. Live-vs-sandbox differences that remained were all
 viewport-dependent (`vw`/`vmin` sizes) or version drift (repo ≠ deployed page).
+
+## Hold-out round 2 (2026-08-17, Next.js static export + Tailwind v4 · Astro blog · styled-components production build)
+
+Built locally from the official starters (no public repo ships these builds);
+compared raw vs identity in the sandbox. Findings, fixed and pinned:
+
+20. **CSSOM rules were invisible** — styled-components/Emotion in production
+    insert every rule through `insertRule` (14 rules, 0 characters of text).
+    `hookScriptTag()` is injected before their bundle and wraps `insertRule` /
+    `replace` / `replaceSync`; each rule goes through the SAME rewriter in the
+    parent (`host.rewriteRuleFor`), new variables are defined in that frame at
+    once, and the app re-maps on a coalesced tick. Raw keeps no hook.
+21. **A CSS-wide keyword INSIDE a value** (`font: 600 14px inherit`) is invalid
+    and dropped by the browser; rewritten with a var() it parses and fails at
+    computed-value time = `unset` — a different result. Never rewritten (#7).
+22. **The baseline is corrected by the screen and by the grown sheet**, only
+    while every knob still stands on it: body font = the family most WORDS are
+    set in (Next's `globals.css` says Arial, every paragraph is Geist), heading
+    font from h1–h3; brand/radius/fonts from rules that arrived at runtime.
+    Provenance reads the live baseline, so badges stay honest.
+23. Error pages (`404`, `_not-found`) are not screens; inline `<style>` counts
+    as CSS; build-tool hashes are dropped from font labels (`Atkinson-c7f4…`).
+
+Result: Next/Tailwind v4 (2 screens), Astro (8 screens) and styled-components
+all verify 1:1 with 0 differences; the brand knob reaches insertRule'd rules live.

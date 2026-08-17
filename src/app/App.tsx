@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Info, PanelLeftOpen, Redo2, Undo2, X } from 'lucide-react'
 import { Panel } from '../panel/Panel'
+import type { Config } from '../tokens/types'
 import { useConfig } from '../state/useConfig'
 import { randomKit } from '../state/randomKit'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, type SandboxProject, type Screen } from '../sandbox/project'
-import { deriveBaseline, type BaselineReport } from '../sandbox/baseline'
+import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
+import { buildTokens } from '../tokens/buildTokens'
 import { computeVars } from '../sandbox/mapping'
-import { disown, ensureWorker, own } from '../sandbox/host'
+import { disown, ensureWorker, own, onSheetGrow } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
 import { googleFontsImport, isCustomFont, customFontFamily, SYSTEM_FONT } from '../tokens/fonts'
@@ -100,13 +102,45 @@ export function App() {
   useEffect(() => { applyVars() }, [vars, fontCss, applyVars])
 
   // After each load: apply the sheet, then watch what their JS styles at runtime.
+  const cfgRef = useRef(cfg)
+  cfgRef.current = cfg
+  const loadedRef = useRef(loaded)
+  loadedRef.current = loaded
+  /* Let the SCREEN and the GROWN sheet correct the baseline — but only while
+     every knob still stands where the baseline put it. Runs after each load and
+     after runtime rules arrived (styled-components inserts after `load` on a
+     slow frame); a correction is idempotent, so running twice is harmless. */
+  const refineBaseline = useCallback(() => {
+    const cur = loadedRef.current
+    const doc = frameRef.current?.contentDocument
+    if (!cur || !doc || !doc.body) return
+    const base = cur.report.baseline.cfg
+    const untouched = (Object.keys(base) as (keyof Config)[]).every((k) => cfgRef.current[k] === base[k])
+    if (!untouched) return
+    const fromTable = refineFromTable(cur.project.table, base)
+    const mid = { ...base, ...(fromTable ?? {}) }
+    const fromDoc = refineFromDocument(doc, mid)
+    if (!fromTable && !fromDoc) return
+    const cfg2 = { ...mid, ...(fromDoc ?? {}) }
+    cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2) }
+    if (fromTable) cur.report.notes.push(`Corrected from rules your JS inserted at runtime: ${Object.entries(fromTable).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
+    if (fromDoc) cur.report.notes.push(`Fonts corrected from the rendered page: body ${cfg2.fontBody}, display ${cfg2.fontDisplay}.`)
+    dispatch({ type: 'REPLACE', cfg: cfg2 })
+    setLoaded({ ...cur })
+  }, [dispatch])
   const onFrameLoaded = useCallback(() => {
     applyVars()
     stopObserver.current?.()
     const doc = frameRef.current?.contentDocument
     if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => setSheetVersion((v) => v + 1))
-  }, [applyVars, loaded])
+    refineBaseline()
+  }, [applyVars, loaded, refineBaseline])
   useEffect(() => () => { stopObserver.current?.() }, [])
+  // Runtime rules (insertRule) that grew the sheet — coalesced, then re-map.
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null
+    return onSheetGrow(() => { if (t) clearTimeout(t); t = setTimeout(() => { setSheetVersion((v) => v + 1); refineBaseline() }, 80) })
+  }, [refineBaseline])
 
   const onArchive = async (archive: Archive) => {
     setError(null)
