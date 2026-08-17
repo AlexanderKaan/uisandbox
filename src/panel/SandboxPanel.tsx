@@ -7,7 +7,7 @@ import { COLOR_THEMES } from '../tokens/stylesAndThemes'
 import type { ColorTheme, Config, Tokens } from '../tokens/types'
 import type { ConfigAction } from '../state/configReducer'
 import { FontPicker } from './FontPicker'
-import { DIALS, fmtDial, nearestSnap, type DialSpec, type Dials } from '../sandbox/dials'
+import { DEFAULT_DIALS, DIALS, fmtDial, nearestSnap, type DialSpec, type Dials } from '../sandbox/dials'
 import type { Families, Family } from '../sandbox/mapping'
 import { formatCssColor } from '../sandbox/cssColor'
 import type { Scheme } from '../sandbox/scheme'
@@ -21,6 +21,8 @@ interface Props {
   scheme?: Scheme
   /** Families their sheet carries (knob names) — the picker's "In your code". */
   codeFonts?: string[]
+  /** The sheet holds a linear/conic gradient — the angle dial has something to turn. */
+  hasGradients?: boolean
   dispatch: Dispatch<ConfigAction>
   onCollapse: () => void
   onRandomize: () => void
@@ -45,7 +47,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], dispatch, onCollapse, onRandomize, onReset }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, dispatch, onCollapse, onRandomize, onReset }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -132,8 +134,8 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
     })
   }
   const dialRow = (spec: DialSpec, sec?: string): Row => {
-    const v = cfg.sb[spec.key] as number
-    const bv = base.sb[spec.key] as number
+    const v = (cfg.sb[spec.key] ?? DEFAULT_DIALS[spec.key]) as number
+    const bv = (base.sb[spec.key] ?? DEFAULT_DIALS[spec.key]) as number
     return {
       key: spec.key, sec, label: spec.label, changed: v !== bv, value: fmtDial(spec, v),
       body: () => (
@@ -152,7 +154,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       ),
     }
   }
-  for (const spec of DIALS.filter((d) => d.section === 'Colour')) rows.push(dialRow(spec))
+  for (const spec of DIALS.filter((d) => d.section === 'Colour' && (d.key !== 'gradAngle' || hasGradients))) rows.push(dialRow(spec))
   if (scheme && (scheme.media || scheme.hooks.length)) {
     const cur = cfg.sb.dark
     rows.push({

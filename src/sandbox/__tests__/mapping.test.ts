@@ -178,3 +178,28 @@ describe('global colour dials reach every colour, family or not', () => {
     expect(parseCssColor(h['--us-v5']!)!.L).toBeGreaterThan(parseCssColor('#6b7280')!.L)
   })
 })
+
+describe('gradient angle dial', () => {
+  it('adds degrees to every direction, in any unit, and reads a side keyword', async () => {
+    const { angleDeg } = await import('../mapping')
+    expect(angleDeg('135deg')).toBe(135)
+    expect(angleDeg('.25turn')).toBe(90)
+    expect(angleDeg('to right')).toBe(90)
+    expect(angleDeg('to top')).toBe(0)
+    expect(angleDeg('to top right')).toBeNull()
+    const table = new SubstitutionTable()
+    rewriteCss('.h{background:linear-gradient(135deg,#6f42c1,#7952b3)}.r{background:linear-gradient(to right,#000,#fff)}.t{background:linear-gradient(.25turn,#000,#fff)}', table, 'x.css')
+    const cfg: Config = { ...theirCfg, cPrimary: '#6f42c1' }
+    const baseline: Baseline = { cfg, tokens: buildTokens(cfg), families: familiesOf(table, cfg.cPrimary) }
+    const rest = computeVars(table, baseline, cfg, buildTokens(cfg))
+    expect(rest['--us-v1']).toBe('135deg') // ×1 = their code, notation kept
+    expect(rest['--us-v4']).toBe('to right')
+    const turned = { ...cfg, sb: { ...DEFAULT_DIALS, gradAngle: 45 } }
+    const out = computeVars(table, baseline, turned, buildTokens(turned))
+    expect(out['--us-v1']).toBe('180deg')
+    expect(out['--us-v4']).toBe('135deg')
+    expect(out['--us-v7']).toBe('135deg') // .25turn + 45°
+    const rev = { ...cfg, sb: { ...DEFAULT_DIALS, gradAngle: 180 } }
+    expect(computeVars(table, baseline, rev, buildTokens(rev))['--us-v1']).toBe('315deg')
+  })
+})

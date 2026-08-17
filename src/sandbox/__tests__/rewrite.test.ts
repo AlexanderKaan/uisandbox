@@ -25,10 +25,20 @@ describe('scanDeclarations', () => {
 
 describe('splicesFor', () => {
   const kinds = (prop: string, value: string) => splicesFor(prop, value).map((s) => `${s.kind}:${s.raw}`)
+  it('gradient directions: numeric angles and single sides, not corners, not radial', () => {
+    expect(kinds('background-image', 'linear-gradient(135deg,#6f42c1,#7952b3)')).toEqual(['angle:135deg', 'color:#6f42c1', 'color:#7952b3'])
+    expect(kinds('background', 'repeating-linear-gradient(.25turn, #000 0 2px, #fff 2px 4px)')).toEqual(['angle:.25turn', 'color:#000', 'color:#fff'])
+    expect(kinds('background', 'conic-gradient(from 90deg, #f00, #00f)')).toEqual(['angle:90deg', 'color:#f00', 'color:#00f'])
+    expect(kinds('background', 'linear-gradient(to right, #f00, #00f)')).toEqual(['angle:to right', 'color:#f00', 'color:#00f'])
+    // A corner depends on the box's aspect ratio: no fixed angle, stays as written.
+    expect(kinds('background', 'linear-gradient(to top right, #f00, #00f)')).toEqual(['color:#f00', 'color:#00f'])
+    expect(kinds('background', 'radial-gradient(circle at 20% 20%, #f00, transparent)')).toEqual(['color:#f00'])
+    expect(kinds('--bs-gradient', 'linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,0))')).toEqual(['angle:180deg', 'color:rgba(255,255,255,.15)', 'color:rgba(255,255,255,0)'])
+  })
   it('colours in colour-carrying props, incl. named and function colours', () => {
     expect(kinds('color', '#fff')).toEqual(['color:#fff'])
     expect(kinds('border', '1px solid rgba(0,0,0,.08)')).toEqual(['border-width:1px', 'color:rgba(0,0,0,.08)'])
-    expect(kinds('background', 'linear-gradient(90deg, red 0%, #00f 100%)')).toEqual(['color:red', 'color:#00f'])
+    expect(kinds('background', 'linear-gradient(90deg, red 0%, #00f 100%)')).toEqual(['angle:90deg', 'color:red', 'color:#00f'])
     expect(kinds('background', 'url(#fff) no-repeat')).toEqual([])
     expect(kinds('color', 'transparent')).toEqual([])
     expect(kinds('color', 'currentColor')).toEqual([])

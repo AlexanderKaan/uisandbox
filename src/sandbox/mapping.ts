@@ -294,6 +294,13 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
     case 'font-size': return scaleLength(e.value, sb.type)
     case 'line-height': return scaleLength(e.value, sb.lineHeight)
     case 'border-width': return scaleLength(e.value, sb.borderWidth)
+    case 'angle': {
+      const add = sb.gradAngle ?? 0
+      if (!add) return e.value
+      const deg = angleDeg(e.value)
+      if (deg === null) return e.value
+      return `${Math.round((((deg + add) % 360) + 360) % 360 * 100) / 100}deg`
+    }
     case 'duration': {
       if (sb.motion === 1) return e.value
       const m = e.value.match(/^(\d*\.?\d+)(ms|s)$/)
@@ -364,3 +371,15 @@ const same = (a: Okla, b: Okla) =>
   // Two colours with (near) no chroma have no hue to disagree on.
   (Math.abs(hueDelta(a.H, b.H)) < 1e-3 || (a.C < 1e-4 && b.C < 1e-4)) &&
   Math.abs(a.a - b.a) < 1e-4
+
+/** A gradient direction in degrees: `135deg`, `.25turn`, `to right` (= 90deg). */
+export function angleDeg(v: string): number | null {
+  const t = v.trim().toLowerCase()
+  const side: Record<string, number> = { top: 0, right: 90, bottom: 180, left: 270 }
+  const kw = t.match(/^to\s+(top|right|bottom|left)$/)
+  if (kw) return side[kw[1]!]!
+  const m = t.match(/^(-?\d*\.?\d+)(deg|turn|rad|grad)$/)
+  if (!m) return null
+  const n = parseFloat(m[1]!)
+  return m[2] === 'deg' ? n : m[2] === 'turn' ? n * 360 : m[2] === 'rad' ? (n * 180) / Math.PI : n * 0.9
+}

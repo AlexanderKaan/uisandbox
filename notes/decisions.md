@@ -441,3 +441,22 @@ font sizes at runtime — 1:1) · SpinKit 100/100/100 · Hover.css 100/100/100
     not a ban.
 74. A scroll inside a flyout is browsing, not leaving: only the panel
     scrolling under an anchored popover closes it.
+
+## Gradients (2026-08-18)
+
+75. **Gradients are already under the knobs per stop** — every colour inside
+    `linear/radial/conic-gradient(...)` is an ordinary colour entry, so Brand,
+    the families and Hue/Saturation/Contrast move them, while the direction,
+    the stop positions and the type stay as written. No "from A to B" bar: it
+    fits two-stop gradients only, and a real hero (Bootstrap's masthead: two
+    layers, six stops, a blend mode) would have to be folded into two colours
+    — the end of "×1 = your code".
+76. **What was missing was direction.** Kind `angle`: the direction of every
+    linear/conic gradient — a numeric angle in any unit or a single side
+    (`to right`); a corner (`to top right`) has no fixed angle (it depends on
+    the box's aspect ratio) and stays as written, radials have no direction.
+    Dial **Gradient angle** adds degrees to all of them (Reversed = +180°),
+    printed as `deg`; the row appears only when the sheet holds one. Bootstrap
+    docs: 7 directions, 1,184 elements still 1:1 at rest.
+77. A raster hero (Bootswatch's diagonal planes are a JPEG) is outside every
+    knob and the reach meter says so; only an SVG data-URI would move.

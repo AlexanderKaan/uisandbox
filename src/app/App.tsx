@@ -305,6 +305,7 @@ export function App() {
                 families={loaded.report.baseline.families}
                 scheme={loaded.project.scheme}
                 codeFonts={codeFonts(loaded.project.table)}
+                hasGradients={loaded.project.table.ofKind('angle').length > 0}
                 dispatch={dispatch}
                 onCollapse={() => setPanelOpen(false)}
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}
@@ -327,7 +328,7 @@ export function App() {
                 <h3>What we read from your code</h3>
                 <ul className="notes">
                   {loaded.report.notes.map((n, i) => <li key={i}>{n}</li>)}
-                  <li>{loaded.project.table.entries.length} distinct values in {Math.round(loaded.project.cssBytes / 1024)} KB of CSS: {(['color', 'radius', 'font-size', 'font-family', 'space', 'shadow'] as const).map((k) => `${loaded.project.table.ofKind(k).length} ${k}`).join(' · ')}.</li>
+                  <li>{loaded.project.table.entries.length} distinct values in {Math.round(loaded.project.cssBytes / 1024)} KB of CSS: {(['color', 'radius', 'font-size', 'font-family', 'space', 'shadow', 'angle'] as const).map((k) => `${loaded.project.table.ofKind(k).length} ${k === 'angle' ? 'gradient angle' : k}`).join(' · ')}.</li>
                   {loaded.project.candidates.length > 1 && (
                     <li>Other roots in the archive:{' '}
                       {loaded.project.candidates.filter((c) => c !== loaded.project.root).slice(0, 6).map((c) => (

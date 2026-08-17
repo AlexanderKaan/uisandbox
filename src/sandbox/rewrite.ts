@@ -261,6 +261,20 @@ function findDurations(m: string): Splice[] {
   return s
 }
 
+/** The direction of every linear/conic gradient in a value: a numeric angle
+ *  or a single `to <side>` keyword (a corner — `to top right` — depends on the
+ *  box's aspect ratio and has no fixed angle, so it stays as written). */
+const GRADIENT_DIR = /((?:repeating-)?(?:linear|conic)-gradient\(\s*(?:from\s+)?)(-?\d*\.?\d+(?:deg|turn|rad|grad)|to\s+(?:top|right|bottom|left))(?=\s*,)/gi
+function findAngles(m: string): Splice[] {
+  const s: Splice[] = []
+  for (const x of m.matchAll(GRADIENT_DIR)) {
+    const start = x.index + x[1]!.length
+    s.push({ start, end: start + x[2]!.length, kind: 'angle', raw: x[2]! })
+  }
+  return s
+}
+const HAS_GRADIENT = /(linear|conic)-gradient\(/i
+
 /** Nested function-colours produce overlapping matches; keep the outermost. */
 function dropOverlaps(s: Splice[]): Splice[] {
   s.sort((a, b) => a.start - b.start || b.end - a.end)
@@ -326,7 +340,7 @@ export function splicesFor(prop: string, value: string): Splice[] {
 
   if (prop.startsWith('--')) {
     // A custom property: colours always; lengths only when the name says the role.
-    const s = [...svgs, ...findColors(value, m, false)]
+    const s = [...svgs, ...(HAS_GRADIENT.test(m) ? findAngles(m) : []), ...findColors(value, m, false)]
     if (s.length) return s
     // Bare channel triplets — Bootstrap `--bs-primary-rgb: 13,110,253`,
     // Tailwind `--color-x: 66 80 175`, shadcn `--primary: 222.2 47.4% 11.2%` —
@@ -378,7 +392,7 @@ export function splicesFor(prop: string, value: string): Splice[] {
     const inner = findColors(value, m, true)
     return [...inner, { start: 0, end: value.length, kind: 'shadow', raw: value }]
   }
-  if (COLOR_PROP.test(prop) || /^(mask|mask-image|-webkit-mask|-webkit-mask-image|list-style|list-style-image|content)$/.test(prop)) return [...svgs, ...findColors(value, m, true)]
+  if (COLOR_PROP.test(prop) || /^(mask|mask-image|-webkit-mask|-webkit-mask-image|list-style|list-style-image|content)$/.test(prop)) return [...svgs, ...(HAS_GRADIENT.test(m) ? findAngles(m) : []), ...findColors(value, m, true)]
   return []
 }
 

@@ -28,6 +28,9 @@ export interface Dials {
   hue: number         // ° rotation of every chromatic colour (−180 … 180)
   sat: number         // × chroma of every colour  (0 … 2)
   contrast: number    // ± lightness stretch around the middle (−0.3 … 0.3)
+  /** ° added to every gradient direction (−180 … 180); the row shows only
+   *  when the sheet holds a linear/conic gradient. Older configs lack it. */
+  gradAngle?: number
   /** Their dark mode, switched: undefined = as is. */
   dark?: 'dark' | 'light'
   /** Overrides for the colour families the sheet contains, as #rrggbb. */
@@ -42,7 +45,7 @@ export interface Dials {
 export const DEFAULT_DIALS: Dials = {
   radius: 1, space: 1, type: 1, lineHeight: 1, tracking: 0, weight: 0,
   borderWidth: 1, borderTone: 0, bgTone: 0, shadow: 1, motion: 1,
-  hue: 0, sat: 1, contrast: 0,
+  hue: 0, sat: 1, contrast: 0, gradAngle: 0,
 }
 
 export interface Snap { at: number; label: string }
@@ -63,6 +66,7 @@ export const DIALS: DialSpec[] = [
   { key: 'sat', label: 'Saturation', min: 0, max: 2, step: 0.02, unit: '×', section: 'Colour', snaps: [{ at: 0, label: 'Grey' }, { at: 0.6, label: 'Muted' }, { at: 1, label: 'as is' }, { at: 1.4, label: 'Vivid' }] },
   { key: 'contrast', label: 'Contrast', min: -0.3, max: 0.3, step: 0.01, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.15, label: 'Softer' }, { at: 0, label: 'as is' }, { at: 0.15, label: 'Harder' }] },
   { key: 'bgTone', label: 'Background', min: -0.1, max: 0.06, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.05, label: 'Dimmer' }, { at: 0, label: 'as is' }, { at: 0.03, label: 'Brighter' }] },
+  { key: 'gradAngle', label: 'Gradient angle', min: -180, max: 180, step: 5, unit: '°', section: 'Colour', snaps: [{ at: -90, label: '−90°' }, { at: -45, label: '−45°' }, { at: 0, label: 'as is' }, { at: 45, label: '+45°' }, { at: 90, label: '+90°' }, { at: 180, label: 'Reversed' }] },
   { key: 'borderTone', label: 'Border tone', min: -0.15, max: 0.15, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.08, label: 'Stronger' }, { at: 0, label: 'as is' }, { at: 0.06, label: 'Fainter' }] },
 ]
 
@@ -74,5 +78,5 @@ export const nearestSnap = (spec: DialSpec, v: number): Snap | null => {
 export const fmtDial = (spec: DialSpec, v: number): string => {
   const snap = nearestSnap(spec, v)
   const num = spec.unit === '°' ? `${v > 0 ? '+' : ''}${Math.round(v)}°` : spec.unit === '×' ? `×${String(+v.toFixed(2))}` : spec.unit === 'em' ? `${v >= 0 ? '+' : ''}${v.toFixed(3).replace(/0+$/, '').replace(/\.$/, '')}em` : spec.unit === 'steps' ? `${v > 0 ? '+' : ''}${v}` : `${v >= 0 ? '+' : ''}${(v * 100).toFixed(1).replace(/\.0$/, '')}%`
-  return snap ? (snap.label === 'as is' ? 'as is' : `${snap.label} · ${num}`) : num
+  return snap ? (snap.label === 'as is' ? 'as is' : snap.label === num ? num : `${snap.label} · ${num}`) : num
 }
