@@ -262,9 +262,6 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
   // is the user's OWN — show its colour name (e.g. "Burnt Orange") instead of
   // the stale preset name, and clear the grid checkmark. Pick a preset exactly
   // again and it snaps back.
-  // 'transparent' whenever the brand separates from the page on its own, which
-  // is most of the time — so the note below stays absent rather than nagging.
-  const brandEdge = String((tokens.vars as Record<string, string>)['--k-primary-edge'] ?? 'transparent')
 
   const themeHex = COLOR_THEMES[cfg.colorTheme]?.cPrimary
   const themeIsCustom = !!themeHex && cfg.cPrimary.toLowerCase() !== themeHex.toLowerCase()
@@ -352,25 +349,10 @@ export function Panel({ cfg, tokens, dispatch, onCollapse, onRandomize, onReset,
               aria-label="Brand color"
             />
           </label>
-          {/* Said out loud, because something was done on their behalf.
-            *
-            * Roughly a quarter of the reachable brand space sits too close to the
-            * page to satisfy WCAG 1.4.11 on its own. The usual fix is to shift the
-            * colour, and we measured what that costs: median dE00 10.8 — a visibly
-            * different colour. A public body's brand is often fixed by decision,
-            * so we keep it exactly and give the button a boundary instead.
-            *
-            * The note exists because a silent adjustment is the thing a design
-            * team discovers three months later. It reports what happened and why,
-            * and it appears only when it actually happened. */}
-          {brandEdge !== 'transparent' && (
-            <p className="fmbrand__note">
-              <span className="fmbrand__note-swatch" style={{ background: brandEdge }} aria-hidden="true" />
-              This colour sits close to the page background, so primary buttons get a
-              1px boundary to stay identifiable (WCAG&nbsp;1.4.11). Your brand colour
-              is unchanged.
-            </p>
-          )}
+          {/* UIcockpit showed a note here when its kit gave primary buttons a 1px
+            * boundary (--k-primary-edge) for a brand too close to the page. The
+            * sandbox has no kit and touches nothing of theirs on load — identity,
+            * no opinion — so there is nothing to say out loud. */}
         </>
       ),
     },

@@ -929,23 +929,3 @@
 /* Brand-colour note — shown only when the engine had to add a button boundary
    because the chosen brand does not separate from the page. Quiet by design: it
    reports, it does not warn. Nothing is wrong with their colour. */
-.fmbrand__note {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  margin: 8px 0 0;
-  padding: 8px 10px;
-  border-radius: var(--app-radius-sm, 6px);
-  background: var(--app-surface-2, rgba(0, 0, 0, 0.03));
-  color: var(--app-fg-muted);
-  font-size: 11px;
-  line-height: 1.45;
-}
-.fmbrand__note-swatch {
-  flex: 0 0 auto;
-  inline-size: 10px;
-  block-size: 10px;
-  margin-top: 2px;
-  border-radius: 2px;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
-}
