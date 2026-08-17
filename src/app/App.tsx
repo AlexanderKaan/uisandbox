@@ -17,12 +17,15 @@ import { customFontUrl } from '../tokens/customFonts'
 import { Intake } from './Intake'
 import { Stage } from './Stage'
 import { ExportDialog } from './ExportDialog'
+import { ValuesBoard } from './ValuesBoard'
 import { genPatch, genPatchedFiles } from '../export/genSheet'
 
 interface Loaded {
   project: SandboxProject
   report: BaselineReport
   screen: Screen
+  /** Kept so a different root can be chosen without dropping the file again. */
+  archive: Archive
   /** The rendered page has had its one chance to decide the brand. */
   brandSeen?: boolean
 }
@@ -172,22 +175,24 @@ export function App() {
     return onSheetGrow(() => { if (t) clearTimeout(t); t = setTimeout(() => { setSheetVersion((v) => v + 1); refineBaseline() }, 80) })
   }, [refineBaseline])
 
-  const onArchive = async (archive: Archive) => {
+  const onArchive = async (archive: Archive, root?: string) => {
     setError(null)
     try {
       setBusy('Registering the sandbox worker…')
       await ensureWorker()
       setBusy('Reading files…')
       const project = await buildProject(archive, {
+        root,
         onProgress: (d, t) => { if (d % 25 === 0 || d === t) setBusy(`Reading files… ${d}/${t}`) },
       })
-      if (!project.screens.length) throw new Error('No index.html found. Drop the BUILT site (dist/, build/, out/) — a source folder alone cannot be rendered.')
+      if (!project.screens.length && project.platform.renders) throw new Error('No index.html found. Drop the BUILT site (dist/, build/, out/) — a source folder alone cannot be rendered.')
+      if (!project.screens.length && project.table.entries.length === 0) throw new Error(`Read this as ${project.platform.label}, but found nothing to tokenise (no colours, fonts, radii or sizes in a notation the reader knows).`)
       setBusy('Deriving the knobs from your code…')
       const report = await deriveBaseline(archive, project.table)
       if (loaded) disown(loaded.project)
       own(project, () => varsRef.current)
       dispatch({ type: 'REPLACE', cfg: report.baseline.cfg })
-      setLoaded({ project, report, screen: project.screens[0]! })
+      setLoaded({ project, report, screen: project.screens[0] ?? { path: '', label: '/', source: 'file' }, archive })
       setShowNotes(true)
     } catch (err) {
       setError((err as Error).message)
@@ -265,6 +270,11 @@ export function App() {
                 onToggleLock={(k) => setLocked((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n })}
               />
             )}
+            {!loaded.project.platform.renders ? (
+              <section className="stage"><ValuesBoard project={loaded.project} vars={vars} />
+                <div className="stage__foot"><span><b>{loaded.project.name}</b> · {loaded.project.platform.label} · {loaded.project.table.entries.length} values from {loaded.project.sourceFiles} source files</span><span className="stage__spacer" />{changedCount > 0 ? <span className="chip chip--warn"><span className="chip__dot" />{changedCount} value{changedCount === 1 ? '' : 's'} moved</span> : <span className="chip chip--ok"><span className="chip__dot" />identity — nothing turned</span>}</div>
+              </section>
+            ) : (
             <Stage
               project={loaded.project}
               screen={loaded.screen}
@@ -274,13 +284,20 @@ export function App() {
               onPin={pinCurrent}
               changedCount={changedCount}
             />
+            )}
             {showNotes && (
               <div className="card popcard" role="dialog" aria-label="What was read">
                 <h3>What we read from your code</h3>
                 <ul className="notes">
                   {loaded.report.notes.map((n, i) => <li key={i}>{n}</li>)}
                   <li>{loaded.project.table.entries.length} distinct values in {Math.round(loaded.project.cssBytes / 1024)} KB of CSS: {(['color', 'radius', 'font-size', 'font-family', 'space', 'shadow'] as const).map((k) => `${loaded.project.table.ofKind(k).length} ${k}`).join(' · ')}.</li>
-                  {loaded.project.candidates.length > 1 && <li>Other possible roots in the archive: {loaded.project.candidates.slice(1, 5).map((c) => c || '/').join(', ')}.</li>}
+                  {loaded.project.candidates.length > 1 && (
+                    <li>Other roots in the archive:{' '}
+                      {loaded.project.candidates.filter((c) => c !== loaded.project.root).slice(0, 6).map((c) => (
+                        <button key={c} type="button" className="btn btn--secondary btn--sm" style={{ marginRight: 6, marginTop: 4 }} onClick={() => { const a = loaded.archive; disown(loaded.project); setLoaded(null); void onArchive(a, c) }}>{c || '/'}</button>
+                      ))}
+                    </li>
+                  )}
                 </ul>
                 <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes(false)}>Close</button></div>
               </div>

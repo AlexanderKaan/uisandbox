@@ -178,3 +178,46 @@ all verify 1:1 with 0 differences; the brand knob reaches insertRule'd rules liv
 35. Two NUL bytes had crept into `table.ts` key strings — consistent for `add`,
     so invisible until `find`. Cleaned; a reminder that a diff of bytes is a
     thing worth looking at when a lookup "cannot" fail.
+
+## Round 5 — where the bar is (2026-08-17: iOS · Android · Flutter · Kivy · Raspberry Pi HMI · marketing site · WordPress · odd archives)
+
+36. **The intake TRIAGES instead of refusing.** `platform.ts` names what was
+    dropped (web-build · web-source · ios · android · flutter · qt · kivy ·
+    python-gui · electron · unknown) and says whether it renders. A WordPress
+    theme's `templates/index.html` is a block template, not a page: root
+    detection is skipped for it.
+37. **Non-web sources are tokenised by `sourceScan.ts`** into the SAME sheet:
+    hex (quoted, between tags, bare) · `0xAARRGGBB` (alpha kept) · Android XML
+    `#AARRGGBB` (ARGB!) · Swift `Color(red:green:blue:)` floats · xcassets
+    components (`0x66` or `0.400`, each channel in its notation) · Kivy float
+    tuples · `R.font.karla_regular` / `@font/x` / `Font.custom("X")` /
+    `fontFamily:` · WordPress theme.json escaped families · W3C design-tokens
+    JSON (the key names the role) · `cornerRadius(12)` / `RoundedCornerShape` /
+    `BorderRadius.circular` / QML `radius:` · `fontSize`, `.sp`, `pixelSize`.
+    Each span carries a PRINTER, so the patched export writes the value back
+    in that file's notation. The identifier a colour is bound to
+    (`md_theme_light_primary`, `colorPrimary`, a theme.json `slug`) is the
+    site's `prop`, so `brandDeclared` hears it.
+38. **Art is not palette**: `drawable*/`, `mipmap*/`, `ic_*.xml`, imagesets,
+    SVGs are skipped — a launcher icon's orange was crowned the brand of
+    compose-samples. Tests, mocks, fixtures, Preview Content too.
+39. **The stage for what no browser draws is a values board** (`ValuesBoard`):
+    every literal painted with its CURRENT value, labelled as a legend, never
+    as their app. Knobs work; export writes the values back (patched files) and
+    also as Swift + asset catalog and, new, Android `colors.xml` (+night) and a
+    Compose `DesignTokens.kt`.
+40. **Root switcher**: other index.html roots in an archive are one click away
+    (a monorepo with `site-a/` and `site-b/dist/`); test/mock pages are not
+    screens; a bare `index.html` zip works; images-only and empty zips fail
+    with a sentence, not a stack.
+
+Where the bar is, measured on real repos: web builds render 1:1 (16 hold-outs,
+0 diffs); Electron/HMI shells render what the archive contains (MagicMirror:
+its black shell, fonts served, modules need the server); iOS/Android/Flutter/
+Kivy/WordPress/tokens-JSON tokenise-and-export with knobs on their stand but
+NO render; a monorepo of many apps has no single brand (compose-samples) —
+the knob is theirs to set; a design-tokens JSON alone is a valid input.
+Not readable yet: system-colour references (`Color.blue`, `MaterialTheme.
+colorScheme.primary`), Interface Builder .storyboard RGB, Qt stylesheets
+(`.qss` — plain CSS, would work if the extension were allowed), PDF/Figma
+files, nested zips, tar.gz.

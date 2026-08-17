@@ -10,6 +10,7 @@ import { genJson } from '../export/genJson'
 import { genTailwind } from '../export/genTailwind'
 import { genShadcn } from '../export/genShadcn'
 import { genSwift, genAssetCatalog } from '../export/genSwift'
+import { genAndroidColorsXml, genAndroidKotlin } from '../export/genAndroid'
 import { zipSync } from '../export/zip'
 
 interface ExportDialogProps {
@@ -47,6 +48,8 @@ export function ExportDialog({ cfg, table, vars, projectName, files, fontCss, on
     { id: 'tokens-shadcn', group: 'The tokens', label: 'shadcn', file: 'shadcn.css', make: () => genShadcn(cfg) },
     { id: 'ios-swift', group: 'iOS', label: 'DesignTokens.swift', file: 'DesignTokens.swift', make: () => genSwift(cfg) },
     { id: 'ios-assets', group: 'iOS', label: 'Asset catalog (colour sets)', file: 'DesignTokens.xcassets.txt', make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n') },
+    { id: 'android-xml', group: 'Android', label: 'colors.xml (+ night)', file: 'colors.xml', make: () => genAndroidColorsXml(cfg) + '\n' + genAndroidColorsXml(cfg, 'dark') },
+    { id: 'android-kt', group: 'Android', label: 'DesignTokens.kt (Compose)', file: 'DesignTokens.kt', make: () => genAndroidKotlin(cfg) },
   ], [cfg, table, vars, patched])
   const [active, setActive] = useState(items[0]!.id)
   const [copied, setCopied] = useState(false)

@@ -14,6 +14,7 @@
 import type { Entry, SubstitutionTable } from '../sandbox/table'
 import { cssValue, varName } from '../sandbox/table'
 import { rewriteCss, rewriteHtml } from '../sandbox/rewrite'
+import { SOURCE_EXT, patchSourceFile } from '../sandbox/sourceScan'
 
 export interface SheetRow {
   entry: Entry
@@ -108,6 +109,10 @@ export async function genPatchedFiles(
       const html = await f.blob.text()
       const patched = rewriteHtml(html, table, path, { mode: 'values', vars })
       if (patched !== html) out.push({ path, text: patched })
+    } else if (SOURCE_EXT.test(path)) {
+      const text = await f.blob.text()
+      const patched = patchSourceFile(path, text, table, vars)
+      if (patched !== text) out.push({ path, text: patched })
     }
   }
   return out

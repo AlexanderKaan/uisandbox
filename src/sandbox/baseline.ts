@@ -46,7 +46,10 @@ interface AuditLike {
  *  `--color-primary` — outranks any count and any softer name (`accent`,
  *  `highlight`): getbootstrap.com's docs declare `--bd-accent: #ffe484` (a
  *  yellow) and the audit crowned it while `--bs-primary` sat right there. */
-const BRAND_NAME = /^--([\w-]*-)?(primary|brand)(-(color|base|default|500|600|main|hex))?$/i
+/* `--bs-primary`, `--color-primary`, `md_theme_light_primary`, `colorPrimary`,
+ * `brandColor`, `Brand.primary` — not `on_primary`, `primary_container`,
+ * `primary-foreground`. */
+const BRAND_NAME = /^(?:--)?(?![\w-]*\bon[_-]?primary)(?:[\w.-]*?[-_.])?(primary|brand)(?:[-_]?(color|colour|base|default|500|600|main|hex))?$/i
 export function brandDeclared(table: SubstitutionTable): string | null {
   let best: { hex: string; n: number } | null = null
   for (const e of table.ofKind('color')) {

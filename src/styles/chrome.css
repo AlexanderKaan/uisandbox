@@ -203,3 +203,27 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .popcard { position: absolute; right: 16px; top: 62px; z-index: 50; width: min(440px, 90vw); padding: 14px 16px; }
 .popcard h3 { margin: 0 0 8px; font-size: 13px; }
 kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px solid var(--app-border); border-bottom-width: 2px; border-radius: 5px; background: var(--app-surface); }
+
+/* === Values board (the stage for what no browser can draw) === */
+.board { flex: 1; min-height: 0; overflow: auto; padding: 22px 26px; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 12px; }
+.board__head h2 { font-size: 15px; margin: 0 0 4px; }
+.board__head p { color: var(--app-fg-muted); font-size: 12.5px; margin: 0 0 18px; max-width: 78ch; }
+.board__sec { margin-bottom: 22px; }
+.board__sec h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--app-fg-faint); margin: 0 0 10px; }
+.board__sec h3 small { text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; }
+.board__swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.board__sw { display: flex; align-items: center; gap: 8px; font-size: 11.5px; padding: 6px 8px; border: 1px solid var(--app-border); border-radius: 8px; }
+.board__chip { width: 26px; height: 26px; border-radius: 6px; flex: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.board__val { font-family: ui-monospace, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board__cnt { margin-left: auto; color: var(--app-fg-faint); }
+.board__font { display: flex; align-items: baseline; gap: 14px; padding: 8px 0; border-top: 1px solid var(--app-border); font-size: 18px; }
+.board__fontname { font-size: 12px; font-family: ui-monospace, Menlo, monospace; color: var(--app-fg-muted); min-width: 220px; }
+.board__sample { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board__sizes { display: flex; flex-wrap: wrap; gap: 14px; align-items: baseline; margin-top: 10px; }
+.board__sizes small { font-size: 10px; color: var(--app-fg-faint); font-family: ui-monospace, Menlo, monospace; }
+.board__shapes { display: flex; flex-wrap: wrap; gap: 12px; }
+.board__box { width: 84px; height: 56px; border: 1px solid var(--app-border); background: var(--app-surface-2); display: grid; place-items: center; font-family: ui-monospace, Menlo, monospace; color: var(--app-fg-muted); }
+.board__spaces { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.board__spaces div { display: flex; align-items: center; gap: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 10.5px; color: var(--app-fg-muted); }
+.board__spaces i { display: block; height: 10px; background: var(--app-fg-faint); border-radius: 2px; }
+.board__empty { color: var(--app-fg-muted); }
