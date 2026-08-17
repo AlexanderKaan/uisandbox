@@ -169,7 +169,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 10px; }
 .seg__opt { height: 26px; padding: 0 9px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--app-fg-muted); }
 .seg__opt:hover { background: var(--app-hover); color: var(--app-fg); }
-.seg__opt--on, .seg__opt--on:hover { background: var(--app-fg); color: var(--app-bg); }
+/* Specific enough to beat panel.css's generic .seg__opt:hover — otherwise the
+   active option hovers to fg-on-fg (white on white in the dark scheme). */
+.seg .seg__opt--on, .seg .seg__opt--on:hover { background: var(--app-fg); color: var(--app-bg); }
 
 /* === Intake === */
 .intake { flex: 1; display: grid; place-items: center; padding: 24px; }

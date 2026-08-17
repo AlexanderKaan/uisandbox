@@ -57,13 +57,6 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
   const [open, setOpen] = useState(false)
   const showMenu = inline || open
   useEffect(() => { if (showMenu) preloadListFonts(groups) }, [showMenu, groups])
-  // Their families first; a face that is also in our list is theirs to keep there.
-  const listed = new Set(inCode)
-  const shown: FontGroup[] = [
-    ...groups.slice(0, 1),
-    ...(inCode.length ? [{ group: 'In your code', fonts: inCode }] : []),
-    ...groups.slice(1).map((g) => ({ ...g, fonts: g.fonts.filter((f) => !listed.has(f)) })).filter((g) => g.fonts.length),
-  ]
   const ref = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -76,6 +69,18 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
     listCustomFonts,
     () => [] as string[],
   )
+
+  // Their families first; a face that is also in our list is theirs to keep
+  // there. The CURRENT value is always listed — the rendered page can name a
+  // family the sheet never spelled out (a UA default, an inline style).
+  const ours = new Set(groups.flatMap((g) => g.fonts))
+  const theirs = inCode.includes(value) || ours.has(value) || !isCustomFont(value) || customFonts.includes(value) ? inCode : [value, ...inCode]
+  const listed = new Set(theirs)
+  const shown: FontGroup[] = [
+    ...groups.slice(0, 1),
+    ...(theirs.length ? [{ group: 'In your code', fonts: theirs }] : []),
+    ...groups.slice(1).map((g) => ({ ...g, fonts: g.fonts.filter((f) => !listed.has(f)) })).filter((g) => g.fonts.length),
+  ]
 
   useEffect(() => {
     if (!open) return

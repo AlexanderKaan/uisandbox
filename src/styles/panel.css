@@ -127,7 +127,7 @@
    panel's own gutter for the lock affordance and belongs to nobody else. */
 .panel .fmsec {
   /* Aligned with the row labels, from the same expression rather than a copy. */
-  padding-left: calc(var(--k-in-h-default, 36px) + var(--k-s-8));
+  padding-left: calc(36px + 8px);
 }
 /* A section header that twins a Foundations stage section — clicking jumps there.
  * Resets button chrome to match the .fmsec label; a → appears on hover as the cue. */
@@ -211,7 +211,7 @@
      is: control height + a little air. It used to be a hard-coded 28, which was
      narrower than the button it had to contain. */
   padding: 9px 10px;
-  padding-left: calc(var(--k-in-h-default, 36px) + var(--k-s-8));
+  padding-left: calc(36px + 8px);
   /* The row IS the target now that every setting is one, so it holds to the
      floor we hold everyone else to — and it gets there for free, because a
      full-width row is large by construction. The old inline segments measured
@@ -221,10 +221,10 @@
      transient and wants to be dense; a settings panel is a surface you sit in,
      and at the sm rung the rows read as one block of text with no air between
      them. Same ladder, the rung that fits the context. */
-  min-height: var(--k-row-h-md, 32px);
+  min-height: 32px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--k-radius-md, 8px);
+  border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
   text-align: left;
@@ -259,7 +259,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--k-s-6);
+  gap: 6px;
   font-size: 12.5px;
   font-weight: 600;
   color: var(--app-fg);
@@ -313,7 +313,7 @@
   /* Portalled to <body>, fixed beside its row (Panel.tsx sets top/left inline);
      the fallback below is only for a row whose rect could not be read. */
   position: fixed;
-  z-index: var(--k-z-popover, 60);
+  z-index: 60;
   top: 80px;
   left: 300px;
 }
@@ -604,7 +604,7 @@
  * the recipe learns something new. */
 .fp__menu {
   position: absolute;
-  top: calc(100% + var(--k-s-4));
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   z-index: 12;
@@ -698,10 +698,12 @@
    paint, no way to tell which one is in force. Now the kit's one selected
    treatment, the same as every other option list. */
 .fp__item--on {
-  background: var(--k-state-selected-bg);
-  color: var(--k-fg);
-  font-weight: var(--k-weight-semibold);
-  box-shadow: var(--k-selected-edge);
+  /* Chrome tokens, never the kit's: --k-* belongs to THEIR app and reads
+     dark-on-dark once the chrome is in the dark scheme. */
+  background: var(--app-hover);
+  color: var(--app-fg);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--app-border);
 }
 /* "Custom" tag — sibling of .fp__name (not nested) so it doesn't pick up
    the custom font that .fp__name renders in. Stays in the chrome's own
@@ -865,7 +867,7 @@
 .kit__clear:focus-visible {
   display: inline-flex;
   outline: none;
-  box-shadow: 0 0 0 3px var(--k-focus-ring, rgba(59, 130, 246, 0.6));
+  box-shadow: 0 0 0 3px var(--app-accent);
 }
 /* Respect OS reduced-motion for chrome menus (preview side is covered by the
  * global guard in preview.css; chrome --app-* CSS needs its own). */
