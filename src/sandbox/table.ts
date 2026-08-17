@@ -107,6 +107,10 @@ export function normalise(kind: Kind, value: string): string {
     v = v.split(',').map((f) => f.trim()).filter(Boolean).join(', ')
     return v
   }
+  // A data-URI SVG is CASE-SENSITIVE (`M4 7h22` is not `m4 7h22`; `viewBox`
+  // is not `viewbox`) — the 1:1 check on Bootswatch's hamburger icon caught the
+  // generic lowercasing. Whitespace only.
+  if (kind === 'svg') return v
   v = v.toLowerCase().replace(/\s*,\s*/g, ', ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')')
   if (kind === 'color') {
     // Bare channels keep their notation marker; the marker never reaches CSS

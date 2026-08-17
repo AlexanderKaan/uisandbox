@@ -11,7 +11,7 @@
  */
 import { injectVars, type SandboxProject } from './project'
 import { rewriteCss } from './rewrite'
-import { defineNewVars } from './table'
+import { cssValue, defineNewVars, varName } from './table'
 
 interface Owned {
   project: SandboxProject
@@ -123,10 +123,30 @@ export function resolveFile<T>(files: Map<string, T>, path: string): T | undefin
 }
 
 async function onMessage(e: MessageEvent) {
-  const data = e.data as { type?: string; sid?: string; path?: string } | undefined
-  if (!data || data.type !== 'us:fetch' || !data.sid) return
+  const data = e.data as { type?: string; sid?: string; path?: string; url?: string; css?: string; navigate?: boolean } | undefined
+  if (!data || !data.sid) return
   const port = e.ports[0]
   if (!port) return
+  if (data.type === 'us:rewrite-css') {
+    // A CDN stylesheet for one of our sandboxes: rewrite it like a local one.
+    // The raw control keeps the untouched sheet; the identity/live variants
+    // get the rewrite with the NEW variables defined at the top of the sheet
+    // itself, so nothing is ever invalid while the page waits for a render.
+    const o = owned.get(data.sid)
+    if (!o || o.variant !== 'rewritten' || !data.css) { port.postMessage({ found: false }); return }
+    const table = o.project.table
+    const before = table.entries.length
+    const file = `cdn: ${(data.url ?? '').replace(/^https?:\/\//, '')}`
+    const out = rewriteCss(data.css, table, file)
+    const fresh = table.entries.slice(before)
+    const head = fresh.length ? `:root{${fresh.map((x) => `${varName(x.id)}:${cssValue(x.value)}`).join(';')}}\n` : ''
+    // @charset / @import must stay first
+    const lead = out.match(/^(?:@charset[^;]*;\s*)?(?:@import[^;]*;\s*)*/)?.[0] ?? ''
+    port.postMessage({ found: true, css: lead + head + out.slice(lead.length) })
+    if (fresh.length) for (const fn of growListeners) fn(o.project)
+    return
+  }
+  if (data.type !== 'us:fetch') return
   const o = owned.get(data.sid)
   if (!o) { port.postMessage({ found: false, owner: false }); return }
   const files = o.variant === 'raw' ? o.project.raw : o.project.rewritten
@@ -134,7 +154,10 @@ async function onMessage(e: MessageEvent) {
   const f = resolveFile(files, path)
   if (!f) { port.postMessage({ found: false, owner: true }); return }
   let body: ArrayBuffer
-  if (o.variant === 'rewritten' && /\.html?$/i.test(path)) {
+  // Only a NAVIGATED document gets the variable block and the hook: an HTML
+  // import, an XHR'd template or a fragment fetched by their JS is not a page
+  // (Polymer's HTML-imports polyfill choked on a <script> at the top of one).
+  if (o.variant === 'rewritten' && /\.html?$/i.test(path) && data.navigate) {
     const html = injectVars(await f.blob.text(), o.vars(), data.sid)
     body = new TextEncoder().encode(html).buffer as ArrayBuffer
   } else {

@@ -493,10 +493,23 @@ export function stripLinkIntegrity(html: string): string {
   return html.replace(/<link\b[^>]*>/gi, (tag) => (/\bintegrity\s*=/i.test(tag) ? tag.replace(/\s+integrity\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i, '') : tag))
 }
 
+/** `<link rel=stylesheet href="https://cdn…/x.css">` → `/__ext/?u=…`: the worker
+ *  fetches it, the host rewrites it like any local sheet (a CDN Bulma is still
+ *  their CSS), and the new variables ride along inside the response. */
+export function proxyExternalStylesheets(html: string): string {
+  return html.replace(/<link\b[^>]*>/gi, (tag) => {
+    if (!/rel\s*=\s*["']?stylesheet/i.test(tag)) return tag
+    return tag.replace(/\shref\s*=\s*(["'])((?:https?:)?\/\/[^"']+)\1/i, (_m, q: string, href: string) => {
+      const abs = href.startsWith('//') ? 'https:' + href : href
+      return ` href=${q}/__ext/?u=${encodeURIComponent(abs)}${q} data-us-ext=${q}${abs}${q}`
+    })
+  })
+}
+
 export function rewriteHtml(html: string, table: SubstitutionTable, file: string, opts: RewriteOptions = {}): string {
   // In patch mode their HTML keeps its integrity attributes: the CSS on disk
   // will be theirs again, and the hash is theirs to update.
-  let out = opts.mode === 'values' ? html : stripLinkIntegrity(html)
+  let out = opts.mode === 'values' ? html : proxyExternalStylesheets(stripLinkIntegrity(html))
   out = out.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (_m, open: string, css: string, close: string) =>
     open + rewriteCss(css, table, file, opts) + close)
   out = out.replace(/(<[a-zA-Z][^>]*?\sstyle=)("([^"]*)"|'([^']*)')/g, (m, pre: string, _q: string, dq?: string, sq?: string) => {

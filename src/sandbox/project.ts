@@ -106,9 +106,20 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
       if (t) heads.push({ path: e.path, head: t.slice(0, 2000) })
     }
   }
-  const early = detectPlatform(paths, paths.some((p) => /(^|\/)index\.html?$/i.test(p)), heads)
+  // Any page counts, not only index.html — JavaScript30's thirty mini-apps are
+  // `index-START.html` / `index-FINISHED.html`; a folder of pages is a site.
+  const anyPage = paths.some((p) => /\.html?$/i.test(p) && !/(^|\/)(node_modules|tests?|__tests__|mocks?)\//i.test(p))
+  const early = detectPlatform(paths, anyPage, heads)
   const candidates = early.renders || early.kind === 'unknown' || early.kind === 'web-source' && !heads.some((h) => /Theme Name:/i.test(h.head)) ? findRoots(paths) : []
-  const root = opts.root ?? candidates[0] ?? ''
+  // A folder with the only index.html is not the site when the archive holds
+  // many more pages beside it (JavaScript30: sixty `index-START.html`s and one
+  // video player with an index.html) — then the archive root is the site.
+  const NOT_PAGE = /(^|\/)(node_modules|tests?|__tests__|mocks?|fixtures?)\//i
+  const pagesUnder = (dir: string) => paths.filter((p) => /\.html?$/i.test(p) && !NOT_PAGE.test(p) && (dir === '' || p.startsWith(dir + '/'))).length
+  const best = candidates[0]
+  const wholeArchive = best !== undefined && best !== '' && pagesUnder('') >= 3 * Math.max(1, pagesUnder(best)) && !/(^|\/)(dist|build|out|_site|public)$/i.test(best)
+  if (wholeArchive && !candidates.includes('')) candidates.unshift('')
+  const root = opts.root ?? (wholeArchive ? '' : candidates[0]) ?? ''
   const prefix = root ? `${root}/` : ''
   const under = archive.entries.filter((e) => e.path.startsWith(prefix) && !/(^|\/)(node_modules|\.git)\//.test(e.path))
 
@@ -163,7 +174,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     .map((p) => ({ path: p, label: '/' + p.replace(/(^|\/)index\.html?$/i, '').replace(/\.html?$/i, ''), source: 'file' as const }))
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
 
-  const platform = detectPlatform(paths, screens.length > 0, heads)
+  const platform = detectPlatform(paths, screens.length > 0 || anyPage, heads)
   return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme }
 }
 
@@ -181,7 +192,9 @@ export function varsStyleTag(vars: Record<string, string>): string {
  * the one thing the MutationObserver in live.ts cannot see.
  */
 export function hookScriptTag(sid: string): string {
-  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
+  // Polymer 1 (2015) resolves var() with its own shim and never sees ours; it
+  // honours a settings object defined before it loads. Harmless elsewhere.
+  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};if(!window.Polymer)window.Polymer={useNativeCSSProperties:true};var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
 }
 
 /** Put the variables (and the CSSOM hook) into a served HTML document, before anything else in <head>. */

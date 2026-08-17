@@ -318,3 +318,43 @@ values on real builds; the sheet-only meter cannot see the display-font rule.
     their own switcher would, `color-scheme` follows for form controls.
     "As is" restores everything. Measured: water.css (media) light → white;
     Bootstrap docs (`data-bs-theme`) light/dark/as-is round-trip.
+
+## Sweep 6 — three sites, three apps, unseen (2026-08-17)
+
+Bootswatch (27 MB, 45 MB CSS, 519 screens) · Bulma-templates (35 pages, CSS
+from a CDN) · StartBootstrap Clean Blog · TodoMVC (200 pages, 60 frameworks) ·
+JavaScript30 (57 mini-apps) · SVGOMG (PWA). Found and fixed:
+
+58. **A data-URI SVG is case-sensitive** — the generic normaliser lowercased
+    `M4 7h22` into `m4 7h22` (relative moves) and `viewBox` into `viewbox`;
+    the 1:1 check on Bootswatch's hamburger icon caught it. `svg` values are
+    whitespace-normalised only. `rgba%28…%29` inside data URIs is mapped too.
+59. **Cross-origin stylesheets are rewritten**: `<link rel=stylesheet
+    href="https://cdn…">` → `/__ext/?u=…`; the worker fetches with CORS, the
+    page rewrites it into the same sheet, and the NEW variables ride at the top
+    of the CSS response so nothing is invalid before the next render. Bulma
+    from jsdelivr: reach 43 → 74 % colours, 58 → 100 % radii, still 1:1. The
+    raw control keeps the untouched CDN link. (Bulma 1.0's `hsl(var(--h),
+    var(--s), var(--l))` — one colour split over three custom properties — is
+    the remaining unread notation.)
+60. **Pages win in platform detection**: TodoMVC was refused as "Flutter"
+    because one of its sixty examples has a `pubspec.yaml`. Renderable pages
+    decide first; a source repo whose only page is a build template renders a
+    shell and the stage says so.
+61. **The archive is the site when it holds most pages**: JavaScript30's only
+    `index.html` (one video player) was picked as root over sixty
+    `index-START.html`s; any `.html` counts as a page now, and a root that
+    covers a third or less of the pages yields to the whole archive.
+62. **Only navigated documents get the variable block and the hook** — an
+    HTML import, an XHR'd template, a fragment is not a page.
+63. **Known, honestly reported, not fixed**: Polymer 1.2 (TodoMVC's home)
+    resolves `var()` with its own style shim, drops declarations it cannot
+    resolve, and reprocesses `<style is=custom-style>` blocks (which mangled
+    font stacks when tried). The 1:1 check says "44 differences"; a 2015
+    framework that re-parses CSS text is outside what a substitution can
+    promise. `useNativeCSSProperties` is set for Polymer ≥ 1.6 in the hook.
+
+Scorecard: Clean Blog 100/100/100 · SVGOMG 100/100/98 · JavaScript30
+100/50/100 (generic families) · Bulma 74/100/100 (CDN now in, split-hsl out) ·
+Bootswatch 100/100/97 (1 min to load 45 MB of CSS) · TodoMVC 92/100/100 with
+the Polymer home page failing 1:1 by design.

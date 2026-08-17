@@ -65,7 +65,7 @@ async function sandboxOfRequester(event) {
 
 let seq = 0
 /** Ask every window client until one owns the sandbox. */
-async function askPage(sid, path) {
+async function askPage(sid, path, navigate = false) {
   const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
   // The owner is our app, never a sandboxed document — skip those first.
   const ordered = clients.filter((c) => !c.url.includes(PREFIX)).concat(clients.filter((c) => c.url.includes(PREFIX)))
@@ -75,7 +75,7 @@ async function askPage(sid, path) {
       const id = ++seq
       const timer = setTimeout(() => resolve(null), 4000)
       ch.port1.onmessage = (e) => { clearTimeout(timer); resolve(e.data) }
-      client.postMessage({ type: 'us:fetch', id, sid, path }, [ch.port2])
+      client.postMessage({ type: 'us:fetch', id, sid, path, navigate: !!navigate }, [ch.port2])
     })
     if (answer && answer.found) return answer
     if (answer && answer.owner === false) continue
@@ -83,9 +83,35 @@ async function askPage(sid, path) {
   return null
 }
 
+/** A cross-origin stylesheet, fetched here and rewritten by the page. */
+async function externalCss(event, url) {
+  const target = url.searchParams.get('u')
+  const sid = await sandboxOfRequester(event)
+  if (!target) return new Response('missing u', { status: 400 })
+  let res
+  try { res = await fetch(target, { mode: 'cors', credentials: 'omit' }) } catch { return new Response('', { status: 502 }) }
+  if (!res.ok || !sid) return res
+  const css = await res.text()
+  const answer = await new Promise((resolve) => {
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const owner = clients.filter((c) => !c.url.includes(PREFIX) && !c.url.includes('__sb='))
+      let done = false
+      for (const client of owner) {
+        const ch = new MessageChannel()
+        ch.port1.onmessage = (e) => { if (!done && e.data && e.data.found) { done = true; resolve(e.data) } }
+        client.postMessage({ type: 'us:rewrite-css', sid, url: target, css }, [ch.port2])
+      }
+      setTimeout(() => { if (!done) resolve(null) }, 6000)
+    })
+  })
+  const body = answer ? answer.css : css
+  return new Response(body, { status: 200, headers: { 'content-type': 'text/css; charset=utf-8', 'cache-control': 'no-store' } })
+}
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   if (url.origin !== self.location.origin) return
+  if (url.pathname === '/__ext/') { event.respondWith(externalCss(event, url)); return }
   const explicit = splitSandboxUrl(url.pathname)
 
   event.respondWith((async () => {
@@ -103,10 +129,10 @@ self.addEventListener('fetch', (event) => {
     }
     // A directory → its index; a route with no extension → the SPA's index.
     if (path === '' || path.endsWith('/')) path += 'index.html'
-    const answer = await askPage(sid, path)
+    const answer = await askPage(sid, path, event.request.mode === 'navigate')
     if (!answer) {
       if (!/\.[a-z0-9]+$/i.test(path) && event.request.mode === 'navigate') {
-        const idx = await askPage(sid, 'index.html')
+        const idx = await askPage(sid, 'index.html', true)
         if (idx) return new Response(idx.body, { status: 200, headers: { 'content-type': idx.type } })
       }
       return new Response(`Not in sandbox: ${path}`, { status: 404, headers: { 'content-type': 'text/plain' } })

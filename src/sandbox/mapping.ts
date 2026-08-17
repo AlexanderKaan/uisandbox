@@ -320,7 +320,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       // Colours inside a data-URI SVG, percent-encoded (`%23fff`) or bare;
       // each goes through the same colour path, then back into the URI.
       let changed = false
-      const out = e.value.replace(/(%23|#)([0-9a-f]{3,8})\b/gi, (m0, hash: string, hex: string) => {
+      let out = e.value.replace(/(%23|#)([0-9a-f]{3,8})\b/gi, (m0, hash: string, hex: string) => {
         const c = parseCssColor('#' + hex)
         if (!c) return m0
         const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams)
@@ -328,6 +328,19 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
         changed = true
         const printed = formatLike('#000000', { ...mapped, a: 1 })
         return hash + printed.slice(1)
+      })
+      // rgb()/rgba(), plain or percent-encoded (`rgba%28255, 255, 255, 0.55%29`)
+      out = out.replace(/(rgba?)(\(|%28)([^)%]*?)(\)|%29)/gi, (m0, fn: string, open: string, inner: string, closeP: string) => {
+        const c = parseCssColor(`${fn}(${inner.replace(/%2c/gi, ',')})`)
+        if (!c) return m0
+        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams)
+        if (same(mapped, c)) return m0
+        changed = true
+        const printed = formatLike('rgb(0 0 0 / 0.5)', mapped) // → rgb(r g b / a) or #hex
+        const back = parseCssColor(printed)!
+        const [r, g, b] = formatLike('#000000', { ...back, a: 1 }).slice(1).match(/../g)!.map((h) => parseInt(h, 16))
+        const body = back.a < 0.999 ? `${r}, ${g}, ${b}, ${Math.round(back.a * 1000) / 1000}` : `${r}, ${g}, ${b}`
+        return `${back.a < 0.999 ? 'rgba' : 'rgb'}${open}${body}${closeP}`
       })
       return changed ? out : e.value
     }

@@ -186,5 +186,10 @@ describe('keyframes and data-URI SVGs are in', () => {
     expect(t.ofKind('svg').length).toBe(2)
     expect(out).toContain('@keyframes pulse{from{background:var(--us-v1)}to{background:var(--us-v2)}}')
     expect(out).toContain('--bs-x:var(--us-v3)')
+    // case and path commands survive: `M` and `m` mean different things
+    const t2 = sheet()
+    rewriteCss(`.h{background-image:url("data:image/svg+xml,%3csvg viewBox='0 0 30 30'%3e%3cpath stroke='%23fff' d='M4 7h22'/%3e%3c/svg%3e")}`, t2, 'x.css')
+    expect(t2.identityVars()['--us-v1']).toContain("viewBox='0 0 30 30'")
+    expect(t2.identityVars()['--us-v1']).toContain("d='M4 7h22'")
   })
 })

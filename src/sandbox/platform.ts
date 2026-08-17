@@ -32,6 +32,13 @@ export function detectPlatform(paths: string[], hasIndexHtml: boolean, texts: { 
   const wpTheme = texts.some((t) => /(^|\/)style\.css$/.test(t.path) && /Theme Name:/i.test(t.head)) || has(paths, /(^|\/)(functions\.php|theme\.json)$/) && has(paths, /\.php$/)
   const electron = /"electron"/.test(pkg)
 
+  // Pages first: a repo that carries a Flutter or Swift example among sixty
+  // others (TodoMVC) is still a site if it has pages to open. A source repo
+  // whose only page is a build template renders a shell — the stage says so.
+  if (hasIndexHtml && !wpTheme) {
+    if (electron) return { kind: 'electron', label: 'Electron (web renderer)', evidence: ['electron in package.json'], renders: true }
+    return { kind: 'web-build', label: 'Web', evidence: [], renders: true }
+  }
   if (has(paths, /\.xcodeproj\/|(^|\/)Package\.swift$|\.xcassets\//) || count(paths, /\.swift$/) > 3) {
     ev.push(`${count(paths, /\.swift$/)} Swift files`, `${count(paths, /\.colorset\/Contents\.json$/)} colour sets`)
     if (!has(paths, /pubspec\.yaml$/)) return { kind: 'ios', label: 'iOS / macOS (Swift)', evidence: ev, renders: false }
@@ -50,10 +57,6 @@ export function detectPlatform(paths: string[], hasIndexHtml: boolean, texts: { 
   }
   if (wpTheme) {
     return { kind: 'web-source', label: 'WordPress theme', evidence: ['style.css with a Theme Name header', `${count(paths, /\.php$/)} PHP templates`], renders: false }
-  }
-  if (hasIndexHtml) {
-    if (electron) return { kind: 'electron', label: 'Electron (web renderer)', evidence: ['electron in package.json'], renders: true }
-    return { kind: 'web-build', label: 'Web', evidence: [], renders: true }
   }
   if (count(paths, /\.(css|scss|less)$/) > 0) {
     return { kind: 'web-source', label: 'Web source (no built page)', evidence: [`${count(paths, /\.(css|scss|less)$/)} stylesheets, no index.html`], renders: false }
