@@ -19,7 +19,6 @@ import type { Archive, ZipEntry } from '../audit/intake/readZip'
 import { rewriteCss, rewriteHtml, stripLinkIntegrity } from './rewrite'
 import { SubstitutionTable } from './table'
 import { detectPlatform, type Platform } from './platform'
-import { SOURCE_EXT, scanSourceFile } from './sourceScan'
 
 export interface ServedFile {
   blob: Blob
@@ -49,8 +48,6 @@ export interface SandboxProject {
   cssBytes: number
   /** What was dropped, and whether it renders. */
   platform: Platform
-  /** Source files read for literals (non-web platforms), for the report. */
-  sourceFiles: number
 }
 
 const MIME: Record<string, string> = {
@@ -155,21 +152,6 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   // Error pages are not screens anyone wants to tune.
   const ERROR_PAGE = /(^|\/)(404|500|_not-found|_error|offline)(\.html?|\/index\.html?)$/i
   const NOT_A_SCREEN = /(^|\/)(tests?|__tests__|mocks?|fixtures?|spec|e2e|cypress|playwright|storybook-static|coverage)\//i
-  // Non-web platforms: read the SOURCE for literals (Swift/Kotlin/XML/Dart/QML/kv/JSON).
-  const platformGuess = detectPlatform(paths, [...raw.keys()].some((p) => /(^|\/)index\.html?$/i.test(p)), heads)
-  let sourceFiles = 0
-  if (!platformGuess.renders) {
-    const srcEntries = archive.entries.filter((e) => SOURCE_EXT.test(e.path) && e.size < 400000).slice(0, 800)
-    for (const e of srcEntries) {
-      const t = await archive.readText(e)
-      if (t === null) continue
-      const n = scanSourceFile(e.path, t, table, platformGuess.kind)
-      if (n) sourceFiles++
-      // Keep the text so the patched export can write into it.
-      if (!raw.has(e.path)) raw.set(e.path, { blob: new Blob([t], { type: 'text/plain' }), type: 'text/plain' })
-    }
-  }
-
   const screens: Screen[] = [...raw.keys()]
     .filter((p) => /\.html?$/i.test(p) && !ERROR_PAGE.test(p) && !NOT_A_SCREEN.test(p) && !redirects.has(p))
     .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)))
@@ -177,7 +159,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
 
   const platform = detectPlatform(paths, screens.length > 0, heads)
-  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, sourceFiles }
+  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform }
 }
 
 /** The `<style>` block that defines the sheet's variables, for injection into a page's head. */

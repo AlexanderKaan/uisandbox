@@ -63,3 +63,24 @@ export function detectPlatform(paths: string[], hasIndexHtml: boolean, texts: { 
   }
   return { kind: 'unknown', label: 'Unknown', evidence: [], renders: false }
 }
+
+/**
+ * The door only opens for what the sandbox can show 1:1. Everything else gets
+ * one honest sentence: what we recognised, why it cannot be rendered here, and
+ * what WOULD work. Reading a Swift file's colours onto a swatch board is not
+ * "tinkering with your own app", and half a promise is worse than none.
+ */
+export function refusalFor(p: Platform, detail: { files: number }): string {
+  const tail = ' Drop a BUILT web app instead — its dist/, build/ or out/ folder with an index.html — and it renders exactly as deployed.'
+  switch (p.kind) {
+    case 'ios': return `This is an iOS/macOS project (${p.evidence.join(', ')}). No browser can render SwiftUI or UIKit, so the sandbox cannot show it 1:1 — and it will not show you a look-alike.` + tail
+    case 'android': return `This is an Android project (${p.evidence.join(', ')}). Compose and XML layouts have no browser render, so the sandbox cannot show it 1:1.` + tail
+    case 'flutter': return `This is a Flutter project. A Flutter WEB build (\`flutter build web\` → build/web/) renders here; the Dart source alone cannot.`
+    case 'qt': return `This is a Qt/QML project. There is no browser render for QML, so the sandbox cannot show it 1:1.` + tail
+    case 'kivy': return `This is a Kivy (Python) project. There is no browser render for kv layouts, so the sandbox cannot show it 1:1.` + tail
+    case 'python-gui': return `This looks like a Python project without a web build. The sandbox renders web builds only.` + tail
+    case 'web-source': return `This is web SOURCE without a built page (${p.evidence.join(', ')}). Build it first — \`npm run build\`, or for a WordPress theme a static export of the site — then drop the output folder.`
+    case 'unknown': return `No index.html and nothing the sandbox can render was found in these ${detail.files} files.` + tail
+    default: return 'This archive has no page the sandbox can open.' + tail
+  }
+}

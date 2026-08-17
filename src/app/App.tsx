@@ -6,6 +6,7 @@ import { useConfig } from '../state/useConfig'
 import { randomKit } from '../state/randomKit'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
+import { refusalFor } from '../sandbox/platform'
 import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars } from '../sandbox/mapping'
@@ -17,7 +18,6 @@ import { customFontUrl } from '../tokens/customFonts'
 import { Intake } from './Intake'
 import { Stage } from './Stage'
 import { ExportDialog } from './ExportDialog'
-import { ValuesBoard } from './ValuesBoard'
 import { genPatch, genPatchedFiles } from '../export/genSheet'
 
 interface Loaded {
@@ -158,10 +158,23 @@ export function App() {
     cur.project.screens = [...cur.project.screens, { path: path.replace(/^\//, ''), label: path, source: 'pinned' }]
     setLoaded({ ...cur })
   }, [])
+  const [thin, setThin] = useState<string | null>(null)
   const onFrameLoaded = useCallback(() => {
     applyVars()
     stopObserver.current?.()
     const doc = frameRef.current?.contentDocument
+    // A shell with nothing in it is not "your app": say so rather than let a
+    // half-empty page pass for the real thing.
+    if (doc?.body) {
+      setTimeout(() => {
+        const els = doc.body.querySelectorAll('*').length
+        const rules = Array.from(doc.styleSheets).reduce((n, sh) => { try { return n + sh.cssRules.length } catch { return n } }, 0)
+        const text = (doc.body.innerText ?? '').trim().length
+        const media = doc.body.querySelectorAll('img, svg, canvas, video, picture').length
+        const shell = els < 6 || rules < 3 || (text < 20 && media === 0)
+        setThin(shell ? `This screen rendered ${els} element${els === 1 ? '' : 's'}, ${rules} style rules and ${text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
+      }, 1200)
+    }
     if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => { setSheetVersion((v) => v + 1); refineBaseline() })
     refineBaseline()
     discoverScreens()
@@ -185,14 +198,14 @@ export function App() {
         root,
         onProgress: (d, t) => { if (d % 25 === 0 || d === t) setBusy(`Reading files… ${d}/${t}`) },
       })
-      if (!project.screens.length && project.platform.renders) throw new Error('No index.html found. Drop the BUILT site (dist/, build/, out/) — a source folder alone cannot be rendered.')
-      if (!project.screens.length && project.table.entries.length === 0) throw new Error(`Read this as ${project.platform.label}, but found nothing to tokenise (no colours, fonts, radii or sizes in a notation the reader knows).`)
+      // The door opens for what renders 1:1, and for nothing else.
+      if (!project.platform.renders || !project.screens.length) throw new Error(refusalFor(project.platform, { files: archive.entries.length }))
       setBusy('Deriving the knobs from your code…')
       const report = await deriveBaseline(archive, project.table)
       if (loaded) disown(loaded.project)
       own(project, () => varsRef.current)
       dispatch({ type: 'REPLACE', cfg: report.baseline.cfg })
-      setLoaded({ project, report, screen: project.screens[0] ?? { path: '', label: '/', source: 'file' }, archive })
+      setLoaded({ project, report, screen: project.screens[0]!, archive })
       setShowNotes(true)
     } catch (err) {
       setError((err as Error).message)
@@ -270,11 +283,6 @@ export function App() {
                 onToggleLock={(k) => setLocked((s) => { const n = new Set(s); if (n.has(k)) n.delete(k); else n.add(k); return n })}
               />
             )}
-            {!loaded.project.platform.renders ? (
-              <section className="stage"><ValuesBoard project={loaded.project} vars={vars} />
-                <div className="stage__foot"><span><b>{loaded.project.name}</b> · {loaded.project.platform.label} · {loaded.project.table.entries.length} values from {loaded.project.sourceFiles} source files</span><span className="stage__spacer" />{changedCount > 0 ? <span className="chip chip--warn"><span className="chip__dot" />{changedCount} value{changedCount === 1 ? '' : 's'} moved</span> : <span className="chip chip--ok"><span className="chip__dot" />identity — nothing turned</span>}</div>
-              </section>
-            ) : (
             <Stage
               project={loaded.project}
               screen={loaded.screen}
@@ -283,8 +291,8 @@ export function App() {
               onLoaded={onFrameLoaded}
               onPin={pinCurrent}
               changedCount={changedCount}
+              warning={thin}
             />
-            )}
             {showNotes && (
               <div className="card popcard" role="dialog" aria-label="What was read">
                 <h3>What we read from your code</h3>

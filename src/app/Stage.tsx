@@ -14,6 +14,8 @@ interface StageProps {
   /** Add the frame's current route to the screens. */
   onPin: () => void
   changedCount: number
+  /** A doubt about the render worth saying out loud (a shell, not the app). */
+  warning?: string | null
 }
 
 const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
@@ -23,7 +25,7 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
   { id: 'phone', label: '390', w: 390 },
 ]
 
-export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount }: StageProps) {
+export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning }: StageProps) {
   const [width, setWidth] = useState<string>('fit')
   const [verify, setVerify] = useState<VerifyResult | { busy: true } | null>(null)
   const [showVerify, setShowVerify] = useState(false)
@@ -97,8 +99,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             if (!away) onLoaded()
           }}
         />
+        {warning && !leftSandbox && (
+          <div className="card popcard popcard--low verify" role="status"><h3>Is this the built app?</h3><div>{warning}</div></div>
+        )}
         {leftSandbox && (
-          <div className="card popcard verify" role="status">
+          <div className="card popcard popcard--low verify" role="status">
             <h3>This screen left the sandbox</h3>
             <div>The page navigated to another origin (a redirect page, or a script that sends visitors elsewhere). Nothing there is yours to tune — pick another screen.</div>
           </div>
