@@ -221,3 +221,19 @@ Not readable yet: system-colour references (`Color.blue`, `MaterialTheme.
 colorScheme.primary`), Interface Builder .storyboard RGB, Qt stylesheets
 (`.qss` — plain CSS, would work if the extension were allowed), PDF/Figma
 files, nested zips, tar.gz.
+
+## The door (2026-08-17, after round 5)
+
+41. **Only what renders 1:1 comes in.** The values board for iOS/Android/
+    Flutter/Kivy/WordPress was honest, but "a legend of your colours" is not
+    "tinkering with your own app", and half a promise weakens the whole one.
+    Non-renderable platforms are refused with one sentence each
+    (`platform.refusalFor`): what we recognised, why no browser can show it,
+    what would work (a Flutter WEB build, a static export). The source reader
+    (`sourceScan.ts`), the Android/Swift exports and the tests stay as modules
+    for a later "tokens without a render" track — deliberately not wired.
+42. **A shell is called a shell.** After the first load, a screen with fewer
+    than 6 elements, fewer than 3 style rules, or no visible text and no media
+    gets a warning card at the bottom of the frame ("Is this the built app?").
+    MagicMirror — a Raspberry-Pi HMI whose modules come from the server —
+    renders a black page with 41 empty elements; the card says so.
