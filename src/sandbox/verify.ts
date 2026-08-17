@@ -40,7 +40,21 @@ export interface VerifyResult {
 
 const MAX_REPORT = 40
 
-/** A stable address for an element: its path of tag#id.class:nth from <body>. */
+/** Every element under a root, shadow roots included (Lit, web components). */
+export function allElements(root: ParentNode): Element[] {
+  const out: Element[] = []
+  const walk = (node: ParentNode) => {
+    for (const el of Array.from(node.querySelectorAll('*'))) {
+      out.push(el)
+      if (el.shadowRoot) walk(el.shadowRoot)
+    }
+  }
+  walk(root)
+  return out
+}
+
+/** A stable address for an element: its path of tag#id.class:nth from <body>,
+ *  crossing shadow boundaries as `host>#shadow>…`. */
 function keyOf(el: Element): string {
   const parts: string[] = []
   let e: Element | null = el
@@ -52,7 +66,13 @@ function keyOf(el: Element): string {
     let sib = e.previousElementSibling
     while (sib) { if (sib.tagName === e.tagName) nth++; sib = sib.previousElementSibling }
     parts.push(`${tag}${id}${cls ? '.' + cls : ''}:${nth}`)
-    e = e.parentElement
+    const parent: Element | null = e.parentElement
+    if (!parent) {
+      // Top of a shadow tree: continue at the host.
+      const rootNode = e.getRootNode()
+      if (rootNode instanceof ShadowRoot) { parts.push('#shadow'); e = rootNode.host; continue }
+    }
+    e = parent
   }
   return parts.reverse().join('>')
 }
@@ -64,8 +84,8 @@ function keyOf(el: Element): string {
  * "unpaired" instead of refusing the whole page.
  */
 export function compareDocuments(raw: Document, sandbox: Document, props: readonly string[] = VERIFY_PROPS): VerifyResult {
-  const a = Array.from(raw.querySelectorAll('body *')).filter((el) => !isOurs(el))
-  const b = Array.from(sandbox.querySelectorAll('body *')).filter((el) => !isOurs(el))
+  const a = allElements(raw.body).filter((el) => !isOurs(el))
+  const b = allElements(sandbox.body).filter((el) => !isOurs(el))
   if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, unpaired: { raw: a.length, sandbox: b.length }, mismatches: [] }
   const bByKey = new Map<string, Element>()
   for (const el of b) { const k = keyOf(el); if (!bByKey.has(k)) bByKey.set(k, el) }

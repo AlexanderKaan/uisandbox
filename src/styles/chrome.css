@@ -135,6 +135,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .stage__tab { height: 26px; padding: 0 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--app-fg-muted); white-space: nowrap; }
 .stage__tab:hover { background: var(--app-hover); color: var(--app-fg); }
 .stage__tab--on { background: var(--app-fg); color: var(--app-bg); }
+.stage__tab--route:not(.stage__tab--on) { color: var(--app-fg-faint); font-style: italic; }
 .stage__tab--on:hover { background: var(--app-fg); color: var(--app-bg); }
 .stage__frame {
   flex: 1; min-height: 0; position: relative;

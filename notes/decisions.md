@@ -121,3 +121,24 @@ compared raw vs identity in the sandbox. Findings, fixed and pinned:
 
 Result: Next/Tailwind v4 (2 screens), Astro (8 screens) and styled-components
 all verify 1:1 with 0 differences; the brand knob reaches insertRule'd rules live.
+
+## Hold-out round 3 (2026-08-17, MUI/Emotion + react-router · Lit/Shadow DOM · redirect pages)
+
+24. **A sandbox document opens at its REAL path** — `/projects?__sb=<sid>` —
+    and the worker BINDS the resulting client to the sandbox (public/sw.js
+    `boundClients`, then referrer, then the last bound sandbox for framed
+    navigations). Under `/__sb/<sid>/index.html` a BrowserRouter matched no
+    route (7 elements, nav only); now it sees `/` and `/projects` as deployed.
+    `/__sb/<sid>/…` still works. The hook script carries the sid.
+25. **SPA screens come from the rendered page's links** (`discoverRoutes`:
+    same-origin, extension-less `<a href>`), plus a pin button for the route the
+    frame is on. The archive cannot list an SPA's routes; the page can.
+26. **Emotion (MUI) rules arrive through the same insertRule hook** — brand
+    `#6d28d9` read from them; `/projects` verifies 1:1.
+27. **Lit's adopted stylesheets** go through the `replaceSync` hook; custom
+    properties inherit into shadow roots, so nothing more was needed for the
+    render — but the 1:1 check now WALKS shadow roots (`allElements`, keys
+    cross the boundary as `host>#shadow>…`).
+28. **A `<meta http-equiv=refresh>` page is not a screen** (Bootstrap's docs
+    /about redirects to getbootstrap.com and the frame left the origin); the
+    stage says so when a frame navigates away.

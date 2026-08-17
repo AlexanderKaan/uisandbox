@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ExternalLink, Pin, RefreshCw, ShieldCheck } from 'lucide-react'
 import type { SandboxProject, Screen } from '../sandbox/project'
 import { identitySid, rawSid, sandboxUrl } from '../sandbox/host'
 import { compareDocuments, loadHidden, type VerifyResult } from '../sandbox/verify'
@@ -11,6 +11,8 @@ interface StageProps {
   frameRef: RefObject<HTMLIFrameElement | null>
   /** Called after each load so the live sheet can be (re)applied. */
   onLoaded: () => void
+  /** Add the frame's current route to the screens. */
+  onPin: () => void
   changedCount: number
 }
 
@@ -21,16 +23,17 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
   { id: 'phone', label: '390', w: 390 },
 ]
 
-export function Stage({ project, screen, onScreen, frameRef, onLoaded, changedCount }: StageProps) {
+export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount }: StageProps) {
   const [width, setWidth] = useState<string>('fit')
   const [verify, setVerify] = useState<VerifyResult | { busy: true } | null>(null)
   const [showVerify, setShowVerify] = useState(false)
+  const [leftSandbox, setLeftSandbox] = useState(false)
   const hiddenHost = useRef<HTMLDivElement>(null)
   const w = WIDTHS.find((x) => x.id === width)?.w ?? null
   const src = sandboxUrl(project.id, screen.path)
 
   // A new project or screen invalidates the last measurement.
-  useEffect(() => { setVerify(null) }, [project.id, screen.path])
+  useEffect(() => { setVerify(null); setLeftSandbox(false) }, [project.id, screen.path])
 
   const runVerify = async () => {
     setVerify({ busy: true })
@@ -57,10 +60,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, changedCo
       <div className="stage__bar">
         <div className="stage__tabs" role="tablist" aria-label="Screens">
           {project.screens.map((s) => (
-            <button key={s.path} role="tab" aria-selected={s.path === screen.path} className={`stage__tab ${s.path === screen.path ? 'stage__tab--on' : ''}`} onClick={() => onScreen(s)} title={s.path}>
+            <button key={s.path} role="tab" aria-selected={s.path === screen.path} className={`stage__tab ${s.path === screen.path ? 'stage__tab--on' : ''} ${s.source && s.source !== 'file' ? 'stage__tab--route' : ''}`} onClick={() => onScreen(s)} title={s.source === 'link' ? `${s.path} — a route found on the page` : s.source === 'pinned' ? `${s.path} — pinned` : s.path}>
               {s.label}
             </button>
           ))}
+          <button type="button" className="stage__tab" onClick={onPin} title="Pin the route the frame is on now as a screen"><Pin size={11} strokeWidth={2} /></button>
         </div>
         <div className="seg" role="group" aria-label="Viewport width">
           {WIDTHS.map((x) => (
@@ -78,13 +82,27 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, changedCo
       <div className={`stage__frame ${w ? 'stage__frame--w' : ''}`}>
         <iframe
           key={project.id}
+          name={`us:${project.id}`}
           ref={frameRef}
           className="stage__iframe"
           title={`${project.name} — ${screen.label}`}
           src={src}
           style={w ? { width: w, maxWidth: '100%' } : undefined}
-          onLoad={onLoaded}
+          onLoad={() => {
+            // A page that redirected to another origin is out of our hands.
+            let away = false
+            try { void frameRef.current?.contentDocument?.body } catch { away = true }
+            if (!away && frameRef.current && !frameRef.current.contentDocument) away = true
+            setLeftSandbox(away)
+            if (!away) onLoaded()
+          }}
         />
+        {leftSandbox && (
+          <div className="card popcard verify" role="status">
+            <h3>This screen left the sandbox</h3>
+            <div>The page navigated to another origin (a redirect page, or a script that sends visitors elsewhere). Nothing there is yours to tune — pick another screen.</div>
+          </div>
+        )}
         <div ref={hiddenHost} aria-hidden="true" />
         {showVerify && (
           <div className="card popcard verify" role="dialog" aria-label="1:1 check">

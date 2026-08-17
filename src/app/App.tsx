@@ -5,7 +5,7 @@ import type { Config } from '../tokens/types'
 import { useConfig } from '../state/useConfig'
 import { randomKit } from '../state/randomKit'
 import { openZip, type Archive } from '../audit/intake/readZip'
-import { buildProject, type SandboxProject, type Screen } from '../sandbox/project'
+import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars } from '../sandbox/mapping'
@@ -128,13 +128,35 @@ export function App() {
     dispatch({ type: 'REPLACE', cfg: cfg2 })
     setLoaded({ ...cur })
   }, [dispatch])
+  // Screens an SPA only reveals once rendered: its links. Merged into the picker.
+  const discoverScreens = useCallback(() => {
+    const cur = loadedRef.current
+    const doc = frameRef.current?.contentDocument
+    if (!cur || !doc?.body) return
+    const found = discoverRoutes(doc, cur.project.screens)
+    if (!found.length) return
+    cur.project.screens = [...cur.project.screens, ...found]
+    setLoaded({ ...cur })
+  }, [])
+  const pinCurrent = useCallback(() => {
+    const cur = loadedRef.current
+    const win = frameRef.current?.contentWindow
+    if (!cur || !win) return
+    const path = win.location.pathname.replace(/^\/__sb\/[^/]+\//, '/').replace(/\/+$/, '') || '/'
+    if (cur.project.screens.some((s) => s.label === path)) return
+    cur.project.screens = [...cur.project.screens, { path: path.replace(/^\//, ''), label: path, source: 'pinned' }]
+    setLoaded({ ...cur })
+  }, [])
   const onFrameLoaded = useCallback(() => {
     applyVars()
     stopObserver.current?.()
     const doc = frameRef.current?.contentDocument
     if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => setSheetVersion((v) => v + 1))
     refineBaseline()
-  }, [applyVars, loaded, refineBaseline])
+    discoverScreens()
+    // A router renders after load; look once more.
+    setTimeout(discoverScreens, 800)
+  }, [applyVars, loaded, refineBaseline, discoverScreens])
   useEffect(() => () => { stopObserver.current?.() }, [])
   // Runtime rules (insertRule) that grew the sheet — coalesced, then re-map.
   useEffect(() => {
@@ -241,6 +263,7 @@ export function App() {
               onScreen={(screen) => setLoaded({ ...loaded, screen })}
               frameRef={frameRef}
               onLoaded={onFrameLoaded}
+              onPin={pinCurrent}
               changedCount={changedCount}
             />
             {showNotes && (

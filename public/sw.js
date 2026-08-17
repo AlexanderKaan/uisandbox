@@ -28,16 +28,38 @@ function splitSandboxUrl(pathname) {
   return { sid: rest.slice(0, slash), path: rest.slice(slash + 1) }
 }
 
+/* A sandbox document opened at its REAL path — `/projects?__sb=<sid>` — so a
+ * client-side router (BrowserRouter, Next, SvelteKit) sees the pathname it was
+ * deployed for. The worker BINDS the resulting client to the sandbox; every
+ * later request from that client resolves without the parameter, and a
+ * navigation inside that frame (a link click) is attributed by referrer, then
+ * by the most recently bound sandbox for framed navigations. */
+const boundClients = new Map() // clientId → sid
+let lastBoundSid = null
+const sidFromUrl = (u) => {
+  try {
+    const url = new URL(u)
+    return url.searchParams.get('__sb') || splitSandboxUrl(url.pathname)?.sid || null
+  } catch { return null }
+}
+
 /** Which sandbox does a request come from, when its URL does not say? */
 async function sandboxOfRequester(event) {
-  const fromUrl = (u) => {
-    try { return splitSandboxUrl(new URL(u).pathname)?.sid || null } catch { return null }
-  }
+  if (event.clientId && boundClients.has(event.clientId)) return boundClients.get(event.clientId)
   if (event.clientId) {
     const c = await self.clients.get(event.clientId)
-    if (c) { const sid = fromUrl(c.url); if (sid) return sid }
+    if (c) { const sid = sidFromUrl(c.url); if (sid) return sid }
   }
-  if (event.request.referrer) { const sid = fromUrl(event.request.referrer); if (sid) return sid }
+  if (event.request.referrer) { const sid = sidFromUrl(event.request.referrer); if (sid) return sid }
+  // A navigation inside a sandboxed frame after the router moved on
+  // (`/dashboard` → link click): the referrer no longer carries the id.
+  // Our own app is a top-level document, never an iframe, and its only path
+  // is `/` — anything else navigating in a frame is a sandbox.
+  if (event.request.mode === 'navigate' && lastBoundSid) {
+    if (event.request.destination === 'iframe') return lastBoundSid
+    const ref = event.request.referrer ? new URL(event.request.referrer).pathname : ''
+    if (ref && ref !== '/' && ref !== '/index.html') return lastBoundSid
+  }
   return null
 }
 
@@ -67,11 +89,17 @@ self.addEventListener('fetch', (event) => {
   const explicit = splitSandboxUrl(url.pathname)
 
   event.respondWith((async () => {
-    let sid = explicit?.sid || null
+    const param = url.searchParams.get('__sb')
+    let sid = explicit?.sid || param || null
     let path = explicit ? explicit.path : url.pathname.replace(/^\//, '')
     if (!sid) {
       sid = await sandboxOfRequester(event)
       if (!sid) return fetch(event.request)
+    }
+    if (event.request.mode === 'navigate') {
+      if (event.resultingClientId) boundClients.set(event.resultingClientId, sid)
+      lastBoundSid = sid
+      if (boundClients.size > 200) boundClients.delete(boundClients.keys().next().value)
     }
     // A directory → its index; a route with no extension → the SPA's index.
     if (path === '' || path.endsWith('/')) path += 'index.html'

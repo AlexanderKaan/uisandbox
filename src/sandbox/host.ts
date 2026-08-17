@@ -32,7 +32,9 @@ export function onSheetGrow(fn: (project: SandboxProject) => void): () => void {
 
 /** `/__sb/<sid>/…` → sid, for a sandboxed window. */
 const sidOfWindow = (win: Window): string | null => {
-  try { return win.location.pathname.match(/^\/__sb\/([^/]+)\//)?.[1] ?? null } catch { return null }
+  try {
+    return new URLSearchParams(win.location.search).get('__sb') || win.location.pathname.match(/^\/__sb\/([^/]+)\//)?.[1] || win.name.match(/^us:(\S+)$/)?.[1] || null
+  } catch { return null }
 }
 
 /**
@@ -42,8 +44,8 @@ const sidOfWindow = (win: Window): string | null => {
  * once (identity values — the knob mapping follows on the next render), so the
  * rule never computes against an undefined variable.
  */
-function rewriteRuleFor(rule: string, win: Window): string {
-  const sid = sidOfWindow(win)
+function rewriteRuleFor(rule: string, win: Window, sidHint?: string): string {
+  const sid = sidHint || sidOfWindow(win)
   const o = sid ? owned.get(sid) : undefined
   if (!o || o.variant !== 'rewritten') return rule
   const table = o.project.table
@@ -64,7 +66,12 @@ function rewriteRuleFor(rule: string, win: Window): string {
 }
 if (typeof window !== 'undefined') (window as unknown as { __usRewriteRule?: typeof rewriteRuleFor }).__usRewriteRule = rewriteRuleFor
 
-export const sandboxUrl = (sid: string, path: string) => `/__sb/${sid}/${path.replace(/^\//, '')}`
+/** The REAL path plus the sandbox id: `/about/?__sb=<sid>` — a client-side
+ *  router then sees the pathname it was deployed for (see public/sw.js). */
+export const sandboxUrl = (sid: string, path: string) => {
+  const p = path.replace(/^\//, '').replace(/(^|\/)index\.html?$/i, '$1')
+  return `/${p}?__sb=${sid}`
+}
 export const rawSid = (id: string) => `${id}-raw`
 export const identitySid = (id: string) => `${id}-id`
 
@@ -135,7 +142,7 @@ async function onMessage(e: MessageEvent) {
   if (!f) { port.postMessage({ found: false, owner: true }); return }
   let body: ArrayBuffer
   if (o.variant === 'rewritten' && /\.html?$/i.test(path)) {
-    const html = injectVars(await f.blob.text(), o.vars())
+    const html = injectVars(await f.blob.text(), o.vars(), data.sid)
     body = new TextEncoder().encode(html).buffer as ArrayBuffer
   } else {
     body = await f.blob.arrayBuffer()

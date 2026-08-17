@@ -10,3 +10,13 @@ describe('resolveFile', () => {
     expect(resolveFile(files, 'nope/x.js')).toBeUndefined()
   })
 })
+
+import { sandboxUrl } from '../host'
+describe('sandboxUrl', () => {
+  it('opens a screen at its REAL path with the sandbox id as a parameter (routers see the deployed pathname)', () => {
+    expect(sandboxUrl('p1', 'index.html')).toBe('/?__sb=p1')
+    expect(sandboxUrl('p1', 'about/index.html')).toBe('/about/?__sb=p1')
+    expect(sandboxUrl('p1', 'pricing.html')).toBe('/pricing.html?__sb=p1')
+    expect(sandboxUrl('p1', 'dashboard')).toBe('/dashboard?__sb=p1')
+  })
+})
