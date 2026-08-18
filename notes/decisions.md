@@ -555,3 +555,8 @@ Spectrum 100/95/100 (138 painted el. 1:1) · js13kPWA 100/100/100 (506 el.
 1:1, only our worker registered) · Open Props 100/100/100 (3,912 el. 1:1) ·
 MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
 1:1).
+91. **Status colours are one row** — Success/Warning/Danger/Info as a set of
+    dots (one per family the sheet has), the pickers stacked in the flyout. In
+    any grown design system they are the standard four; a row each was three
+    rows saying "green, amber, red". Secondary and Accent stay separate: those
+    are choices, not a set.

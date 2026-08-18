@@ -112,23 +112,41 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       </>
     ),
   })
-  for (const f of FAMILY_ROWS) {
+  // Secondary and accent are one row each; the STATUS colours are a set — one
+  // row, one dot per family the sheet has, the pickers stacked in the flyout.
+  // In any grown design system they are the standard four; a row each was
+  // three rows saying "green, amber, red".
+  const famState = (f: (typeof FAMILY_ROWS)[number]) => {
     const centre = families?.centre[f.fam]
-    if (!centre) continue
+    if (!centre) return null
     const centreHex = formatCssColor({ ...centre, a: 1 })
     const cur = (cfg.sb[f.key] as string | undefined) ?? centreHex
+    return { ...f, centreHex, cur, changed: cur.toLowerCase() !== centreHex.toLowerCase() }
+  }
+  const famPicker = (f: NonNullable<ReturnType<typeof famState>>, hint = true) => (
+    <Fragment key={f.key}>
+      <label className="fmbrand">
+        <span className="fmbrand__label">{f.label} colour</span>
+        <span className="fmbrand__val"><span className="fmrow__dot" style={{ background: f.cur }} />{f.cur}</span>
+        <input type="color" className="fmrow__colorinput" value={f.cur} onChange={(e) => setDial(f.key, e.target.value)} aria-label={`${f.label} colour`} />
+      </label>
+      {hint && <p className="sbp__hint">Every {f.label.toLowerCase()}-family colour in your CSS moves with this one; its most-used member is {f.centreHex}.</p>}
+      {cfg.sb[f.key] && <button type="button" className="btn btn--ghost btn--sm sbp__reset" onClick={() => setDial(f.key, undefined)}>Back to your code{hint ? '' : ` (${f.label.toLowerCase()})`}</button>}
+    </Fragment>
+  )
+  for (const f of FAMILY_ROWS.filter((x) => x.fam === 'secondary' || x.fam === 'accent').map(famState)) {
+    if (!f) continue
+    rows.push({ key: f.key, label: f.label, changed: f.changed, value: nameColor(f.cur as `#${string}`), dot: <span className="fmrow__dot" style={{ background: f.cur }} />, body: () => famPicker(f) })
+  }
+  const status = FAMILY_ROWS.filter((x) => x.fam !== 'secondary' && x.fam !== 'accent').map(famState).filter((x): x is NonNullable<typeof x> => !!x)
+  if (status.length) {
     rows.push({
-      key: f.key, label: f.label, changed: cur.toLowerCase() !== centreHex.toLowerCase(),
-      value: nameColor(cur as `#${string}`), dot: <span className="fmrow__dot" style={{ background: cur }} />,
+      key: 'status', label: 'Status', changed: status.some((f) => f.changed),
+      value: <span className="fmrow__dots">{status.map((f) => <span key={f.key} className="fmrow__dot" style={{ background: f.cur }} title={`${f.label}: ${f.cur}`} />)}</span>,
       body: () => (
         <>
-          <label className="fmbrand">
-            <span className="fmbrand__label">{f.label} colour</span>
-            <span className="fmbrand__val"><span className="fmrow__dot" style={{ background: cur }} />{cur}</span>
-            <input type="color" className="fmrow__colorinput" value={cur} onChange={(e) => setDial(f.key, e.target.value)} aria-label={`${f.label} colour`} />
-          </label>
-          <p className="sbp__hint">Every {f.label.toLowerCase()}-family colour in your CSS moves with this one; its most-used member is {centreHex}.</p>
-          {cfg.sb[f.key] && <button type="button" className="btn btn--ghost btn--sm sbp__reset" onClick={() => setDial(f.key, undefined)}>Back to your code</button>}
+          {status.map((f) => famPicker(f, false))}
+          <p className="sbp__hint">Every colour of a status family in your CSS moves with its picker; the dots show each family's most-used member.</p>
         </>
       ),
     })

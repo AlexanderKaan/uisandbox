@@ -955,3 +955,6 @@
   color: var(--app-fg-faint);
   letter-spacing: 0.02em;
 }
+
+/* Status row: the families as a set of dots. */
+.fmrow__dots { display: inline-flex; gap: 4px; align-items: center; }
