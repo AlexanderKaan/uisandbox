@@ -33,6 +33,9 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
   { id: 'phone', label: '390', w: 390 },
 ]
 
+/** What a sandboxed document may do — everything a page needs, minus top navigation. */
+export const SANDBOX_FLAGS = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock'
+
 export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, coverage, notes }: StageProps) {
   const [showCov, setShowCov] = useState(false)
   const [width, setWidth] = useState<string>('fit')
@@ -89,6 +92,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
           name={`us:${project.id}`}
           ref={frameRef}
           className="stage__iframe"
+          // Their scripts run same-origin (the worker serves them), so the one
+          // thing the sandbox flag can still deny is worth denying: navigating
+          // the TOP window (`top.location = …` in a hostile build hijacked the
+          // whole app). No allow-top-navigation, no downloads.
+          sandbox={SANDBOX_FLAGS}
           title={`${project.name} — ${screen.label}`}
           src={src}
           style={w ? { width: w, maxWidth: '100%' } : undefined}

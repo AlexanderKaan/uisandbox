@@ -182,12 +182,14 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     if (!blob) continue
     const type = mimeOf(rel)
     raw.set(rel, { blob, type })
-    if (/\.css$/i.test(rel)) {
+    // A single stylesheet past 24 MB is not a stylesheet anyone wrote (a
+    // padded or hostile file): served as it is, not parsed into a tab's memory.
+    if (/\.css$/i.test(rel) && blob.size <= 24 * 1024 * 1024) {
       const css = await blob.text()
       cssBytes += css.length
       detectScheme(css, scheme)
       rewritten.set(rel, { blob: new Blob([rewriteCss(css, table, rel)], { type }), type })
-    } else if (/\.html?$/i.test(rel)) {
+    } else if (/\.html?$/i.test(rel) && blob.size <= 8 * 1024 * 1024) {
       const html = await blob.text()
       // A page whose only job is to send you elsewhere is not a screen.
       if (/<meta[^>]+http-equiv=["']?refresh["']?[^>]*>/i.test(html) && html.length < 4000) redirects.add(rel)

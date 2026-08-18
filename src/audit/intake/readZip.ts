@@ -125,6 +125,11 @@ async function readCentralDirectory(file: Blob): Promise<ZipEntry[] | null> {
 }
 
 /** Inflate one entry to bytes. Stored and deflate are the only two methods in the wild. */
+/** A zip entry name as a project-relative path — see the intake note on names. */
+export function safePath(p: string): string {
+  return p.replace(/\\/g, '/').split('/').filter((seg) => seg && seg !== '.' && seg !== '..').join('/')
+}
+
 async function readEntryBlob(file: Blob, entry: ZipEntry): Promise<Blob | null> {
   // The local header repeats the name and extra fields, and its lengths can
   // differ from the central directory's — the data starts after ITS pair.
@@ -180,7 +185,17 @@ export async function openZip(file: File): Promise<Archive> {
   const rootName = wrapped ? first! : file.name.replace(/\.zip$/i, '') || 'your project'
   const strip = (p: string) => (wrapped ? p.slice(first!.length + 1) : p)
 
-  const named = real.map((e) => ({ ...e, path: strip(e.path) })).filter((e) => e.path)
+  // Paths are NAMES, never locations: an entry called `../../x.html` or
+  // `/abs/x.html` (a hostile or merely odd zip) is normalised — backslashes to
+  // slashes, leading slashes and `..` segments dropped — so it can neither
+  // read as a screen above the root nor come back out of an export as a
+  // zip-slip into whoever unpacks it.
+  const named = real.map((e) => ({ ...e, path: safePath(strip(e.path)) })).filter((e) => e.path)
+  // The size guard: a build is tens of megabytes; an archive claiming more than
+  // 2 GB unpacked, or 60,000 files, is not one we can hold in a tab.
+  const total = named.reduce((n, e) => n + e.size, 0)
+  if (total > 2 * 1024 ** 3) throw new Error(`This archive unpacks to ${Math.round(total / 1024 ** 3)} GB — more than a browser tab can hold. Drop the built site only (its dist/ or build/ folder).`)
+  if (named.length > 60000) throw new Error(`This archive holds ${named.length.toLocaleString()} files — more than a browser tab can hold. Drop the built site only (its dist/ or build/ folder).`)
   return {
     rootName,
     entries: named,

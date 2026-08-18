@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run && node --test src/audit/__tests__/*.test.mjs",
     "test:watch": "vitest",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "holdouts": "node scripts/holdouts.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "jsdom": "^29.1.1",
+    "playwright": "^1.62.1",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",
     "vitest": "^4.1.7"

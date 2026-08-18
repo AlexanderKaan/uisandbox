@@ -642,3 +642,20 @@ was guarded) · Material Tailwind 100/100/100 (709 el. 1:1, was 75 % colours)
 across manager + story frame) · react-dates 91/88/67 (manager + inner frame,
 1:1) · visx 100/100/100 (2,137 el.; chart colours are Palette, no status) ·
 react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
+
+## Regression runner and the security sweep (2026-08-18)
+
+101. **`pnpm holdouts`** — every fixture zip through the real app in headless
+    Chromium: load, "Check 1:1", reach, and a verdict held against
+    `scripts/holdouts.expect.json` (exit 1 when a fixture expected `ok` is
+    not). One run instead of a sweep: every rewriter change is now toetsed
+    against ~80 real builds in ~15 minutes. After each fixture the host is
+    checked too — same origin, exactly one worker (`host-tampered` otherwise).
+102. **A hostile archive** (fixtures/sec-evil.zip, notes/security.md): one line
+    `top.location = …` hijacked the whole app — every frame now carries the
+    `sandbox` flags without `allow-top-navigation`; zip-slip entry names are
+    normalised at intake (`safePath`); a stylesheet over 24 MB / page over
+    8 MB is served raw, an archive over 2 GB or 60,000 files refused; the
+    `window.__us` debug handle is DEV-only. Same-origin reach into the host's
+    DOM remains by design (the worker needs it) and the host holds nothing
+    worth reaching — deploy on an origin of its own.

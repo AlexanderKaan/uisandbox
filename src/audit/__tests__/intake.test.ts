@@ -196,3 +196,14 @@ describe('reading a zipped project', () => {
     expect(isZip({ name: 'repo.tar.gz', type: '' } as File)).toBe(false)
   })
 })
+
+describe('safePath — a zip entry name is a name, never a location', () => {
+  it('drops leading slashes and .. segments, turns backslashes into slashes', async () => {
+    const { safePath } = await import('../intake/readZip')
+    expect(safePath('../../escaped.html')).toBe('escaped.html')
+    expect(safePath('/abs/rooted.html')).toBe('abs/rooted.html')
+    expect(safePath('a\\b\\c.css')).toBe('a/b/c.css')
+    expect(safePath('./dist/./x/../y.js')).toBe('dist/x/y.js')
+    expect(safePath('normal/path.html')).toBe('normal/path.html')
+  })
+})

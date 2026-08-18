@@ -180,6 +180,8 @@ export function loadHidden(url: string, parent: HTMLElement, width: number, heig
     const frame = document.createElement('iframe')
     frame.style.cssText = `position:absolute;left:-10000px;top:0;width:${width}px;height:${height}px;visibility:hidden;border:0`
     frame.setAttribute('aria-hidden', 'true')
+    // Same flags as the stage: a hostile page must not navigate the top window from here either.
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock')
     frame.onload = async () => {
       try {
         const doc = frame.contentDocument
