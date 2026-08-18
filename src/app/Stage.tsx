@@ -20,6 +20,10 @@ interface StageProps {
   warning?: string | null
   /** How much of what is painted the knobs reach — measured on the frame. */
   coverage?: Coverage | null
+  /** The "What we read from your code" card — shown in the top-right slot
+   *  whenever the 1:1 check is not; one card at a time, never two on top of
+   *  each other. */
+  notes?: React.ReactNode
 }
 
 const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
@@ -29,7 +33,7 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
   { id: 'phone', label: '390', w: 390 },
 ]
 
-export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, coverage }: StageProps) {
+export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, coverage, notes }: StageProps) {
   const [showCov, setShowCov] = useState(false)
   const [width, setWidth] = useState<string>('fit')
   const [verify, setVerify] = useState<VerifyResult | { busy: true } | null>(null)
@@ -97,6 +101,8 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             if (!away) onLoaded()
           }}
         />
+        {!showVerify && notes}
+        <div className="stage__low">
         {showCov && coverage && (
           <div className="card popcard popcard--low verify" role="dialog" aria-label="Reach">
             <h3>What the knobs reach on this screen</h3>
@@ -114,6 +120,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             <div>The page navigated to another origin (a redirect page, or a script that sends visitors elsewhere). Nothing there is yours to tune — pick another screen.</div>
           </div>
         )}
+        </div>
         <div ref={hiddenHost} aria-hidden="true" />
         {showVerify && (
           <div className="card popcard verify" role="dialog" aria-label="1:1 check">

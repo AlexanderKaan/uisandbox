@@ -214,15 +214,27 @@ export function App() {
     // A shell with nothing in it is not "your app": say so rather than let a
     // half-empty page pass for the real thing.
     if (doc?.body) {
-      setTimeout(() => {
-        const els = doc.body.querySelectorAll('*').length
-        const rules = Array.from(doc.styleSheets).reduce((n, sh) => { try { return n + sh.cssRules.length } catch { return n } }, 0)
-        const text = (doc.body.innerText ?? '').trim().length
-        const media = doc.body.querySelectorAll('img, svg, canvas, video, picture').length
+      // Nested same-origin frames count as content (Storybook's manager is a
+      // shell around iframe.html); a slow manager is empty at 1.2 s and full at
+      // 4 s, so a shell verdict needs a second look before it is said.
+      const measure = () => {
+        const docs = [doc, ...nestedDocs(doc)]
+        const els = docs.reduce((n, d) => n + d.body.querySelectorAll('*').length, 0)
+        const rules = docs.reduce((n, d) => n + Array.from(d.styleSheets).reduce((m, sh) => { try { return m + sh.cssRules.length } catch { return m } }, 0), 0)
+        const text = docs.reduce((n, d) => n + (d.body.innerText ?? '').trim().length, 0)
+        const media = docs.reduce((n, d) => n + d.body.querySelectorAll('img, svg, canvas, video, picture').length, 0)
         // A canvas/WebGL page is three elements and no text — and not a shell.
         // No text is suspicious only on a small DOM: 172 animated <div>s (anime.js) are an app.
         const shell = media === 0 && (els < 6 || rules < 3 || (text < 20 && els < 40))
-        setThin(shell ? `This screen rendered ${els} element${els === 1 ? '' : 's'}, ${rules} style rules and ${text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
+        return { shell, els, rules, text }
+      }
+      setTimeout(() => {
+        const first = measure()
+        if (!first.shell) { setThin(null); return }
+        setTimeout(() => {
+          const m = measure()
+          setThin(m.shell ? `This screen rendered ${m.els} element${m.els === 1 ? '' : 's'}, ${m.rules} style rules and ${m.text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
+        }, 2800)
       }, 1200)
     }
     if (doc && loaded) stopObserver.current = observeFrame(doc, loaded.project.table, () => { setSheetVersion((v) => v + 1); refineBaseline(); remeasure() })
@@ -346,8 +358,7 @@ export function App() {
               changedCount={changedCount}
               warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive — ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : null)}
               coverage={coverage}
-            />
-            {showNotes && (
+              notes={showNotes ? (
               <div className="card popcard" role="dialog" aria-label="What was read">
                 <h3>What we read from your code</h3>
                 <ul className="notes">
@@ -363,7 +374,8 @@ export function App() {
                 </ul>
                 <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes(false)}>Close</button></div>
               </div>
-            )}
+              ) : null}
+            />
           </>
         )}
         {!loaded && <Intake onArchive={onArchive} busy={busy} error={error} />}

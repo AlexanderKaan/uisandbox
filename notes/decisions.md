@@ -591,3 +591,54 @@ MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
     Same maths as a family. The old "Dimmer / Brighter" ΔL dial is gone —
     a lighter or darker pick is that dial. Its dot wears a ring: near-white
     needs an edge to be seen.
+
+## Sweep 11 — stratified, part 2 (2026-08-18)
+
+Nuxt static (`nuxi generate`, built here) · SvelteKit static (adapter-static,
+built here) · vue-element-admin (Vue scoped) · Element Plus docs · Material
+Tailwind Dashboard (Tailwind v3 JIT, ApexCharts) · Microsoft FAST docs · SAP
+Fundamental Styles (Storybook: everything inside iframe.html) · react-dates
+(old Storybook) · visx gallery (SVG charts, palettes) · react-virtualized
+(runtime inline styles).
+
+95. **A page cannot unregister the worker serving it.** Element Plus's docs run
+    a "clean up old service workers" snippet; inside the sandbox it removed
+    OUR registration — running frames kept their controller, every new
+    navigation got the host's own index, and the 1:1 check paired our intake
+    page against itself (✓ 50 elements). Every sandboxed document — the raw
+    control too, it paints nothing — now carries a guard: `register()` rejects
+    quietly, `unregister()` resolves false. And the check REFUSES a document
+    without the guard: the sandbox did not serve it, nothing of theirs is
+    compared. Traps.md material: an instrument that can measure itself and
+    call it a pass.
+96. **Backslash escapes outside strings.** Tailwind's arbitrary-value selector
+    `.bg-\[url\(\'\/img\/x\.png\'\)\]` carries an escaped quote; the scanner
+    took it for a string start and swallowed the next 107 rules — every
+    `text-*`/`bg-*` colour after it stayed literal (75 % colour reach; 131 →
+    368 entries once fixed).
+97. **Nested same-origin frames are the page too** (Storybook): the sheet
+    applies to them on every change, the 1:1 check and the meter descend into
+    them (`#frame` in the key), the shell verdict counts them — and waits for
+    a second look at 4 s, since a slow manager is empty at 1.2 s.
+98. **The 1:1 key drops generated ids and classes** (`apexchartska7c5jyi`,
+    `SvgjsG1082`, React's `:r2:`): tag, plain classes and position remain
+    (442 → 709 paired on the dashboard); hidden frames wait until the DOM
+    holds still for 600 ms before comparing (a hydrating SPA had 50 elements
+    at `load`).
+99. **The canvas the page PAINTS wins**: Fundamental Styles ships a dark theme
+    sheet whose `body { background }` beat the light one; the rendered
+    html/body background corrects it. And a surface in the background zone
+    takes the pick's tint additively (a grey has no chroma to multiply):
+    Old Lace on the page, a step under it in the story frame.
+100. One card at a time in the stage's top-right slot ("What we read" gives
+    way to the 1:1 check and returns when it closes); the low cards (reach,
+    a warning) stack instead of overlapping.
+
+Scorecard: Nuxt 100/88/100 (16 el. 1:1; the 12 % are UA defaults on an
+unstyled h2/button) · SvelteKit 100/100/100 (42 el. 1:1) · vue-element-admin
+100/100/100 (168 el.) · Element Plus 100/100/100 (288 el. 1:1 once the worker
+was guarded) · Material Tailwind 100/100/100 (709 el. 1:1, was 75 % colours)
+· FAST 100/100/100 (229 el.) · Fundamental Styles 100/100/100 (1,891 el.
+across manager + story frame) · react-dates 91/88/67 (manager + inner frame,
+1:1) · visx 100/100/100 (2,137 el.; chart colours are Palette, no status) ·
+react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).

@@ -216,5 +216,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .popcard { position: absolute; right: 16px; top: 62px; z-index: 50; width: min(440px, 90vw); padding: 14px 16px; }
 .popcard h3 { margin: 0 0 8px; font-size: 13px; }
 .stage__frame .popcard { top: 12px; right: 12px; }
-.stage__frame .popcard--low { top: auto; bottom: 12px; border-color: color-mix(in srgb, var(--app-warn) 45%, var(--app-border)); }
+.stage__frame .popcard--low { border-color: color-mix(in srgb, var(--app-warn) 45%, var(--app-border)); }
+/* The low cards (reach, a warning) stack instead of overlapping. */
+.stage__low { position: absolute; right: 12px; bottom: 12px; z-index: 50; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; pointer-events: none; }
+.stage__low .popcard { position: static; pointer-events: auto; }
 kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px solid var(--app-border); border-bottom-width: 2px; border-radius: 5px; background: var(--app-surface); }
