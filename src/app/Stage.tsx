@@ -61,7 +61,19 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         loadHidden(sandboxUrl(rawSid(project.id), screen.path, project.base), host, fw, fh),
         loadHidden(sandboxUrl(identitySid(project.id), screen.path, project.base), host, fw, fh),
       ])
-      setVerify(compareDocuments(raw.doc, idn.doc))
+      let res = compareDocuments(raw.doc, idn.doc)
+      // A carousel mid-slide (jQuery animating margin-left, no CSS transition
+      // to freeze) is two moments, not two stylesheets: when the only
+      // differences are a few layout offsets, look again after a beat and keep
+      // what persists.
+      const LAYOUT = /^(margin|padding|gap)/
+      if (!res.ok && !res.refusal && res.mismatches.length <= 4 && res.mismatches.every((m) => LAYOUT.test(m.prop))) {
+        await new Promise((r) => setTimeout(r, 900))
+        const again = compareDocuments(raw.doc, idn.doc)
+        const persistent = res.mismatches.filter((m) => again.mismatches.some((n) => n.index === m.index && n.prop === m.prop))
+        res = { ...again, mismatches: persistent, ok: persistent.length === 0 }
+      }
+      setVerify(res)
     } catch (err) {
       setVerify({ ok: false, refusal: `Could not load both frames: ${(err as Error).message}`, elements: 0, unpaired: { raw: 0, sandbox: 0 }, mismatches: [] })
     } finally {

@@ -23,7 +23,7 @@
  */
 import { chromium } from 'playwright'
 import { spawn } from 'node:child_process'
-import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -59,28 +59,42 @@ if (!base) {
   })
 }
 
-const browser = await chromium.launch()
-const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+let browser = await chromium.launch()
+let context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
 // Against an https site (a production build, the live site) the fixtures are
 // served by the TEST BROWSER itself on a fictitious https origin, with CORS —
 // no mixed content, no local-network request, nothing outside this process.
 const FIX_ORIGIN = 'https://fixtures.uisandbox.invalid'
 const routed = /^https:/.test(base) && !fixturesBase
-if (routed) {
-  await context.route(`${FIX_ORIGIN}/**`, async (route) => {
+// A route answer travels through the DevTools protocol in one message: 90 MB
+// killed the browser. Larger fixtures are skipped against an https target
+// (they are measured against a local server; the verdict says so).
+const ROUTE_MAX = 64 * 1024 * 1024
+async function installRoute(ctx) {
+  await ctx.route(`${FIX_ORIGIN}/**`, async (route) => {
     const name = decodeURIComponent(new URL(route.request().url()).pathname.slice(1))
     const file = join(root, 'fixtures', name)
     if (!existsSync(file)) return route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: 'no such fixture' })
     return route.fulfill({ status: 200, headers: { 'content-type': 'application/zip', 'access-control-allow-origin': '*' }, body: readFileSync(file) })
   })
 }
+if (routed) await installRoute(context)
 const results = []
 const t0 = Date.now()
 
 for (const [i, f] of fixtures.entries()) {
-  const page = await context.newPage()
   const started = Date.now()
   const r = { fixture: f, verdict: 'timeout', paired: 0, reach: '', note: '' }
+  if (routed && statSync(join(root, 'fixtures', f)).size > ROUTE_MAX) {
+    r.verdict = 'skipped'; r.note = `${Math.round(statSync(join(root, 'fixtures', f)).size / 1024 / 1024)} MB — too large to serve from the test browser; measured against a local server only`
+    results.push(r); log(r, i); continue
+  }
+  // A crashed browser (a huge page) must not end the run: relaunch and go on.
+  if (!browser.isConnected()) {
+    browser = await chromium.launch(); context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+    if (routed) await installRoute(context)
+  }
+  const page = await context.newPage()
   try {
     const zipUrl = routed ? `${FIX_ORIGIN}/${encodeURIComponent(f)}` : fixturesBase ? `${fixturesBase.replace(/\/$/, '')}/${encodeURIComponent(f)}` : `/fixtures/${encodeURIComponent(f)}`
     await page.goto(`${base}/?load=${encodeURIComponent(zipUrl)}&r=${i}`, { waitUntil: 'domcontentloaded' })
@@ -127,7 +141,7 @@ for (const [i, f] of fixtures.entries()) {
   r.ms = Date.now() - started
   results.push(r)
   log(r, i)
-  await page.close()
+  try { await page.close() } catch { /* browser gone; relaunched next round */ }
 }
 
 await browser.close()
@@ -146,7 +160,7 @@ if (record) {
   writeFileSync(expectPath, JSON.stringify(Object.fromEntries(Object.entries(expect).sort()), null, 2) + '\n')
   console.log(`\nrecorded ${results.length} expectations → scripts/holdouts.expect.json`)
 }
-const regressions = results.filter((r) => expect[r.fixture] === 'ok' && r.verdict !== 'ok')
+const regressions = results.filter((r) => expect[r.fixture] === 'ok' && r.verdict !== 'ok' && r.verdict !== 'skipped')
 const unknown = results.filter((r) => !(r.fixture in expect))
 
 const md = [
