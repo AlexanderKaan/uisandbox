@@ -17,6 +17,7 @@ import { disown, ensureWorker, own, onSheetGrow, onMissing, missingFor } from '.
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
 import { measureCoverage, type Coverage } from '../sandbox/coverage'
+import { nestedDocs } from '../sandbox/verify'
 import { applyScheme } from '../sandbox/scheme'
 import { googleFontsImport, isCustomFont, customFontFamily, SYSTEM_FONT } from '../tokens/fonts'
 import { customFontUrl } from '../tokens/customFonts'
@@ -101,8 +102,12 @@ export function App() {
   // Write the sheet into the frame's document on every change (same origin,
   // served by our worker) — the whole point: no reload, no flash, live.
   const applyVars = useCallback(() => {
-    const doc = frameRef.current?.contentDocument
-    if (!doc) return
+    const top = frameRef.current?.contentDocument
+    if (!top) return
+    // Their page may hold same-origin frames of its own (Storybook's manager
+    // renders every story inside iframe.html): the sheet applies to each.
+    for (const doc of [top, ...nestedDocs(top)]) applyTo(doc)
+    function applyTo(doc: Document) {
     let el = doc.getElementById('us-vars')
     if (!el) {
       el = doc.createElement('style')
@@ -125,6 +130,7 @@ export function App() {
     // Their dark mode, switched on their own hooks (sandbox/scheme.ts).
     const cur = loadedRef.current
     if (cur) { try { applyScheme(doc, cur.project.scheme, cfgRef.current.sb.dark ?? null) } catch { /* mid-navigation */ } }
+    }
   }, [])
   useEffect(() => { applyVars() }, [vars, fontCss, cfg.sb.dark, applyVars])
 
@@ -146,9 +152,20 @@ export function App() {
     const brandFromPaint = !cur.report.brandDeclared && !cur.brandSeen
     cur.brandSeen = true
     const fromDoc = refineFromDocument(doc, mid, { brand: brandFromPaint })
-    if (!fromTable && !fromDoc) return
+    // The canvas the page PAINTS (html/body computed) corrects a body rule from
+    // a shipped-but-inactive theme sheet.
+    let paintedCanvas: string | undefined
+    try {
+      const w = doc.defaultView!
+      const bodyBg = w.getComputedStyle(doc.body).backgroundColor, htmlBg = w.getComputedStyle(doc.documentElement).backgroundColor
+      const pick = [bodyBg, htmlBg].find((c) => c && !/^rgba\(0, 0, 0, 0\)$|^transparent$/.test(c))
+      if (pick) paintedCanvas = pick
+    } catch { /* mid-navigation */ }
     const cfg2 = { ...mid, ...(fromDoc ?? {}) }
-    cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2), families: familiesOf(cur.project.table, cfg2.cPrimary) }
+    const fams2 = familiesOf(cur.project.table, cfg2.cPrimary, { paintedCanvas })
+    const canvasMoved = fams2.canvasId !== cur.report.baseline.families?.canvasId
+    if (!fromTable && !fromDoc && !canvasMoved) return
+    cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2), families: fams2 }
     if (fromTable) cur.report.notes.push(`Corrected from rules your JS inserted at runtime: ${Object.entries(fromTable).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     if (fromDoc) cur.report.notes.push(`Corrected from the rendered page: ${Object.entries(fromDoc).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     // The refined baseline is still the starting point, not a step to undo.

@@ -40,13 +40,30 @@ export interface VerifyResult {
 
 const MAX_REPORT = 40
 
-/** Every element under a root, shadow roots included (Lit, web components). */
+/** Same-origin documents nested in `doc` (Storybook's iframe.html), depth-first. */
+export function nestedDocs(doc: Document): Document[] {
+  const out: Document[] = []
+  for (const f of Array.from(doc.querySelectorAll('iframe'))) {
+    let d: Document | null = null
+    try { d = f.contentDocument } catch { d = null }
+    if (d && d.body) { out.push(d, ...nestedDocs(d)) }
+  }
+  return out
+}
+
+/** Every element under a root, shadow roots included (Lit, web components),
+ *  and — for a document body — the elements of same-origin frames inside it. */
 export function allElements(root: ParentNode): Element[] {
   const out: Element[] = []
   const walk = (node: ParentNode) => {
     for (const el of Array.from(node.querySelectorAll('*'))) {
       out.push(el)
       if (el.shadowRoot) walk(el.shadowRoot)
+      if (el.tagName === 'IFRAME') {
+        let d: Document | null = null
+        try { d = (el as HTMLIFrameElement).contentDocument } catch { d = null }
+        if (d?.body) walk(d.body)
+      }
     }
   }
   walk(root)
@@ -55,10 +72,12 @@ export function allElements(root: ParentNode): Element[] {
 
 /** A stable address for an element: its path of tag#id.class:nth from <body>,
  *  crossing shadow boundaries as `host>#shadow>…`. */
-function keyOf(el: Element): string {
+function keyOf(el: Element, top: Document): string {
   const parts: string[] = []
   let e: Element | null = el
-  while (e && e.tagName !== 'BODY') {
+  // Stops at the TOP document's body; a nested document's body is crossed
+  // into its <iframe> (`#frame`).
+  while (e && !(e.tagName === 'BODY' && e.ownerDocument === top)) {
     const tag = e.tagName.toLowerCase()
     // …and a class with a digit (`apexchartska7c5jyi`, a hashed module class)
     // is dropped for the same reason; tag, plain classes and position remain.
@@ -74,9 +93,11 @@ function keyOf(el: Element): string {
     const parent: Element | null = e.parentElement
     if (!parent) {
       // Top of a shadow tree: continue at the host.
-      const rootNode = e.getRootNode() as Node & { host?: Element }
+      const rootNode = e.getRootNode() as Node & { host?: Element; defaultView?: Window | null }
       // Cross-realm: the frame's ShadowRoot is not this window's — duck-type.
       if (rootNode.nodeType === 11 && rootNode.host) { parts.push('#shadow'); e = rootNode.host; continue }
+      // Top of a nested document: continue at its <iframe>.
+      if (rootNode.nodeType === 9) { let fe: Element | null = null; try { fe = rootNode.defaultView?.frameElement ?? null } catch { fe = null } if (fe) { parts.push('#frame'); e = fe; continue } }
     }
     e = parent
   }
@@ -100,20 +121,21 @@ export function compareDocuments(raw: Document, sandbox: Document, props: readon
   const b = allElements(sandbox.body).filter((el) => !isOurs(el) && inFlatTree(el))
   if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, unpaired: { raw: a.length, sandbox: b.length }, mismatches: [] }
   const bByKey = new Map<string, Element>()
-  for (const el of b) { const k = keyOf(el); if (!bByKey.has(k)) bByKey.set(k, el) }
+  for (const el of b) { const k = keyOf(el, sandbox); if (!bByKey.has(k)) bByKey.set(k, el) }
   const wa = raw.defaultView!
   const wb = sandbox.defaultView!
   const mismatches: Mismatch[] = []
   let paired = 0
   const seen = new Set<string>()
   a.forEach((ea, i) => {
-    const k = keyOf(ea)
+    const k = keyOf(ea, raw)
     const eb = bByKey.get(k)
     if (!eb || seen.has(k)) return
     seen.add(k)
     paired++
     if (mismatches.length >= MAX_REPORT) return
-    const sa = wa.getComputedStyle(ea), sb = wb.getComputedStyle(eb)
+    // An element of a nested frame is measured by its OWN window.
+    const sa = (ea.ownerDocument.defaultView ?? wa).getComputedStyle(ea), sb = (eb.ownerDocument.defaultView ?? wb).getComputedStyle(eb)
     for (const p of props) {
       const va = sa.getPropertyValue(p), vb = sb.getPropertyValue(p)
       if (va !== vb) mismatches.push({ index: i, tag: ea.tagName.toLowerCase(), prop: p, raw: va, sandbox: vb })

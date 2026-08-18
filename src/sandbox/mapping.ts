@@ -130,7 +130,10 @@ export function familyOfColor(c: Okla, fams: Families): Family {
 }
 
 /** Classify every colour entry of the sheet against the brand hex, once. */
-export function familiesOf(table: SubstitutionTable, brandHex: string): Families {
+/** `paintedCanvas`: the background the RENDERED page actually paints behind
+ *  everything (html/body computed) — it outranks a `body { background }` from
+ *  a shipped-but-inactive theme sheet (Fundamental Styles' dark theme). */
+export function familiesOf(table: SubstitutionTable, brandHex: string, opts: { paintedCanvas?: string } = {}): Families {
   const brand = parseCssColor(brandHex)
   const of = new Map<number, Family>()
   const chroma: Array<{ e: Entry; c: Okla }> = []
@@ -206,14 +209,17 @@ export function familiesOf(table: SubstitutionTable, brandHex: string): Families
   // Canvas: what html/body/:root paints as background; else the most-used
   // neutral used as a background.
   const SITE = /^(html|body|:root)(\s*,\s*(html|body|:root))*$/i
-  let canvas: { c: Okla; n: number; id: number; site: boolean } | null = null
+  const painted = opts.paintedCanvas ? parseCssColor(opts.paintedCanvas) : null
+  let canvas: { c: Okla; n: number; id: number; site: boolean; painted: boolean } | null = null
   for (const e of table.ofKind('color')) {
     const c = parseCssColor(e.value)
     if (!c || c.a < 0.99) continue
+    const isPainted = !!painted && sameRgb(c, painted)
     const onSite = e.sites.some((s) => /^(background|background-color)$/.test(s.prop) && SITE.test(s.selector ?? ''))
     const bgNeutral = of.get(e.id) === 'neutral' && neutralUse(e) === 'bg'
-    if (!onSite && !bgNeutral) continue
-    if (!canvas || (onSite && !canvas.site) || (onSite === canvas.site && e.count > canvas.n)) canvas = { c, n: e.count, id: e.id, site: onSite }
+    if (!onSite && !bgNeutral && !isPainted) continue
+    const better = !canvas || (isPainted && !canvas.painted) || (isPainted === canvas.painted && ((onSite && !canvas.site) || (onSite === canvas.site && e.count > canvas.n)))
+    if (better) canvas = { c, n: e.count, id: e.id, site: onSite, painted: isPainted }
   }
   return { of, centre, centreId, ...(pal.length ? { palette: pal.map((v) => v.c), paletteId: pal.map((v) => v.id) } : {}), ...(canvas ? { canvas: canvas.c, canvasId: canvas.id } : {}) }
 }
@@ -355,7 +361,14 @@ function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, 
   // by the delta from canvas to pick — the same maths as a family.
   const bgPick = sb.cBackground ? parseCssColor(sb.cBackground) : null
   if (bgPick && fams.canvas && e && (e.id === fams.canvasId || (fam === 'neutral' && neutralUse(e) === 'bg' && Math.abs(c.L - fams.canvas.L) <= 0.3))) {
-    return applyGlobal(mapByDelta(c, fams.canvas, bgPick), sb)
+    if (e.id === fams.canvasId) return applyGlobal({ ...bgPick, a: c.a }, sb)
+    // A surface in the zone takes the pick's TINT additively (a grey has no
+    // chroma to multiply) and moves in lightness by the same delta as the canvas.
+    const b = fams.canvas, n = bgPick
+    const L = shiftL(c.L, b.L, n.L - b.L)
+    const C = clamp(c.C + (n.C - b.C), 0, 0.4)
+    const H = c.C < 0.004 ? n.H : ((c.H + hueDelta(b.H, n.H)) % 360 + 360) % 360
+    return applyGlobal({ L, C, H, a: c.a }, sb)
   }
   if (fam === 'keep' || fam === 'palette') mapped = c
   else if (fam === 'neutral') mapped = e ? mapNeutral(c, e, base, now, sb) : c
@@ -463,7 +476,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
 }
 
 /** Equal once quantised to 8-bit sRGB (what the screen can show). */
-const sameRgb = (a: Okla, b: Okla) => formatLike('#000000', { ...a, a: 1 }) === formatLike('#000000', { ...b, a: 1 }) && Math.abs(a.a - b.a) < 0.002
+function sameRgb(a: Okla, b: Okla): boolean { return formatLike('#000000', { ...a, a: 1 }) === formatLike('#000000', { ...b, a: 1 }) && Math.abs(a.a - b.a) < 0.002 }
 
 const same = (a: Okla, b: Okla) =>
   Math.abs(a.L - b.L) < 1e-4 &&

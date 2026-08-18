@@ -103,7 +103,8 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
     if (el.tagName === 'IMG' || el.tagName === 'PICTURE') { cov.outside.images++; continue }
     if (el.tagName === 'CANVAS') { cov.outside.canvas++; continue }
     if (el.tagName === 'VIDEO') { cov.outside.video++; continue }
-    const cs = win.getComputedStyle(el)
+    const ew = el.ownerDocument.defaultView ?? win
+    const cs = ew.getComputedStyle(el)
     const bg = rgbKey(cs.backgroundColor)
     if (bg && bg !== 'transparent' && (!UA_COLOURS.has(bg) || colourSet.has(bg))) { cov.colours.total++; if (colourSet.has(bg)) cov.colours.hit++ }
     if (cs.backgroundImage && cs.backgroundImage !== 'none' && /url\((?!"data:image\/svg)/.test(cs.backgroundImage)) cov.outside.backgroundImages++
@@ -119,7 +120,7 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
       if (!uaGeneric) { cov.fonts.total++; if (familySet.has(fam) || familySet.size === 0) cov.fonts.hit++ }
       cov.sizes.total++
       const fs = parseFloat(cs.fontSize)
-      const parentFs = el.parentElement ? parseFloat(win.getComputedStyle(el.parentElement).fontSize) : rootPx
+      const parentFs = el.parentElement ? parseFloat(ew.getComputedStyle(el.parentElement).fontSize) : rootPx
       // A sheet with no font-size at all left the UA's sizes alone — nothing was
       // missed, there was nothing to move (as for families).
       if (near(sizeSet, fs) || nearEm(sizeEm, fs, parentFs) || (sizeSet.size === 0 && sizeEm.size === 0)) cov.sizes.hit++
