@@ -666,3 +666,11 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     a loop; the SPA fallback lives in `wrangler.jsonc`. The runner serves the
     fixtures to an https target from a route inside the test browser (no mixed
     content, no local-network request).
+104. **uisandbox.org is live** (Cloudflare Worker, zone on Cloudflare,
+    nameservers moved from Hostinger). The full hold-out run against
+    `https://uisandbox.org`: 69 ok · 2 differs (Polymer 1, docsify's random
+    gradient) · 5 refused at the door · 2 skipped as too large to serve from
+    the test browser (measured locally). One flake — a Bootstrap carousel
+    mid-slide (`margin-left 127px → 0px`) — is now a second look in the
+    check: layout-only differences of a few elements are re-measured after
+    900 ms and kept only if they persist. Sprint A is done.
