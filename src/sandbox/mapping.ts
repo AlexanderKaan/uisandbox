@@ -95,7 +95,7 @@ const inHue = (h: number, lo: number, hi: number) => (lo <= hi ? h >= lo && h <=
 const STATUS_WORDS: Record<'success' | 'warning' | 'danger' | 'info', RegExp> = {
   success: /(^|[^a-z])(success|valid|positive|ok|confirm|approved?|complete|done|passed?)([^a-z]|$)/i,
   warning: /(^|[^a-z])(warn(ing)?|caution|pending|attention|notice-warn)([^a-z]|$)/i,
-  danger: /(^|[^a-z])(danger|error|invalid|destructive|critical|negative|fail(ed|ure)?|alert|delete|remove|bad)([^a-z]|$)/i,
+  danger: /(^|[^a-z])(danger|err(or)?|invalid|destructive|critical|negative|fail(ed|ure)?|alert|delete|remove|bad)([^a-z]|$)/i,
   info: /(^|[^a-z])(info|notice|note|hint|tip)([^a-z]|$)/i,
 }
 const PALETTE_WORDS = /(^|[^a-z])(red|pink|rose|fuchsia|magenta|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange|brown|gold|mint|lavender|peach|coral|pastel|palette|swatch|categor(y|ies)|tag|series|chart)([^a-z0-9]|$)/i

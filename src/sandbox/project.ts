@@ -203,7 +203,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   }
 
   // Error pages are not screens anyone wants to tune.
-  const ERROR_PAGE = /(^|\/)(404|500|_not-found|_error|offline)(\.html?|\/index\.html?)$/i
+  const ERROR_PAGE = /(^|\/)(404|500|200|_not-found|_error|offline)(\.html?|\/index\.html?)$/i
   const NOT_A_SCREEN = /(^|\/)(tests?|__tests__|mocks?|fixtures?|spec|e2e|cypress|playwright|storybook-static|coverage)\//i
   const screens: Screen[] = [...raw.keys()]
     .filter((p) => /\.html?$/i.test(p) && !ERROR_PAGE.test(p) && !NOT_A_SCREEN.test(p) && !redirects.has(p))
@@ -232,19 +232,32 @@ export function varsStyleTag(vars: Record<string, string>): string {
  * passes through the SAME rewriter in the parent page. Rules with no text are
  * the one thing the MutationObserver in live.ts cannot see.
  */
+/** The service-worker guard, for EVERY sandboxed document — the raw control
+ *  too (it touches no pixel): a page cannot register its own worker here, and
+ *  cannot unregister ours. Element Plus's docs run a "clean up old service
+ *  workers" snippet that unregistered the worker serving the sandbox; every
+ *  navigation after that got the host's own index — and the 1:1 check paired
+ *  our intake page against itself. */
+export function guardScriptTag(): string {
+  return `<script id="us-guard">(function(){try{var sw=navigator.serviceWorker;if(!sw)return;sw.register=function(){return Promise.reject(new DOMException('UISandbox: a page inside the sandbox cannot register its own service worker.','SecurityError'))};var R=window.ServiceWorkerRegistration;if(R&&R.prototype)R.prototype.unregister=function(){return Promise.resolve(false)}}catch(e){}})()</script>`
+}
+export function injectGuard(html: string): string {
+  const tag = guardScriptTag()
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag)
+  if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, (m) => m + `<head>${tag}</head>`)
+  return tag + html
+}
+
 export function hookScriptTag(sid: string): string {
   // Polymer 1 (2015) resolves var() with its own shim and never sees ours; it
   // honours a settings object defined before it loads. Harmless elsewhere.
-  // Their own service worker (a PWA, Spectrum's docs) is refused QUIETLY: a
-  // second worker on this origin would fight the one serving the sandbox, and
-  // the registration would fail on the host anyway (a loud MIME error) — a
-  // clean rejection lets their code take its no-offline path deterministically.
-  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};if(!window.Polymer)window.Polymer={useNativeCSSProperties:true};try{if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.reject(new DOMException('UISandbox: a page inside the sandbox cannot register its own service worker.','SecurityError'))}}}catch(e){}var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
+  // Their service worker: see guardScriptTag (injected into every document).
+  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};if(!window.Polymer)window.Polymer={useNativeCSSProperties:true};var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
 }
 
 /** Put the variables (and the CSSOM hook) into a served HTML document, before anything else in <head>. */
 export function injectVars(html: string, vars: Record<string, string>, sid: string): string {
-  const tag = varsStyleTag(vars) + hookScriptTag(sid)
+  const tag = guardScriptTag() + varsStyleTag(vars) + hookScriptTag(sid)
   if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag)
   if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, (m) => m + `<head>${tag}</head>`)
   return tag + html

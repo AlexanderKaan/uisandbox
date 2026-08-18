@@ -85,6 +85,12 @@ function keyOf(el: Element): string {
  * "unpaired" instead of refusing the whole page.
  */
 export function compareDocuments(raw: Document, sandbox: Document, props: readonly string[] = VERIFY_PROPS): VerifyResult {
+  // Every document the sandbox serves carries the guard; a document without
+  // it came from somewhere else (the host's own index after the worker was
+  // lost) — comparing that would be the instrument measuring itself.
+  if (!raw.getElementById('us-guard') || !sandbox.getElementById('us-guard')) {
+    return { ok: false, refusal: 'The sandbox did not serve this screen (the worker is gone or the page left the sandbox) — nothing of yours was compared.', elements: 0, unpaired: { raw: 0, sandbox: 0 }, mismatches: [] }
+  }
   const a = allElements(raw.body).filter((el) => !isOurs(el) && inFlatTree(el))
   const b = allElements(sandbox.body).filter((el) => !isOurs(el) && inFlatTree(el))
   if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, unpaired: { raw: a.length, sandbox: b.length }, mismatches: [] }
@@ -136,7 +142,7 @@ export function inFlatTree(el: Element): boolean {
 }
 
 /** Our injected style block is not part of their page. */
-const isOurs = (el: Element) => el.id === 'us-vars' || el.id === 'us-still' || el.id === 'us-fonts' || el.id === 'us-hook'
+const isOurs = (el: Element) => el.id === 'us-vars' || el.id === 'us-still' || el.id === 'us-fonts' || el.id === 'us-hook' || el.id === 'us-guard'
   // Images arrive on the network's clock and fade in on their own; their box
   // is "outside" the knobs anyway (coverage.ts counts them so). Not compared.
   || el.tagName === 'IMG'
@@ -162,6 +168,17 @@ export function loadHidden(url: string, parent: HTMLElement, width: number, heig
         // (NES.css docs) makes two loads differ by which images are in yet.
         const t1 = Date.now()
         while (Array.from(doc.images).some((i) => !i.complete) && Date.now() - t1 < 4000) await new Promise((r) => setTimeout(r, 100))
+        // …and let the app finish rendering: a hydrating SPA (Element Plus's
+        // docs) had 50 elements at `load` and 295 a moment later. Wait until
+        // the element count holds still for 600 ms (6 s at most).
+        const t2 = Date.now()
+        let last = -1, stableSince = Date.now()
+        while (Date.now() - t2 < 6000) {
+          const n = doc.body ? allElements(doc.body).length : 0
+          if (n !== last) { last = n; stableSince = Date.now() }
+          else if (Date.now() - stableSince >= 600) break
+          await new Promise((r) => setTimeout(r, 150))
+        }
         // Freeze motion in BOTH frames before comparing: two loads are two
         // moments of the same fade (NES.css's lazy images: alpha .055 vs .098),
         // and a comparison of moments is not a comparison of stylesheets.

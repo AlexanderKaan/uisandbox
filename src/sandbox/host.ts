@@ -9,7 +9,7 @@
  *   <id>-id    the rewritten site with the IDENTITY sheet — what "1:1" claims
  *   <id>-raw   the untouched site: the CONTROL `verify.ts` measures against
  */
-import { injectVars, loadOutsideRoot, type SandboxProject } from './project'
+import { injectGuard, injectVars, loadOutsideRoot, type SandboxProject } from './project'
 import { rewriteCss } from './rewrite'
 import { cssValue, defineNewVars, varName } from './table'
 
@@ -188,6 +188,9 @@ async function onMessage(e: MessageEvent) {
   if (o.variant === 'rewritten' && /\.html?$/i.test(path) && data.navigate) {
     const html = injectVars(await f.blob.text(), o.vars(), data.sid)
     body = new TextEncoder().encode(html).buffer as ArrayBuffer
+  } else if (o.variant === 'raw' && /\.html?$/i.test(path) && data.navigate) {
+    // The control keeps every byte of THEIR page — plus the guard, which paints nothing.
+    body = new TextEncoder().encode(injectGuard(await f.blob.text())).buffer as ArrayBuffer
   } else {
     body = await f.blob.arrayBuffer()
   }
