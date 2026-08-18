@@ -23,6 +23,9 @@ interface Props {
   codeFonts?: string[]
   /** The sheet holds a linear/conic gradient — the angle dial has something to turn. */
   hasGradients?: boolean
+  /** The CURRENT value of a sheet entry (its var, after mapping) — the dots
+   *  move with the knobs, as the page does. */
+  varNow?: (id: number) => string | undefined
   dispatch: Dispatch<ConfigAction>
   onCollapse: () => void
   onRandomize: () => void
@@ -47,7 +50,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, dispatch, onCollapse, onRandomize, onReset }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, varNow, dispatch, onCollapse, onRandomize, onReset }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -91,7 +94,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
   rows.push({
     key: 'brand', sec: 'Colour', label: 'Brand', changed: brandChanged,
     value: themeOf(cfg.cPrimary)?.label ?? nameColor(tokens.primaryHex),
-    dot: <span className="fmrow__dot" style={{ background: cfg.cPrimary }} />,
+    dot: <span className="fmrow__dot" style={{ background: (families?.centreId?.brand !== undefined ? varNow?.(families.centreId.brand) : undefined) ?? cfg.cPrimary }} />,
     body: () => (
       <>
         <div className="fmpop__grid">
@@ -121,7 +124,9 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
     if (!centre) return null
     const centreHex = formatCssColor({ ...centre, a: 1 })
     const cur = (cfg.sb[f.key] as string | undefined) ?? centreHex
-    return { ...f, centreHex, cur, changed: cur.toLowerCase() !== centreHex.toLowerCase() }
+    const id = families?.centreId?.[f.fam]
+    const live = (id !== undefined ? varNow?.(id) : undefined) ?? cur
+    return { ...f, centreHex, cur, live, changed: cur.toLowerCase() !== centreHex.toLowerCase() }
   }
   const famPicker = (f: NonNullable<ReturnType<typeof famState>>, hint = true) => (
     <Fragment key={f.key}>
@@ -136,13 +141,13 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
   )
   for (const f of FAMILY_ROWS.filter((x) => x.fam === 'secondary' || x.fam === 'accent').map(famState)) {
     if (!f) continue
-    rows.push({ key: f.key, label: f.label, changed: f.changed, value: nameColor(f.cur as `#${string}`), dot: <span className="fmrow__dot" style={{ background: f.cur }} />, body: () => famPicker(f) })
+    rows.push({ key: f.key, label: f.label, changed: f.changed, value: nameColor(f.cur as `#${string}`), dot: <span className="fmrow__dot" style={{ background: f.live }} />, body: () => famPicker(f) })
   }
   const status = FAMILY_ROWS.filter((x) => x.fam !== 'secondary' && x.fam !== 'accent').map(famState).filter((x): x is NonNullable<typeof x> => !!x)
   if (status.length) {
     rows.push({
       key: 'status', label: 'Status', changed: status.some((f) => f.changed),
-      value: <span className="fmrow__dots">{status.map((f) => <span key={f.key} className="fmrow__dot" style={{ background: f.cur }} title={`${f.label}: ${f.cur}`} />)}</span>,
+      value: <span className="fmrow__dots">{status.map((f) => <span key={f.key} className="fmrow__dot" style={{ background: f.live }} title={`${f.label}: ${f.live}`} />)}</span>,
       body: () => (
         <>
           {status.map((f) => famPicker(f, false))}
@@ -156,7 +161,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
   // they follow Hue / Saturation / Contrast — but the dots show they were seen
   // and NOT taken for status.
   if (families?.palette?.length) {
-    const pal = families.palette.slice(0, 8).map((c) => formatCssColor({ ...c, a: 1 }))
+    const pal = families.palette.slice(0, 8).map((c, i) => { const id = families.paletteId?.[i]; return (id !== undefined ? varNow?.(id) : undefined) ?? formatCssColor({ ...c, a: 1 }) })
     rows.push({
       key: 'palette', label: 'Palette', changed: false,
       value: <span className="fmrow__dots">{pal.map((hex, i) => <span key={i} className="fmrow__dot" style={{ background: hex }} title={hex} />)}</span>,

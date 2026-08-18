@@ -578,3 +578,8 @@ MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
     move to Palette. Bonus fix: a pale tint named for a role
     (`--bs-success-bg-subtle: #d1e7dd`) was a "neutral" — the alert
     background never followed the Success picker; it does now.
+93. **The dots are live**: Brand, Secondary/Accent, Status and Palette dots
+    show the CURRENT var of their centre entry (families carry `centreId` /
+    `paletteId`), so Hue/Saturation/Contrast turn them exactly as they turn
+    the page. A dot that keeps its baseline while the page moves is the
+    instrument lying.

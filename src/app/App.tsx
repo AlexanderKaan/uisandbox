@@ -9,6 +9,7 @@ import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '
 import { refusalFor } from '../sandbox/platform'
 import { Mark } from './Mark'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
+import { varName } from '../sandbox/table'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
@@ -311,6 +312,7 @@ export function App() {
                 scheme={loaded.project.scheme}
                 codeFonts={codeFonts(loaded.project.table)}
                 hasGradients={loaded.project.table.ofKind('angle').length > 0}
+                varNow={(id) => vars[varName(id)]}
                 dispatch={dispatch}
                 onCollapse={() => setPanelOpen(false)}
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}

@@ -69,6 +69,10 @@ export interface Families {
   centre: Partial<Record<Family, Okla>>
   /** The palette's hue clusters (most-used member each), for the panel's dots. */
   palette?: Okla[]
+  /** Entry ids behind the centres and the palette dots — so the panel can show
+   *  each dot in its CURRENT value (the mapped var), not the baseline. */
+  centreId?: Partial<Record<Family, number>>
+  paletteId?: number[]
 }
 const NEUTRAL_CHROMA = 0.035
 const FAMILY_HUE_WINDOW = 32
@@ -174,21 +178,27 @@ export function familiesOf(table: SubstitutionTable, brandHex: string): Families
   ranked.forEach((cluster, i) => { const fam: Family = i === 0 ? 'secondary' : i === 1 ? 'accent' : 'keep'; for (const x of cluster) of.set(x.e.id, fam) })
   for (const x of palette) of.set(x.e.id, 'palette')
   // centres = most-used member per family
-  const best = new Map<Family, { c: Okla; n: number }>()
+  const best = new Map<Family, { c: Okla; n: number; id: number }>()
   for (const e of table.ofKind('color')) {
     const fam = of.get(e.id)
     if (!fam || fam === 'keep' || fam === 'neutral' || fam === 'brand') continue
     const c = parseCssColor(e.value)!
     const cur = best.get(fam)
-    if (!cur || e.count > cur.n) best.set(fam, { c, n: e.count })
+    if (!cur || e.count > cur.n) best.set(fam, { c, n: e.count, id: e.id })
   }
-  for (const [fam, v] of best) centre[fam] = v.c
-  delete centre.palette
+  const centreId: Partial<Record<Family, number>> = {}
+  for (const [fam, v] of best) { centre[fam] = v.c; centreId[fam] = v.id }
+  // The brand's centre is the pick itself, but its dot should read like the
+  // page: the most-used brand entry, mapped.
+  let brandBest: { id: number; n: number } | null = null
+  for (const e of table.ofKind('color')) if (of.get(e.id) === 'brand' && (!brandBest || e.count > brandBest.n)) brandBest = { id: e.id, n: e.count }
+  if (brandBest) centreId.brand = brandBest.id
+  delete centre.palette; delete centreId.palette
   // The palette's clusters — 30° bins, most-used member each — for the dots.
-  const pbins = new Map<number, { c: Okla; n: number }>()
-  for (const x of palette) { const b = Math.round(x.c.H / 30) % 12; const cur = pbins.get(b); if (!cur || x.e.count > cur.n) pbins.set(b, { c: x.c, n: x.e.count }) }
-  const pal = [...pbins.values()].sort((a, b) => b.n - a.n).map((v) => v.c)
-  return { of, centre, ...(pal.length ? { palette: pal } : {}) }
+  const pbins = new Map<number, { c: Okla; n: number; id: number }>()
+  for (const x of palette) { const b = Math.round(x.c.H / 30) % 12; const cur = pbins.get(b); if (!cur || x.e.count > cur.n) pbins.set(b, { c: x.c, n: x.e.count, id: x.e.id }) }
+  const pal = [...pbins.values()].sort((a, b) => b.n - a.n)
+  return { of, centre, centreId, ...(pal.length ? { palette: pal.map((v) => v.c), paletteId: pal.map((v) => v.id) } : {}) }
 }
 
 /** Shift lightness by `dL`, scaled so 0 and 1 never move (a tint stays a tint). */
