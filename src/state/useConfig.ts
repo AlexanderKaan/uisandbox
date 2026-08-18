@@ -15,6 +15,9 @@ interface UseConfigResult {
   dispatch: (action: ConfigAction) => void
   undo: () => void
   redo: () => void
+  /** Start over at `cfg`: history cleared, URL hash dropped at once (not on
+   *  the debounce — a project switch must never carry the last one's knobs). */
+  reset: (cfg: Config) => void
   canUndo: boolean
   canRedo: boolean
 }
@@ -52,6 +55,11 @@ export function useConfig(): UseConfigResult {
   const tokens = useMemo(() => buildTokens(cfg), [cfg])
 
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), [])
+  const reset = useCallback((next: Config) => {
+    if (writeTimer.current) clearTimeout(writeTimer.current)
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname + window.location.search)
+    dispatch({ type: 'RESET', cfg: next })
+  }, [])
   const redo = useCallback(() => dispatch({ type: 'REDO' }), [])
 
   return {
@@ -63,6 +71,7 @@ export function useConfig(): UseConfigResult {
     dispatch: dispatch as (action: ConfigAction) => void,
     undo,
     redo,
+    reset,
     canUndo: hist.past.length > 0,
     canRedo: hist.future.length > 0,
   }

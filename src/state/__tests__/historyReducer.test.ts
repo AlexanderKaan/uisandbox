@@ -67,3 +67,18 @@ describe('historyReducer', () => {
     expect(h.present.colorTheme).toBe('rose')
   })
 })
+
+describe('RESET', () => {
+  it('starts over with no past and no future — a new project is not an undo step of the last one', () => {
+    let h = initHistory(DEFAULT_CONFIG)
+    h = historyReducer(h, { type: 'SET', patch: { radius: 'round' } })
+    h = historyReducer(h, { type: 'UNDO' })
+    expect(h.past.length + h.future.length).toBeGreaterThan(0)
+    const next = { ...DEFAULT_CONFIG, cPrimary: '#123456' as const }
+    h = historyReducer(h, { type: 'RESET', cfg: next })
+    expect(h.present).toBe(next)
+    expect(h.past).toHaveLength(0)
+    expect(h.future).toHaveLength(0)
+    expect(historyReducer(h, { type: 'UNDO' })).toBe(h)
+  })
+})

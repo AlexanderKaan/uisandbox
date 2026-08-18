@@ -17,7 +17,9 @@ export interface HistoryState {
   mergeKey: string | null
 }
 
-export type HistoryAction = ConfigAction | { type: 'UNDO' } | { type: 'REDO' }
+/** RESET: a new starting point — another project's baseline, or the empty
+ *  intake — with NO past: ⌘Z must not walk back into the previous project. */
+export type HistoryAction = ConfigAction | { type: 'UNDO' } | { type: 'REDO' } | { type: 'RESET'; cfg: Config }
 
 const LIMIT = 50 // bound memory; older steps fall off the bottom
 
@@ -51,6 +53,7 @@ export function historyReducer(h: HistoryState, action: HistoryAction): HistoryS
       const present = h.past[h.past.length - 1]!
       return { past: h.past.slice(0, -1), present, future: [h.present, ...h.future], mergeKey: null }
     }
+    case 'RESET': return initHistory(action.cfg)
     case 'REDO': {
       if (!h.future.length) return h
       const present = h.future[0]!

@@ -491,3 +491,9 @@ Scorecard: Prism 100/100/100 (365 el. 1:1, build files flagged) · Skeleton
 above the root) · fullPage.js 100/100/100 (41 screens, 107 el. 1:1 after the
 root fix) · impress.js 100/93/100 (92 el. 1:1) · slick 100/100/100 (724 el.
 1:1; slick's cloned slides unpaired, as reported).
+82. **A project switch is a clean start**: loading a project (and closing one)
+    RESETs the config history — no past to ⌘Z into, the URL hash dropped at
+    once rather than on the debounce — and the baseline refinement from the
+    rendered page is a reset too, since a corrected starting point is still
+    the starting point. Before, a stale hash from the previous project rode
+    into the next load until the baseline overwrote it.

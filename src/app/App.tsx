@@ -8,6 +8,7 @@ import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
 import { Mark } from './Mark'
+import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
@@ -34,7 +35,7 @@ interface Loaded {
 }
 
 export function App() {
-  const { cfg, tokens, dispatch, undo, redo, canUndo, canRedo } = useConfig()
+  const { cfg, tokens, dispatch, undo, redo, reset, canUndo, canRedo } = useConfig()
   const [loaded, setLoaded] = useState<Loaded | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -149,9 +150,10 @@ export function App() {
     cur.report.baseline = { cfg: cfg2, tokens: buildTokens(cfg2), families: familiesOf(cur.project.table, cfg2.cPrimary) }
     if (fromTable) cur.report.notes.push(`Corrected from rules your JS inserted at runtime: ${Object.entries(fromTable).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
     if (fromDoc) cur.report.notes.push(`Corrected from the rendered page: ${Object.entries(fromDoc).map(([k, v]) => `${k} ${v}`).join(', ')}.`)
-    dispatch({ type: 'REPLACE', cfg: cfg2 })
+    // The refined baseline is still the starting point, not a step to undo.
+    reset(cfg2)
     setLoaded({ ...cur })
-  }, [dispatch])
+  }, [reset])
   // Screens an SPA only reveals once rendered: its links. Merged into the picker.
   const discoverScreens = useCallback(() => {
     const cur = loadedRef.current
@@ -234,7 +236,8 @@ export function App() {
       const report = await deriveBaseline(archive, project.table)
       if (loaded) disown(loaded.project)
       own(project, () => varsRef.current)
-      dispatch({ type: 'REPLACE', cfg: report.baseline.cfg })
+      // A fresh project is a fresh start: no history, no hash from the last one.
+      reset(report.baseline.cfg)
       setLoaded({ project, report, screen: project.screens[0]!, archive })
       setShowNotes(true)
     } catch (err) {
@@ -288,7 +291,7 @@ export function App() {
             <button type="button" className="btn btn--ghost btn--icon" onClick={redo} disabled={!canRedo} title="Redo (⇧⌘Z)"><Redo2 size={15} /></button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes((v) => !v)} title="What we read from your code"><Info size={14} /> Read</button>
             <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowExport(true)}><Download size={14} /> Export</button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { disown(loaded.project); setLoaded(null) }} title="Close this project"><X size={14} /> Close</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { disown(loaded.project); setLoaded(null); reset(DEFAULT_CONFIG) }} title="Close this project"><X size={14} /> Close</button>
           </>
         )}
       </header>
