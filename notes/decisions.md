@@ -460,3 +460,34 @@ font sizes at runtime — 1:1) · SpinKit 100/100/100 · Hover.css 100/100/100
     docs: 7 directions, 1,184 elements still 1:1 at rest.
 77. A raster hero (Bootswatch's diagonal planes are a JPEG) is outside every
     knob and the reach meter says so; only an SVG data-URI would move.
+
+## Sweep 10 — six more, unseen (2026-08-18)
+
+Prism (336 pages) · Skeleton · particles.js · fullPage.js (60 examples) ·
+impress.js · slick. (Tachyons was drawn first and put back: its `index.html`
+is an empty template — the shell warning was right, but there is nothing to
+hold out.)
+
+78. **A buried dist/ does not claim the archive.** The whole-archive rule
+    (many pages beside the best root) exempted `dist|build|out|_site|public`
+    so a Vite repo's top-level dist beats its template index.html; fullPage.js
+    put a browserify example's `dist/` four folders deep with 1 of 60 pages
+    and won. The exemption now holds for a TOP-LEVEL build folder only.
+79. **The reach meter stops counting the browser's own paint**: the UA link
+    blue, the form-control border grey, buttonface (unless the sheet holds
+    that colour), 1×1 clipped sr-only spans, text at font-size 0 (slick's
+    dots), and — when the sheet has no font-size at all — the UA's sizes
+    (nothing was missed: there was nothing to move, as for families).
+80. **em-valued entries resolve per element** in the meter: a `.2em` radius
+    against the element's own font-size, a `.5em` font-size against the
+    parent's — impress.js's 9.6px link radius is its `.2em` at 48px, not a
+    miss.
+81. Honest: Prism master does not ship `prism.js`/`components.js` (build
+    output) — reported; the rest of the page is 1:1. impress.js's type reach
+    reads 93 % at `load` because the meter sees the pre-init fallback text.
+
+Scorecard: Prism 100/100/100 (365 el. 1:1, build files flagged) · Skeleton
+100/100/100 · particles.js 100/100/100 (163 el. 1:1, `../particles.js`
+above the root) · fullPage.js 100/100/100 (41 screens, 107 el. 1:1 after the
+root fix) · impress.js 100/93/100 (92 el. 1:1) · slick 100/100/100 (724 el.
+1:1; slick's cloned slides unpaired, as reported).

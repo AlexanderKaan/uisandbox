@@ -122,7 +122,12 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   const NOT_PAGE = /(^|\/)(node_modules|tests?|__tests__|mocks?|fixtures?)\//i
   const pagesUnder = (dir: string) => paths.filter((p) => /\.html?$/i.test(p) && !NOT_PAGE.test(p) && (dir === '' || p.startsWith(dir + '/'))).length
   const best = candidates[0]
-  const wholeArchive = best !== undefined && best !== '' && pagesUnder('') >= 3 * Math.max(1, pagesUnder(best)) && !/(^|\/)(dist|build|out|_site|public)$/i.test(best)
+  // A TOP-LEVEL dist/build is the site even when the repo has more pages
+  // beside it (a Vite template index.html, docs); a dist/ buried four folders
+  // deep (fullPage.js's browserify example: 1 of 60 pages) is one example's
+  // build, not the archive's.
+  const topBuild = best !== undefined && !best.includes('/') && /^(dist|build|out|_site|public)$/i.test(best)
+  const wholeArchive = best !== undefined && best !== '' && pagesUnder('') >= 3 * Math.max(1, pagesUnder(best)) && !topBuild
   if (wholeArchive && !candidates.includes('')) candidates.unshift('')
   const root = opts.root ?? (wholeArchive ? '' : candidates[0]) ?? ''
   const prefix = root ? `${root}/` : ''
