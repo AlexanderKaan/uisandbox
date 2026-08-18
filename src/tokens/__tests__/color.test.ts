@@ -120,8 +120,10 @@ describe('okNeutralScale / okAccentScale (12-step OKLCH ladder)', () => {
 
 describe('nameColor', () => {
   it('names achromatic by lightness', () => {
-    expect(nameColor('#000000')).toBe('Near Black')
-    expect(nameColor('#ffffff')).toBe('Near White')
+    expect(nameColor('#000000')).toBe('Black')
+    expect(nameColor('#ffffff')).toBe('White')
+    expect(nameColor('#fafafa')).toBe('Near White')
+    expect(nameColor('#0a0a0a')).toBe('Near Black')
     expect(nameColor('#808080')).toBe('Gray')
   })
 

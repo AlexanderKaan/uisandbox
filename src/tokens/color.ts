@@ -441,6 +441,10 @@ const HUE_FAMILIES: Array<{ max: number; name: string }> = [
 
 export function nameColor(hex: Hex): string {
   const [h, s, l] = hexToHsl(hex)
+  // The exact ends are named as what they are: #fff is White, not "Near White".
+  const flat = hex.toLowerCase().replace(/^#/, '')
+  if (/^(f{3}|f{6})$/.test(flat)) return 'White'
+  if (/^(0{3}|0{6})$/.test(flat)) return 'Black'
   if (s < 8) {
     if (l < 10) return 'Near Black'
     if (l < 26) return 'Charcoal'
