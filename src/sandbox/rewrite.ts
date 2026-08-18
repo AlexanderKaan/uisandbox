@@ -79,8 +79,13 @@ export function scanDeclarations(css: string): Decl[] {
     return true
   }
 
+  // A backslash escapes the next character ANYWHERE outside a string — in a
+  // selector too: Tailwind's `.bg-\[url\(\'\/img\/x\.png\'\)\]` carries `\'`,
+  // and reading that as a string start swallowed the next 107 rules whole.
+  const skipEscape = () => { if (css[i] === '\\') { i += 2; return true } return false }
+
   while (i < n) {
-    if (skipComment() || skipString()) continue
+    if (skipComment() || skipString() || skipEscape()) continue
     const c = css[i]!
     if (c === '}') { stack.pop(); selectors.pop(); i++; continue }
     if (/\s/.test(c) || c === ';') { i++; continue }
@@ -91,7 +96,7 @@ export function scanDeclarations(css: string): Decl[] {
     let colonAt = -1
     let terminator = ''
     while (i < n) {
-      if (skipComment() || skipString() || skipUrl()) continue
+      if (skipComment() || skipString() || skipUrl() || skipEscape()) continue
       const ch = css[i]!
       if (ch === '(') depth++
       else if (ch === ')') depth = Math.max(0, depth - 1)

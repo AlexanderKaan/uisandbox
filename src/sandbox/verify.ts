@@ -60,8 +60,13 @@ function keyOf(el: Element): string {
   let e: Element | null = el
   while (e && e.tagName !== 'BODY') {
     const tag = e.tagName.toLowerCase()
-    const cls = (e.getAttribute('class') ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 3).join('.')
-    const id = e.id ? `#${e.id}` : ''
+    // …and a class with a digit (`apexchartska7c5jyi`, a hashed module class)
+    // is dropped for the same reason; tag, plain classes and position remain.
+    const cls = (e.getAttribute('class') ?? '').trim().split(/\s+/).filter((c) => c && !/\d/.test(c)).slice(0, 3).join('.')
+    // Generated ids differ between two loads (ApexCharts `apexchartsq6xxr`,
+    // SVG.js `SvgjsG1082`, React `:r2:`): an id with a digit or a colon is
+    // not part of the address; the tag/class path still is.
+    const id = e.id && !/[\d:]/.test(e.id) ? `#${e.id}` : ''
     let nth = 0
     let sib = e.previousElementSibling
     while (sib) { if (sib.tagName === e.tagName) nth++; sib = sib.previousElementSibling }

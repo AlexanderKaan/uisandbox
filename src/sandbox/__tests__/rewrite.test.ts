@@ -25,6 +25,12 @@ describe('scanDeclarations', () => {
 
 describe('splicesFor', () => {
   const kinds = (prop: string, value: string) => splicesFor(prop, value).map((s) => `${s.kind}:${s.raw}`)
+  it('an escaped quote in a selector (Tailwind arbitrary values) does not open a string', () => {
+    const t = new SubstitutionTable()
+    const out = rewriteCss(String.raw`.bg-\[url\(\'\/img\/x\.png\'\)\]{background-image:url(/img/x.png)}.text-amber-500{--tw-text-opacity: 1;color:rgb(255 193 7 / var(--tw-text-opacity))}.b{color:#000}`, t, 'a.css')
+    expect(out).toContain('color:rgb(var(--us-v1) / var(--tw-text-opacity))')
+    expect(out).toContain('.b{color:var(--us-v2)}')
+  })
   it('font-family custom props: system stacks in, smoothing keywords and functions out', () => {
     expect(kinds('--mantine-font-family', '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif')).toEqual(['font-family:-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'])
     expect(kinds('--mantine-webkit-font-smoothing', 'antialiased')).toEqual([])
