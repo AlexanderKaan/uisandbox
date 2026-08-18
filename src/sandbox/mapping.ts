@@ -73,6 +73,11 @@ export interface Families {
    *  each dot in its CURRENT value (the mapped var), not the baseline. */
   centreId?: Partial<Record<Family, number>>
   paletteId?: number[]
+  /** The page's canvas — the background declared on html/body/:root, else the
+   *  most-used light background neutral — and its entry. The Background
+   *  picker moves it and every background neutral in its lightness zone. */
+  canvas?: Okla
+  canvasId?: number
 }
 const NEUTRAL_CHROMA = 0.035
 const FAMILY_HUE_WINDOW = 32
@@ -198,7 +203,19 @@ export function familiesOf(table: SubstitutionTable, brandHex: string): Families
   const pbins = new Map<number, { c: Okla; n: number; id: number }>()
   for (const x of palette) { const b = Math.round(x.c.H / 30) % 12; const cur = pbins.get(b); if (!cur || x.e.count > cur.n) pbins.set(b, { c: x.c, n: x.e.count, id: x.e.id }) }
   const pal = [...pbins.values()].sort((a, b) => b.n - a.n)
-  return { of, centre, centreId, ...(pal.length ? { palette: pal.map((v) => v.c), paletteId: pal.map((v) => v.id) } : {}) }
+  // Canvas: what html/body/:root paints as background; else the most-used
+  // neutral used as a background.
+  const SITE = /^(html|body|:root)(\s*,\s*(html|body|:root))*$/i
+  let canvas: { c: Okla; n: number; id: number; site: boolean } | null = null
+  for (const e of table.ofKind('color')) {
+    const c = parseCssColor(e.value)
+    if (!c || c.a < 0.99) continue
+    const onSite = e.sites.some((s) => /^(background|background-color)$/.test(s.prop) && SITE.test(s.selector ?? ''))
+    const bgNeutral = of.get(e.id) === 'neutral' && neutralUse(e) === 'bg'
+    if (!onSite && !bgNeutral) continue
+    if (!canvas || (onSite && !canvas.site) || (onSite === canvas.site && e.count > canvas.n)) canvas = { c, n: e.count, id: e.id, site: onSite }
+  }
+  return { of, centre, centreId, ...(pal.length ? { palette: pal.map((v) => v.c), paletteId: pal.map((v) => v.id) } : {}), ...(canvas ? { canvas: canvas.c, canvasId: canvas.id } : {}) }
 }
 
 /** Shift lightness by `dL`, scaled so 0 and 1 never move (a tint stays a tint). */
@@ -333,6 +350,13 @@ function applyGlobal(c: Okla, sb: Dials): Okla {
 /** One colour through its family mapping, then the global dials. */
 function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, sb: Dials, fams: Families): Okla {
   let mapped: Okla
+  // The Background picker: the canvas itself, and every background neutral in
+  // its lightness zone (surfaces, cards, stripes — a dark footer stays), move
+  // by the delta from canvas to pick — the same maths as a family.
+  const bgPick = sb.cBackground ? parseCssColor(sb.cBackground) : null
+  if (bgPick && fams.canvas && e && (e.id === fams.canvasId || (fam === 'neutral' && neutralUse(e) === 'bg' && Math.abs(c.L - fams.canvas.L) <= 0.3))) {
+    return applyGlobal(mapByDelta(c, fams.canvas, bgPick), sb)
+  }
   if (fam === 'keep' || fam === 'palette') mapped = c
   else if (fam === 'neutral') mapped = e ? mapNeutral(c, e, base, now, sb) : c
   else if (fam === 'brand') {

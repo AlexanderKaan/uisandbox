@@ -156,6 +156,29 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       ),
     })
   }
+  // Background: a colour, not a ΔL. The canvas their page declares (html/body)
+  // is the centre; a pick moves it and every background neutral in its
+  // lightness zone — cards and surfaces keep their step above the page.
+  if (families?.canvas) {
+    const canvasHex = formatCssColor({ ...families.canvas, a: 1 })
+    const cur = cfg.sb.cBackground ?? canvasHex
+    const live = (families.canvasId !== undefined ? varNow?.(families.canvasId) : undefined) ?? cur
+    rows.push({
+      key: 'background', label: 'Background', changed: cur.toLowerCase() !== canvasHex.toLowerCase(),
+      value: nameColor(cur as `#${string}`), dot: <span className="fmrow__dot fmrow__dot--ring" style={{ background: live }} />,
+      body: () => (
+        <>
+          <label className="fmbrand">
+            <span className="fmbrand__label">Page background</span>
+            <span className="fmbrand__val"><span className="fmrow__dot fmrow__dot--ring" style={{ background: cur }} />{cur}</span>
+            <input type="color" className="fmrow__colorinput" value={cur} onChange={(e) => setDial('cBackground', e.target.value)} aria-label="Page background" />
+          </label>
+          <p className="sbp__hint">Your page paints {canvasHex} behind everything; surfaces and cards near that lightness move with it, so their step above the page stays.</p>
+          {cfg.sb.cBackground && <button type="button" className="btn btn--ghost btn--sm sbp__reset" onClick={() => setDial('cBackground', undefined)}>Back to your code ({canvasHex})</button>}
+        </>
+      ),
+    })
+  }
   // The palette: chromatic clusters that are neither brand nor a proven status
   // role (pastel card tints, categories, chart series). No picker of their own —
   // they follow Hue / Saturation / Contrast — but the dots show they were seen

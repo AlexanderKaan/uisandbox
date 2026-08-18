@@ -583,3 +583,11 @@ MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
     `paletteId`), so Hue/Saturation/Contrast turn them exactly as they turn
     the page. A dot that keeps its baseline while the page moves is the
     instrument lying.
+94. **Background is a colour, not a ΔL.** The canvas — what html/body/:root
+    paints as background, else the most-used background neutral — is the
+    centre; the Background picker moves it to the pick and every background
+    neutral within 0.3 L of it by the same delta (surfaces and cards keep
+    their step above the page; a dark footer, ink, and chromatic blocks stay).
+    Same maths as a family. The old "Dimmer / Brighter" ΔL dial is gone —
+    a lighter or darker pick is that dial. Its dot wears a ring: near-white
+    needs an edge to be seen.

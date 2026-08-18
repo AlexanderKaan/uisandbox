@@ -33,6 +33,9 @@ export interface Dials {
   gradAngle?: number
   /** Their dark mode, switched: undefined = as is. */
   dark?: 'dark' | 'light'
+  /** The page background, picked — moves the canvas and every background
+   *  neutral in its lightness zone by the delta (undefined = as is). */
+  cBackground?: string
   /** Overrides for the colour families the sheet contains, as #rrggbb. */
   cSecondary?: string
   cAccent?: string
@@ -65,7 +68,6 @@ export const DIALS: DialSpec[] = [
   { key: 'hue', label: 'Hue', min: -180, max: 180, step: 1, unit: '°', section: 'Colour', snaps: [{ at: -90, label: '−90°' }, { at: -30, label: '−30°' }, { at: 0, label: 'as is' }, { at: 30, label: '+30°' }, { at: 90, label: '+90°' }, { at: 180, label: 'Opposite' }] },
   { key: 'sat', label: 'Saturation', min: 0, max: 2, step: 0.02, unit: '×', section: 'Colour', snaps: [{ at: 0, label: 'Grey' }, { at: 0.6, label: 'Muted' }, { at: 1, label: 'as is' }, { at: 1.4, label: 'Vivid' }] },
   { key: 'contrast', label: 'Contrast', min: -0.3, max: 0.3, step: 0.01, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.15, label: 'Softer' }, { at: 0, label: 'as is' }, { at: 0.15, label: 'Harder' }] },
-  { key: 'bgTone', label: 'Background', min: -0.1, max: 0.06, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.05, label: 'Dimmer' }, { at: 0, label: 'as is' }, { at: 0.03, label: 'Brighter' }] },
   { key: 'gradAngle', label: 'Gradient angle', min: -180, max: 180, step: 5, unit: '°', section: 'Colour', snaps: [{ at: -90, label: '−90°' }, { at: -45, label: '−45°' }, { at: 0, label: 'as is' }, { at: 45, label: '+45°' }, { at: 90, label: '+90°' }, { at: 180, label: 'Reversed' }] },
   { key: 'borderTone', label: 'Border tone', min: -0.15, max: 0.15, step: 0.005, unit: 'ΔL', section: 'Colour', snaps: [{ at: -0.08, label: 'Stronger' }, { at: 0, label: 'as is' }, { at: 0.06, label: 'Fainter' }] },
 ]

@@ -4,9 +4,9 @@ import { DEFAULT_CONFIG } from '../../tokens/defaults'
 import { COLOR_THEMES } from '../../tokens/stylesAndThemes'
 import type { Config } from '../../tokens/types'
 import { rewriteCss } from '../rewrite'
-import { SubstitutionTable } from '../table'
+import { SubstitutionTable, varName } from '../table'
 import { computeVars, familiesOf, toPx, type Baseline, type Families } from '../mapping'
-import { parseCssColor, hueDelta } from '../cssColor'
+import { parseCssColor, hueDelta, formatCssColor } from '../cssColor'
 import { DEFAULT_DIALS, type Dials } from '../dials'
 
 /* A small "their app": an indigo brand, greys, a teal secondary, status greens/reds,
@@ -229,5 +229,24 @@ describe('status needs evidence; a palette is not a set of roles', () => {
   it('an unnamed tint inside a proven status window still belongs to the role', () => {
     const { t, f } = fams(`.alert-success{color:#155724}.x{background:#c3e6cb}`, '#0d6efd')
     expect(famOf(t, f, '#c3e6cb')).toBe('success')
+  })
+})
+
+describe('Background is a colour: canvas + its zone move by delta', () => {
+  it('body background is the canvas; a pick moves it and near-lightness surfaces, not a dark footer or ink', () => {
+    const table = new SubstitutionTable()
+    rewriteCss(`body{background:#ffffff;color:#111827}.card{background:#f9fafb}.footer{background:#111111}.muted{color:#6b7280}`, table, 'x.css')
+    const cfg: Config = { ...theirCfg, cPrimary: '#4f39f6' }
+    const f = familiesOf(table, cfg.cPrimary)
+    expect(f.canvas && formatCssColor({ ...f.canvas, a: 1 })).toBe('#ffffff')
+    const baseline: Baseline = { cfg, tokens: buildTokens(cfg), families: f }
+    const pick = { ...cfg, sb: { ...DEFAULT_DIALS, cBackground: '#fdf6e3' } }
+    const out = computeVars(table, baseline, pick, buildTokens(pick))
+    const at = (v: string) => out[varName(table.entries.find((e) => e.value === v)!.id)]!
+    expect(at('#ffffff')).toBe('#fdf6e3')                 // the canvas becomes the pick
+    expect(at('#f9fafb')).not.toBe('#f9fafb')             // the card follows
+    expect(parseCssColor(at('#f9fafb'))!.L).toBeLessThan(parseCssColor('#fdf6e3')!.L + 0.02)
+    expect(at('#111111')).toBe('#111111')                 // a dark footer stays
+    expect(at('#6b7280')).toBe('#6b7280')                 // ink stays
   })
 })
