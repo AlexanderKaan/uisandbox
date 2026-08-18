@@ -74,7 +74,8 @@ for (const [i, f] of fixtures.entries()) {
     // Check 1:1 — the last chip in the foot.
     await page.evaluate(() => { const c = document.querySelectorAll('.stage__foot .chip'); c[c.length - 1].click() })
     const verifyText = await page.waitForFunction(() => {
-      const v = document.querySelector('.verify')
+      // The 1:1 card specifically — a warning card shares the .verify class.
+      const v = document.querySelector('.verify[aria-label="1:1 check"]')
       const t = v ? v.textContent || '' : ''
       return /✓|✗|⚠|shell|not what your users/.test(t) ? t : null
     }, null, { timeout: perFixtureMs }).then((h) => h.jsonValue())
