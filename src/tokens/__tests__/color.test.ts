@@ -125,6 +125,9 @@ describe('nameColor', () => {
     expect(nameColor('#fafafa')).toBe('Near White')
     expect(nameColor('#0a0a0a')).toBe('Near Black')
     expect(nameColor('#808080')).toBe('Gray')
+    expect(nameColor('#f5f5f5')).toBe('White Smoke')
+    expect(nameColor('#fdf5e6')).toBe('Old Lace')
+    expect(nameColor('#dcdcdc')).toBe('Gainsboro')
   })
 
   it('names by hue family for saturated colors', () => {

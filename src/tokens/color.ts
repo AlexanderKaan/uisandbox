@@ -439,12 +439,36 @@ const HUE_FAMILIES: Array<{ max: number; name: string }> = [
   { max: 360, name: 'Red' },
 ]
 
+/* The CSS named colours for the light and grey end — the vocabulary every
+ * browser knows ("Snow", "Ghost White", "Gainsboro"). A colour close to one of
+ * these is called by that name; chromatic colours keep the descriptive names
+ * ("Vivid Blue"), which say more about a brand than "Medium Slate Blue" would. */
+const CSS_NEUTRALS: Array<[string, string]> = [
+  ['White', '#ffffff'], ['Snow', '#fffafa'], ['Ivory', '#fffff0'], ['Floral White', '#fffaf0'], ['Ghost White', '#f8f8ff'],
+  ['White Smoke', '#f5f5f5'], ['Sea Shell', '#fff5ee'], ['Old Lace', '#fdf5e6'], ['Linen', '#faf0e6'], ['Alice Blue', '#f0f8ff'],
+  ['Honeydew', '#f0fff0'], ['Mint Cream', '#f5fffa'], ['Azure', '#f0ffff'], ['Lavender Blush', '#fff0f5'], ['Beige', '#f5f5dc'],
+  ['Antique White', '#faebd7'], ['Lavender', '#e6e6fa'], ['Gainsboro', '#dcdcdc'], ['Light Gray', '#d3d3d3'], ['Silver', '#c0c0c0'],
+  ['Dark Gray', '#a9a9a9'], ['Gray', '#808080'], ['Dim Gray', '#696969'], ['Light Slate Gray', '#778899'], ['Slate Gray', '#708090'],
+  ['Dark Slate Gray', '#2f4f4f'], ['Black', '#000000'],
+]
+function nearCssNeutral(hex: Hex): string | null {
+  const [, s, l] = hexToHsl(hex)
+  if (s >= 8 && l < 90) return null // chromatic: descriptive names
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+  let best: { name: string; d: number } | null = null
+  for (const [name, h] of CSS_NEUTRALS) {
+    const [r2, g2, b2] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+    const d = Math.max(Math.abs(r! - r2!), Math.abs(g! - g2!), Math.abs(b! - b2!))
+    if (!best || d < best.d) best = { name, d }
+  }
+  // Within 3/255 per channel — the same colour for any eye; #fafafa is not White.
+  return best && best.d <= 3 ? best.name : null
+}
+
 export function nameColor(hex: Hex): string {
   const [h, s, l] = hexToHsl(hex)
-  // The exact ends are named as what they are: #fff is White, not "Near White".
-  const flat = hex.toLowerCase().replace(/^#/, '')
-  if (/^(f{3}|f{6})$/.test(flat)) return 'White'
-  if (/^(0{3}|0{6})$/.test(flat)) return 'Black'
+  const css = nearCssNeutral(hex)
+  if (css) return css
   if (s < 8) {
     if (l < 10) return 'Near Black'
     if (l < 26) return 'Charcoal'
