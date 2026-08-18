@@ -22,7 +22,7 @@
 pnpm install
 pnpm dev        # http://localhost:5190
 pnpm test       # vitest + node:test (audit engine)
-pnpm build      # dist/ — static; public/_headers and _redirects ride along
+pnpm build      # dist/ — static; public/_headers rides along
 pnpm holdouts   # every fixture zip through the real app in headless Chromium (see below)
 ```
 
