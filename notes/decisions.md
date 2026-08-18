@@ -560,3 +560,21 @@ MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
     any grown design system they are the standard four; a row each was three
     rows saying "green, amber, red". Secondary and Accent stay separate: those
     are choices, not a set.
+92. **A hue is not a role: status needs evidence.** Every green was "success"
+    and every yellow "warning", so a site's PALETTE — pastel pink/green/blue/
+    yellow on cards under a purple brand, category colours, chart series, the
+    docs' own swatch pages — fell into the status pickers. A hue window is a
+    status family only when a member is NAMED or USED as the role
+    (`--bs-success`, `.alert-danger`, `:invalid`, `--color-warning-bg`);
+    inside such a window a member named after its colour and never after a
+    role (`--green-100`, `.tag-red`) is palette; a window with no evidence is
+    palette, whole. Secondary/Accent need a STRONG member (C ≥ 0.09 and
+    L ≤ 0.82 — a pastel yellow keeps a high OKLCH chroma) and must not be a
+    swatch scale through and through (`--teal-500`, `.bg-teal`); `.btn--teal`
+    — a saturated variant named after its hue — is a choice. Palette is a
+    family of its own: untouched by the pickers, moved by Hue / Saturation /
+    Contrast, shown as a row of dots (one per 30° cluster). Bootstrap docs:
+    the four status roles stay, 31 swatches (`.bd-pink-100…900`, `.swatch-*`)
+    move to Palette. Bonus fix: a pale tint named for a role
+    (`--bs-success-bg-subtle: #d1e7dd`) was a "neutral" — the alert
+    background never followed the Success picker; it does now.

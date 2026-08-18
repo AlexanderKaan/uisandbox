@@ -151,6 +151,23 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       ),
     })
   }
+  // The palette: chromatic clusters that are neither brand nor a proven status
+  // role (pastel card tints, categories, chart series). No picker of their own —
+  // they follow Hue / Saturation / Contrast — but the dots show they were seen
+  // and NOT taken for status.
+  if (families?.palette?.length) {
+    const pal = families.palette.slice(0, 8).map((c) => formatCssColor({ ...c, a: 1 }))
+    rows.push({
+      key: 'palette', label: 'Palette', changed: false,
+      value: <span className="fmrow__dots">{pal.map((hex, i) => <span key={i} className="fmrow__dot" style={{ background: hex }} title={hex} />)}</span>,
+      body: () => (
+        <>
+          <p className="sbp__hint">{families.palette!.length} colour famil{families.palette!.length === 1 ? 'y' : 'ies'} in your CSS that are neither the brand nor a status role — pastel tints on cards, categories, chart series. They are not touched by the Status pickers; Hue, Saturation and Contrast move them.</p>
+          <div className="fmrow__dots" style={{ gap: 6, padding: '4px 10px 8px' }}>{pal.map((hex, i) => <span key={i} className="fmrow__dot" style={{ background: hex, width: 14, height: 14 }} title={hex} />)}</div>
+        </>
+      ),
+    })
+  }
   const dialRow = (spec: DialSpec, sec?: string): Row => {
     const v = (cfg.sb[spec.key] ?? DEFAULT_DIALS[spec.key]) as number
     const bv = (base.sb[spec.key] ?? DEFAULT_DIALS[spec.key]) as number

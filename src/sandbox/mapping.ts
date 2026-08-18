@@ -61,18 +61,52 @@ const fromPx = (px: number, unit: string, original?: string): string => {
 // colour); a picker for that family moves every member by the delta between
 // centre and pick — same maths as the brand.
 
-export type Family = 'brand' | 'secondary' | 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'keep'
+export type Family = 'brand' | 'secondary' | 'accent' | 'success' | 'warning' | 'danger' | 'info' | 'palette' | 'neutral' | 'keep'
 export interface Families {
   /** entry id → family */
   of: Map<number, Family>
   /** family → its centre colour (most-used member) */
   centre: Partial<Record<Family, Okla>>
+  /** The palette's hue clusters (most-used member each), for the panel's dots. */
+  palette?: Okla[]
 }
 const NEUTRAL_CHROMA = 0.035
 const FAMILY_HUE_WINDOW = 32
 // OKLCH hues: red ≈ 20–30, amber ≈ 60–85, green ≈ 140–160, blue ≈ 240–260
 const STATUS: Array<[Family, number, number]> = [['success', 110, 175], ['danger', 335, 40], ['warning', 45, 100], ['info', 215, 265]]
 const inHue = (h: number, lo: number, hi: number) => (lo <= hi ? h >= lo && h <= hi : h >= lo || h <= hi)
+
+/* A hue is not a role. Every green was "success" and every yellow "warning" —
+ * and a site's PALETTE (pastel pink/green/blue/yellow on cards, category
+ * colours, chart series) fell into the status pickers. Status now needs
+ * EVIDENCE: a member named or used as one (`--bs-success`, `.alert-danger`,
+ * `:invalid`, `--color-warning-bg`); a member named after its colour
+ * (`--pink-100`, `.bg-teal`, `--pastel-*`, `--tag-*`) is a swatch, not a role.
+ * A status window with no evidence at all is palette, whole. */
+const STATUS_WORDS: Record<'success' | 'warning' | 'danger' | 'info', RegExp> = {
+  success: /(^|[^a-z])(success|valid|positive|ok|confirm|approved?|complete|done|passed?)([^a-z]|$)/i,
+  warning: /(^|[^a-z])(warn(ing)?|caution|pending|attention|notice-warn)([^a-z]|$)/i,
+  danger: /(^|[^a-z])(danger|error|invalid|destructive|critical|negative|fail(ed|ure)?|alert|delete|remove|bad)([^a-z]|$)/i,
+  info: /(^|[^a-z])(info|notice|note|hint|tip)([^a-z]|$)/i,
+}
+const PALETTE_WORDS = /(^|[^a-z])(red|pink|rose|fuchsia|magenta|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange|brown|gold|mint|lavender|peach|coral|pastel|palette|swatch|categor(y|ies)|tag|series|chart)([^a-z0-9]|$)/i
+/** A SWATCH is a colour named as a colour where names are scales: a custom
+ *  property (`--teal-500`, `--color-pink`) or a utility (`.bg-teal`, `.text-red`)
+ *  — the vocabulary of a palette, not of a role or a component variant. */
+const SWATCH_SELECTOR = /(^|[\s,])\.(bg|text|border|fill|stroke|color|colour|swatch|palette)-[a-z]/i
+const evidenceOf = (e: Entry): { status: Set<Family>; palette: boolean; swatch: boolean } => {
+  const status = new Set<Family>()
+  let palette = false, swatch = false
+  for (const s of e.sites) {
+    const text = `${s.prop} ${s.selector ?? ''}`
+    for (const fam of Object.keys(STATUS_WORDS) as Array<keyof typeof STATUS_WORDS>) if (STATUS_WORDS[fam].test(text)) status.add(fam)
+    if (PALETTE_WORDS.test(text)) {
+      palette = true
+      if ((s.prop.startsWith('--') && PALETTE_WORDS.test(s.prop)) || SWATCH_SELECTOR.test(s.selector ?? '')) swatch = true
+    }
+  }
+  return { status, palette, swatch }
+}
 
 /** The family of one loose colour (an SVG fill inside a data URI), by the same rules. */
 export function familyOfColor(c: Okla, fams: Families): Family {
@@ -81,7 +115,7 @@ export function familyOfColor(c: Okla, fams: Families): Family {
   const b = fams.centre.brand
   if (b && Math.abs(hueDelta(c.H, b.H)) <= FAMILY_HUE_WINDOW) return 'brand'
   const st = STATUS.find(([, lo, hi]) => inHue(c.H, lo, hi))
-  if (st) return st[0]
+  if (st && fams.centre[st[0]]) return st[0]
   for (const fam of ['secondary', 'accent'] as const) { const ce = fams.centre[fam]; if (ce && Math.abs(hueDelta(c.H, ce.H)) <= FAMILY_HUE_WINDOW) return fam }
   return 'keep'
 }
@@ -95,23 +129,50 @@ export function familiesOf(table: SubstitutionTable, brandHex: string): Families
   for (const e of table.ofKind('color')) {
     const c = parseCssColor(e.value)
     if (!c || c.a === 0) { of.set(e.id, 'keep'); continue }
-    if (c.C < NEUTRAL_CHROMA) { of.set(e.id, 'neutral'); continue }
+    if (c.C < NEUTRAL_CHROMA) {
+      // A pale tint NAMED for a role (`--bs-success-bg-subtle: #d1e7dd`) is that
+      // role's, not a grey: the alert background must follow the Success picker.
+      const st = STATUS.find(([, lo, hi]) => inHue(c.H, lo, hi))
+      if (c.C >= 0.012 && st && evidenceOf(e).status.has(st[0])) { rest.push({ e, c }); continue }
+      of.set(e.id, 'neutral'); continue
+    }
     if (brand && Math.abs(hueDelta(c.H, brand.H)) <= FAMILY_HUE_WINDOW) { of.set(e.id, 'brand'); chroma.push({ e, c }); continue }
     rest.push({ e, c })
   }
   const centre: Partial<Record<Family, Okla>> = {}
   if (brand) centre.brand = brand
-  // status by hue window
+  // Status: hue window PLUS evidence (see STATUS_WORDS). A window whose members
+  // carry no status word is a palette, whole; inside a window with evidence, a
+  // member named after its colour and never after a role is palette too.
   const remaining: typeof rest = []
+  const palette: typeof rest = []
+  const byStatus = new Map<Family, typeof rest>()
   for (const x of rest) {
     const st = STATUS.find(([, lo, hi]) => inHue(x.c.H, lo, hi))
-    if (st) of.set(x.e.id, st[0]); else remaining.push(x)
+    if (st) { if (!byStatus.has(st[0])) byStatus.set(st[0], []); byStatus.get(st[0])!.push(x) } else remaining.push(x)
+  }
+  for (const [fam, members] of byStatus) {
+    const ev = members.map((x) => ({ x, ev: evidenceOf(x.e) }))
+    const proven = ev.some((m) => m.ev.status.has(fam))
+    for (const m of ev) {
+      if (proven && (m.ev.status.has(fam) || !m.ev.palette)) of.set(m.x.e.id, fam)
+      else palette.push(m.x)
+    }
   }
   // secondary / accent: the two largest hue clusters (30° bins) among what is left
   const bins = new Map<number, typeof rest>()
   for (const x of remaining) { const b = Math.round(x.c.H / 30) % 12; if (!bins.has(b)) bins.set(b, []); bins.get(b)!.push(x) }
-  const ranked = [...bins.values()].sort((a, b) => b.reduce((n, x) => n + x.e.count, 0) - a.reduce((n, x) => n + x.e.count, 0))
+  // A secondary or accent is a COLOUR CHOICE: saturated (C ≥ 0.09 somewhere in
+  // the cluster) and not a swatch scale through and through. A pastel cluster
+  // (card tints), or one that is `--pink-*` / `.bg-teal` everywhere, is palette;
+  // `.btn--teal` — a saturated variant named after its hue — is a choice.
+  // "Strong" = saturated AND not a tint: a pastel yellow keeps a high OKLCH
+  // chroma at L 0.94, so lightness has to speak too.
+  const strong = (c: Okla) => c.C >= 0.09 && c.L <= 0.82
+  const isPalette = (cluster: typeof rest) => !cluster.some((x) => strong(x.c)) || cluster.every((x) => { const ev = evidenceOf(x.e); return ev.swatch && !ev.status.size })
+  const ranked = [...bins.values()].filter((cl) => { const p = isPalette(cl); if (p) palette.push(...cl); return !p }).sort((a, b) => b.reduce((n, x) => n + x.e.count, 0) - a.reduce((n, x) => n + x.e.count, 0))
   ranked.forEach((cluster, i) => { const fam: Family = i === 0 ? 'secondary' : i === 1 ? 'accent' : 'keep'; for (const x of cluster) of.set(x.e.id, fam) })
+  for (const x of palette) of.set(x.e.id, 'palette')
   // centres = most-used member per family
   const best = new Map<Family, { c: Okla; n: number }>()
   for (const e of table.ofKind('color')) {
@@ -122,7 +183,12 @@ export function familiesOf(table: SubstitutionTable, brandHex: string): Families
     if (!cur || e.count > cur.n) best.set(fam, { c, n: e.count })
   }
   for (const [fam, v] of best) centre[fam] = v.c
-  return { of, centre }
+  delete centre.palette
+  // The palette's clusters — 30° bins, most-used member each — for the dots.
+  const pbins = new Map<number, { c: Okla; n: number }>()
+  for (const x of palette) { const b = Math.round(x.c.H / 30) % 12; const cur = pbins.get(b); if (!cur || x.e.count > cur.n) pbins.set(b, { c: x.c, n: x.e.count }) }
+  const pal = [...pbins.values()].sort((a, b) => b.n - a.n).map((v) => v.c)
+  return { of, centre, ...(pal.length ? { palette: pal } : {}) }
 }
 
 /** Shift lightness by `dL`, scaled so 0 and 1 never move (a tint stays a tint). */
@@ -257,7 +323,7 @@ function applyGlobal(c: Okla, sb: Dials): Okla {
 /** One colour through its family mapping, then the global dials. */
 function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, sb: Dials, fams: Families): Okla {
   let mapped: Okla
-  if (fam === 'keep') mapped = c
+  if (fam === 'keep' || fam === 'palette') mapped = c
   else if (fam === 'neutral') mapped = e ? mapNeutral(c, e, base, now, sb) : c
   else if (fam === 'brand') {
     const b = parseCssColor(str(base['--k-primary'])), n = parseCssColor(str(now['--k-primary']))

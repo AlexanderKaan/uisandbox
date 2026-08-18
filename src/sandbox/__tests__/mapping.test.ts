@@ -5,7 +5,7 @@ import { COLOR_THEMES } from '../../tokens/stylesAndThemes'
 import type { Config } from '../../tokens/types'
 import { rewriteCss } from '../rewrite'
 import { SubstitutionTable } from '../table'
-import { computeVars, familiesOf, toPx, type Baseline } from '../mapping'
+import { computeVars, familiesOf, toPx, type Baseline, type Families } from '../mapping'
 import { parseCssColor, hueDelta } from '../cssColor'
 import { DEFAULT_DIALS, type Dials } from '../dials'
 
@@ -201,5 +201,33 @@ describe('gradient angle dial', () => {
     expect(out['--us-v7']).toBe('135deg') // .25turn + 45°
     const rev = { ...cfg, sb: { ...DEFAULT_DIALS, gradAngle: 180 } }
     expect(computeVars(table, baseline, rev, buildTokens(rev))['--us-v1']).toBe('315deg')
+  })
+})
+
+describe('status needs evidence; a palette is not a set of roles', () => {
+  const fams = (css: string, brand: string) => { const t = new SubstitutionTable(); rewriteCss(css, t, 'x.css'); return { t, f: familiesOf(t, brand) } }
+  const famOf = (t: SubstitutionTable, f: Families, value: string) => f.of.get(t.entries.find((e) => e.value === value)!.id)
+  it('pastel card tints under a purple brand are palette, not success/warning/danger/info', () => {
+    const { t, f } = fams(`:root{--brand:#7c3aed}.card--pink{background:#fbcfe8}.card--green{background:#bbf7d0}.card--blue{background:#bfdbfe}.card--yellow{background:#fef08a}`, '#7c3aed')
+    expect(famOf(t, f, '#bbf7d0')).toBe('palette')
+    expect(famOf(t, f, '#fef08a')).toBe('palette')
+    expect(famOf(t, f, '#bfdbfe')).toBe('palette')
+    expect(f.centre.success).toBeUndefined()
+    expect(f.centre.warning).toBeUndefined()
+    expect(f.palette?.length).toBeGreaterThanOrEqual(3)
+  })
+  it('a role named as one is status; a swatch named after its colour in the same window is palette', () => {
+    const { t, f } = fams(`:root{--bs-success:#198754;--bs-success-bg-subtle:#d1e7dd;--green-100:#dcfce7}.alert-danger{color:#dc3545}.tag-red{background:#fca5a5}`, '#0d6efd')
+    expect(famOf(t, f, '#198754')).toBe('success')
+    expect(famOf(t, f, '#d1e7dd')).toBe('success')
+    expect(famOf(t, f, '#dcfce7')).toBe('palette') // --green-100: a swatch
+    expect(famOf(t, f, '#dc3545')).toBe('danger')
+    expect(famOf(t, f, '#fca5a5')).toBe('palette') // .tag-red: a category swatch in the danger window
+    expect(f.centre.success).toBeDefined()
+    expect(f.centre.danger).toBeDefined()
+  })
+  it('an unnamed tint inside a proven status window still belongs to the role', () => {
+    const { t, f } = fams(`.alert-success{color:#155724}.x{background:#c3e6cb}`, '#0d6efd')
+    expect(famOf(t, f, '#c3e6cb')).toBe('success')
   })
 })
