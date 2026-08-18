@@ -13,7 +13,7 @@ sprint ends with `pnpm test` and `pnpm holdouts` green.
 
 ---
 
-## Sprint A — Ship it: uisandbox.org
+## Sprint A — Ship it: uisandbox.org  ✅ done 2026-08-19 (69/79 hold-outs ok against the live URL)
 
 The tool as it is, on its own origin, with a name on it.
 
@@ -44,7 +44,7 @@ The tool as it is, on its own origin, with a name on it.
   https://uisandbox.org`); the sec-evil fixture cannot navigate the top
   window there either.
 
-## Sprint B — The intake as a front door
+## Sprint B — The intake as a front door  ✅ done 2026-08-19 (three ways in, stages with numbers, the repo route)
 
 Today the intake is a card with a drop zone. People arrive with three things
 in mind; the screen should meet all three and never leave them guessing while
@@ -69,7 +69,7 @@ it works.
 - Done when: a first-time visitor drops a zip, a folder or pastes a repo, sees
   progress, and lands on the stage without reading a paragraph.
 
-## Sprint C — Being found: SEO, GEO, copy, analytics
+## Sprint C — Being found: SEO, GEO, copy, analytics  ✅ done 2026-08-19 (analytics wired, to be switched on)
 
 - **Copy.** The line is *Test your design*. Landing content on uisandbox.org
   above the intake: what it does in one sentence, the honesty in one sentence
@@ -102,7 +102,7 @@ it works.
   few weeks; a model asked "how can I test a colour change on my built site"
   has a document to cite.
 
-## Sprint D — The MCP server, and being on the lists
+## Sprint D — The MCP server, and being on the lists  ✅ server done 2026-08-19 · listings: the human's step
 
 The engine is already one function per step (`buildProject` ·
 `deriveBaseline` · `computeVars` · `gen*`), so the server is a shell.

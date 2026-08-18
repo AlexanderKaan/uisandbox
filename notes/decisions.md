@@ -711,3 +711,19 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     200 MB cap, nothing stored — and the intake says in one sentence that this
     is the one thing that leaves the tab. `?load=` and the route share one
     loader that counts the bytes coming in.
+
+## Sprint D — the MCP server (2026-08-19)
+
+111. **`pnpm mcp`** — UISandbox as an MCP server over the SAME functions the
+    browser runs (openZip → buildProject → deriveBaseline → computeVars →
+    gen*), imported straight from src/ with tsx; no second engine. `load`,
+    `screens`, `set`, `export` are pure Node (the engine needed no change to
+    run there — File, Blob, DecompressionStream are Node 22 globals; only
+    lz-string's CJS default import). `verify` and `screenshot` drive the real
+    app in headless Chromium with the archive served from a route inside the
+    browser and the knobs carried in the URL hash (the app's own state
+    encoding) — the number an agent gets is the number a visitor gets. Smoke:
+    load → set → patch → verify ✓ → screenshot in 8 s on Skeleton.
+112. Listings (registries, directories) are the human's step; the repo now
+    carries what they ask for (mcp/README.md: tools, config, a prompt to
+    paste) and llms.txt points at it.

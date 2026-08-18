@@ -1,4 +1,5 @@
-import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string'
+import LZString from 'lz-string'
+const { compressToEncodedURIComponent, decompressFromEncodedURIComponent } = LZString
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import type { Config } from '../tokens/types'
 

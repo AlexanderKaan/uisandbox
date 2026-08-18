@@ -52,6 +52,10 @@ src/
 notes/           decisions (numbered), traps, lessons, security, roadmap
 ```
 
+## MCP
+
+`pnpm mcp` runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config.
+
 ## Deploy
 
 Static, one origin, service worker at the root. Cloudflare Pages: build command `pnpm build`, output `dist/`; `public/_headers` keeps `sw.js` uncached and sets the security headers; `public/_redirects` sends deep links to the app. Put nothing else on the origin.
