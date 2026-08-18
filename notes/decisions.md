@@ -497,3 +497,61 @@ root fix) · impress.js 100/93/100 (92 el. 1:1) · slick 100/100/100 (724 el.
     rendered page is a reset too, since a corrected starting point is still
     the starting point. Before, a stale hash from the previous project rode
     into the next load until the baseline overwrote it.
+
+## Sweep 11 — stratified, part 1 (2026-08-18)
+
+Not random this time: cells of the matrix no earlier sweep covered. Docusaurus
+v3 (Metro docs) · VitePress (its own docs, base `/vitepress/`) · Ant Design
+(cssinjs runtime, 2,666 pages) · Angular (ng-bootstrap site, 1,748 pages) ·
+Mantine (364 pages) · Spectrum Web Components (Shadow DOM, 785 pages) · MDN
+pwa-examples (their own service worker) · Open Props (modern CSS) · Material
+Components Web (TypeDoc) · Bootstrap RTL (their buttons page, `dir="rtl"` +
+`bootstrap.rtl.min.css`). Nuxt-static and SvelteKit-static have no committed
+build anywhere I could find — part 2 builds them.
+
+83. **A sub-path build is served under its base.** VitePress's docs are built
+    for `/vitepress/`; served at `/` the files loaded (segment-stripping) but
+    the router saw a path outside its base and rendered its 404. Every page
+    now votes for the deploy prefix — a root-absolute script/stylesheet URL
+    the archive holds only once its leading segments are stripped — and
+    screens are served at `/<base>/<path>?__sb=` (`project.base`; a
+    two-segment path counts, Spectrum's `/spectrum-web-components/swc.js`).
+84. **The live observer duck-types across realms.** `r.target instanceof
+    Element` in the MutationObserver callback compared the FRAME's nodes to
+    the HOST's constructor — always false — so every mutation after the initial
+    sweep was dropped: Mantine's hydrated Shiki spans kept 909 raw `style`
+    colours (39 % colour reach on remeasure). Same trap in the 1:1 check's
+    shadow-boundary test (`instanceof ShadowRoot`). nodeType/tagName, never a
+    constructor (notes/traps.md: cross-realm).
+85. **Brand = the most-painted colour among those NAMED brand.** Ant's site
+    declares `--ant-color-primary: #1677ff` once, in the sheet every page
+    loads (28,828 uses), and `#00b96b` in ten theme-demo pages; the count of
+    declaration sites crowned the demo green.
+86. **Unslotted light DOM leaves the 1:1 check** (and the meter). Spectrum's
+    docs keep a fallback `<a id="logo" slot="logo">` no <slot> takes: not in
+    the flat tree, never painted, and computed WITHOUT inherited custom
+    properties — so `var(--us-v452)` read as 0px there while the literal 4px
+    it replaced read fine. 292 such elements, 0 pixels.
+87. **The meter lets the frame resolve values**: a probe element computes
+    `calc(.875rem * var(--mantine-scale))`, bare channel triplets wrapped in
+    `rgb()`/`hsl()`, so the meter's own arithmetic no longer undercounts;
+    it walks shadow roots (allElements) and skips bare UA generics
+    (`monospace` on an unstyled <code>).
+88. **System font stacks are families**: `--mantine-font-family: -apple-system,
+    …` was refused for its leading dash; `antialiased`/`grayscale`
+    (…-font-smoothing) and `clamp(6px, …)` are refused now.
+89. **Their service worker is refused quietly** inside the sandbox
+    (`navigator.serviceWorker.register` rejects with a clear SecurityError): a
+    second worker on this origin would fight the one serving the sandbox, and
+    the registration failed on the host anyway with a loud MIME error.
+90. Screens: an `index.html` sorts before its folder's siblings at every level
+    (VitePress: `/v1` before `/v1/es/…`).
+
+Scorecard: Docusaurus 100/100/100 (158 el. 1:1, dark via data-theme works) ·
+VitePress 100/100/100 (439 el. 1:1 under its base, dark via class works) ·
+Ant Design 100/100/100 (Brand → crimson moves 140 values through cssinjs) ·
+Angular 100/100/100 (151 el. 1:1) · Mantine 100/100/91 (2,640 el. 1:1) ·
+Spectrum 100/95/100 (138 painted el. 1:1) · js13kPWA 100/100/100 (506 el.
+1:1, only our worker registered) · Open Props 100/100/100 (3,912 el. 1:1) ·
+MDC-web 100/100/100 (1,431 el. 1:1) · Bootstrap RTL 100/100/91 (3,358 el.
+1:1).
