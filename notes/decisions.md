@@ -659,3 +659,10 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     `window.__us` debug handle is DEV-only. Same-origin reach into the host's
     DOM remains by design (the worker needs it) and the host holds nothing
     worth reaching — deploy on an origin of its own.
+103. **Live** at `uisandbox.pageminds.workers.dev` (Cloudflare Worker with
+    static assets, `wrangler.jsonc`, deploy on push): 26 of 26 hold-outs `ok`
+    against the live URL, sec-evil cannot navigate the top window there, the
+    headers hold (sw.js no-cache). Workers rejects a `_redirects` catch-all as
+    a loop; the SPA fallback lives in `wrangler.jsonc`. The runner serves the
+    fixtures to an https target from a route inside the test browser (no mixed
+    content, no local-network request).

@@ -8,8 +8,10 @@
  *   pnpm holdouts -- --only s11   a subset (substring of the file name)
  *   pnpm holdouts -- --record     write the current verdicts as the expectations
  *   pnpm holdouts -- --base http://localhost:5190   use a running server
- *   pnpm holdouts -- --base https://uisandbox.org --fixtures http://localhost:5190/fixtures
- *                                 the live site, fixtures from a local dev server
+ *   pnpm holdouts -- --base https://uisandbox.org
+ *                                 the live site (fixtures served by the test browser itself)
+ *   pnpm holdouts -- --base http://localhost:5191 --fixtures http://localhost:5190/fixtures
+ *                                 a production preview, fixtures from the dev server
  *
  * The verdict is what the app itself says: `ok` (1:1 verified), `differs`
  * (mismatches — a rewriter gap), `refused` (the check declined: worker gone,
@@ -59,6 +61,19 @@ if (!base) {
 
 const browser = await chromium.launch()
 const context = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+// Against an https site (a production build, the live site) the fixtures are
+// served by the TEST BROWSER itself on a fictitious https origin, with CORS —
+// no mixed content, no local-network request, nothing outside this process.
+const FIX_ORIGIN = 'https://fixtures.uisandbox.invalid'
+const routed = /^https:/.test(base) && !fixturesBase
+if (routed) {
+  await context.route(`${FIX_ORIGIN}/**`, async (route) => {
+    const name = decodeURIComponent(new URL(route.request().url()).pathname.slice(1))
+    const file = join(root, 'fixtures', name)
+    if (!existsSync(file)) return route.fulfill({ status: 404, headers: { 'access-control-allow-origin': '*' }, body: 'no such fixture' })
+    return route.fulfill({ status: 200, headers: { 'content-type': 'application/zip', 'access-control-allow-origin': '*' }, body: readFileSync(file) })
+  })
+}
 const results = []
 const t0 = Date.now()
 
@@ -67,7 +82,7 @@ for (const [i, f] of fixtures.entries()) {
   const started = Date.now()
   const r = { fixture: f, verdict: 'timeout', paired: 0, reach: '', note: '' }
   try {
-    const zipUrl = fixturesBase ? `${fixturesBase.replace(/\/$/, '')}/${encodeURIComponent(f)}` : `/fixtures/${encodeURIComponent(f)}`
+    const zipUrl = routed ? `${FIX_ORIGIN}/${encodeURIComponent(f)}` : fixturesBase ? `${fixturesBase.replace(/\/$/, '')}/${encodeURIComponent(f)}` : `/fixtures/${encodeURIComponent(f)}`
     await page.goto(`${base}/?load=${encodeURIComponent(zipUrl)}&r=${i}`, { waitUntil: 'domcontentloaded' })
     // Loaded, or refused at the door.
     const state = await page.waitForFunction(() => {
