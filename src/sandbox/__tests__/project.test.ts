@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
-import { discoverRoutes, findRoots, injectVars } from '../project'
+import { discoverRoutes, findRoots, injectVars, voteBase } from '../project'
+import { sandboxUrl } from '../host'
 
 describe('discoverRoutes', () => {
   it('lists same-origin, extension-less links as routes; skips files, hashes and externals', () => {
@@ -25,5 +26,22 @@ describe('injectVars', () => {
     expect(out).toContain('--us-v1:#fff')
     expect(out).toContain('var SID="p9"')
     expect(out).toContain('P.insertRule=')
+  })
+})
+
+describe('voteBase — the deploy prefix a build was made for', () => {
+  it('strips leading segments until the archive holds the file; two-segment paths count too', () => {
+    const under = new Set(['v1/assets/app.js', 'swc.js', 'index.html'])
+    const votes = new Map<string, number>()
+    voteBase('<script src="/vitepress/v1/assets/app.js"></script>', under, votes)
+    voteBase('<script src="/spectrum-web-components/swc.js"></script>', new Set(['swc.js']), votes)
+    voteBase('<script src="/swc.js"></script>', under, votes)
+    expect(votes.get('vitepress')).toBe(1)
+    expect(votes.get('spectrum-web-components')).toBe(1)
+    expect(votes.get('')).toBe(1)
+  })
+  it('screens are served UNDER the base so a client router sees its own path', () => {
+    expect(sandboxUrl('p1', 'v1/index.html', 'vitepress')).toBe('/vitepress/v1/?__sb=p1')
+    expect(sandboxUrl('p1', 'index.html', '')).toBe('/?__sb=p1')
   })
 })

@@ -14,6 +14,7 @@
 import { parseCssColor } from './cssColor'
 import type { SubstitutionTable } from './table'
 import { varName } from './table'
+import { allElements, inFlatTree } from './verify'
 
 export interface Coverage {
   colours: { hit: number; total: number }
@@ -43,31 +44,54 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
   const familySet = new Set<string>()
   const sizeSet = new Set<number>()
   const radiusSet = new Set<number>()
-  // em-valued entries resolve against a font-size the meter only knows per
-  // element: a radius against its own, a font-size against its parent's.
+  const rootPx = parseFloat(win.getComputedStyle(doc.documentElement).fontSize) || 16
+  // The FRAME resolves every sheet value — a probe element computes `calc(.875rem
+  // * var(--mantine-scale))`, `color-mix()`, `oklch()` exactly as the page does;
+  // the meter's own arithmetic could not (Mantine read 82 % type for that).
+  // em stays symbolic: it resolves against a font-size the meter only knows
+  // per element — a radius against its own, a font-size against its parent's.
   const sizeEm = new Set<number>()
   const radiusEm = new Set<number>()
-  const rootPx = parseFloat(win.getComputedStyle(doc.documentElement).fontSize) || 16
-  const toPx = (v: string, ctxPx: number) => { const m = v.match(/^(-?\d*\.?\d+)(px|rem|em)$/); return m ? (m[2] === 'px' ? +m[1]! : m[2] === 'rem' ? +m[1]! * rootPx : +m[1]! * ctxPx) : null }
-  for (const e of table.entries) {
-    const cur = vars[varName(e.id)] ?? e.value
-    if (e.kind === 'color') {
-      const c = parseCssColor(cur)
-      if (c) { const [r, g, b] = hexRgb(c.L, c.C, c.H); colourSet.add(key(r, g, b)) }
-    } else if (e.kind === 'font-family') {
-      familySet.add(cur.split(',')[0]!.trim().replace(/^["']|["']$/g, '').toLowerCase())
-    } else if (e.kind === 'font-size') {
-      const em = cur.match(/^(-?\d*\.?\d+)em$/)
-      if (em) sizeEm.add(+em[1]!)
-      else { const px = toPx(cur, 16); if (px) sizeSet.add(Math.round(px * 2) / 2) }
-    } else if (e.kind === 'radius') {
-      const em = cur.match(/^(-?\d*\.?\d+)em$/)
-      if (em) radiusEm.add(+em[1]!)
-      else { const px = toPx(cur, 16); if (px !== null) radiusSet.add(Math.round(px * 2) / 2) }
+  const probe = doc.createElement('i')
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;width:0;height:0;overflow:hidden'
+  ;(doc.body ?? doc.documentElement).appendChild(probe)
+  const pcs = win.getComputedStyle(probe)
+  try {
+    for (const e of table.entries) {
+      const raw = vars[varName(e.id)] ?? e.value
+      const cur = raw.replace(/^hsl:/, '')
+      if (e.kind === 'color') {
+        // Bare channels (`--bs-primary-rgb: 13,110,253`, `--spectrum-gray-800-rgb:
+        // 34, 34, 34`, shadcn's `222.2 47.4% 11.2%`) are colours only once wrapped.
+        const asCss = raw.startsWith('hsl:') ? `hsl(${cur})` : /^\d{1,3}(\s*,\s*|\s+)\d{1,3}(\s*,\s*|\s+)\d{1,3}$/.test(cur) ? `rgb(${cur})` : cur
+        probe.style.color = ''
+        probe.style.color = asCss
+        const k = rgbKey(pcs.color)
+        if (k && k !== 'transparent') colourSet.add(k)
+        else { const c = parseCssColor(cur); if (c) { const [r, g, b] = hexRgb(c.L, c.C, c.H); colourSet.add(key(r, g, b)) } }
+      } else if (e.kind === 'font-family') {
+        familySet.add(cur.split(',')[0]!.trim().replace(/^["']|["']$/g, '').toLowerCase())
+      } else if (e.kind === 'font-size') {
+        const em = cur.match(/^(-?\d*\.?\d+)em$/)
+        if (em) { sizeEm.add(+em[1]!); continue }
+        probe.style.fontSize = ''
+        probe.style.fontSize = cur
+        const px = parseFloat(pcs.fontSize)
+        if (px) sizeSet.add(Math.round(px * 2) / 2)
+      } else if (e.kind === 'radius') {
+        const em = cur.match(/^(-?\d*\.?\d+)em$/)
+        if (em) { radiusEm.add(+em[1]!); continue }
+        probe.style.borderTopLeftRadius = ''
+        probe.style.borderTopLeftRadius = cur
+        const px = parseFloat(pcs.borderTopLeftRadius)
+        if (Number.isFinite(px)) radiusSet.add(Math.round(px * 2) / 2)
+      }
     }
-  }
+  } finally { probe.remove() }
   const cov: Coverage = { colours: { hit: 0, total: 0 }, fonts: { hit: 0, total: 0 }, sizes: { hit: 0, total: 0 }, radii: { hit: 0, total: 0 }, outside: { images: 0, canvas: 0, video: 0, backgroundImages: 0 }, elements: 0 }
-  const els = Array.from(doc.body.querySelectorAll('*')).slice(0, 4000)
+  // Shadow trees included (Spectrum, Lit: what you see is mostly in them);
+  // unslotted light DOM excluded (never painted).
+  const els = allElements(doc.body).filter(inFlatTree).slice(0, 4000)
   const near = (set: Set<number>, v: number) => { for (const s of set) if (Math.abs(s - v) <= 0.75) return true; return false }
   const nearEm = (set: Set<number>, v: number, base: number) => { for (const s of set) if (Math.abs(s * base - v) <= 0.75) return true; return false }
   for (const el of els) {
@@ -88,9 +112,11 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
     if (hasText) {
       const fg = rgbKey(cs.color)
       if (fg && fg !== 'transparent' && (!UA_COLOURS.has(fg) || colourSet.has(fg))) { cov.colours.total++; if (colourSet.has(fg)) cov.colours.hit++ }
-      cov.fonts.total++
       const fam = cs.fontFamily.split(',')[0]!.trim().replace(/^["']|["']$/g, '').toLowerCase()
-      if (familySet.has(fam) || familySet.size === 0) cov.fonts.hit++
+      // A bare generic (`monospace` on <code>, `serif`) the sheet never named is
+      // the UA's default, not a family their CSS chose: not counted.
+      const uaGeneric = /^(monospace|serif|sans-serif|system-ui|ui-monospace|cursive|fantasy)$/.test(fam) && !familySet.has(fam)
+      if (!uaGeneric) { cov.fonts.total++; if (familySet.has(fam) || familySet.size === 0) cov.fonts.hit++ }
       cov.sizes.total++
       const fs = parseFloat(cs.fontSize)
       const parentFs = el.parentElement ? parseFloat(win.getComputedStyle(el.parentElement).fontSize) : rootPx

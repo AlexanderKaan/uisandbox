@@ -25,6 +25,12 @@ describe('scanDeclarations', () => {
 
 describe('splicesFor', () => {
   const kinds = (prop: string, value: string) => splicesFor(prop, value).map((s) => `${s.kind}:${s.raw}`)
+  it('font-family custom props: system stacks in, smoothing keywords and functions out', () => {
+    expect(kinds('--mantine-font-family', '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif')).toEqual(['font-family:-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif'])
+    expect(kinds('--mantine-webkit-font-smoothing', 'antialiased')).toEqual([])
+    expect(kinds('--x-font-family', 'clamp(6px, 2vw, 12px)')).toEqual([])
+    expect(kinds('--font-sans', '"Inter", sans-serif')).toEqual(['font-family:"Inter", sans-serif'])
+  })
   it('gradient directions: numeric angles and single sides, not corners, not radial', () => {
     expect(kinds('background-image', 'linear-gradient(135deg,#6f42c1,#7952b3)')).toEqual(['angle:135deg', 'color:#6f42c1', 'color:#7952b3'])
     expect(kinds('background', 'repeating-linear-gradient(.25turn, #000 0 2px, #fff 2px 4px)')).toEqual(['angle:.25turn', 'color:#000', 'color:#fff'])

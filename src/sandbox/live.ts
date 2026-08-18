@@ -19,6 +19,13 @@ import { defineNewVars, type SubstitutionTable } from './table'
 export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: () => void): () => void {
   let muted = false
   const before = () => table.entries.length
+  // The frame is ANOTHER realm: its nodes are not instances of this window's
+  // Element/HTMLStyleElement, so `instanceof` here is always false — the
+  // initial sweep (querySelectorAll) worked and every later mutation was
+  // silently dropped (Mantine's hydrated Shiki spans: 909 raw `style` colours).
+  // Duck-type by nodeType/tagName, never by constructor (traps.md: cross-realm).
+  const isEl = (n: Node | null | undefined): n is Element => !!n && n.nodeType === 1
+  const isStyleEl = (n: Node | null | undefined): n is HTMLStyleElement => isEl(n) && n.tagName === 'STYLE'
 
   const rewriteStyleAttr = (el: Element) => {
     const raw = el.getAttribute('style')
@@ -68,20 +75,20 @@ export function observeFrame(doc: Document, table: SubstitutionTable, onGrow: ()
     if (table.entries.length !== n) { defineNewVars(doc, table, n); onGrow() }
   }
   const sweep = (root: ParentNode) => {
-    if (root instanceof Element && root.hasAttribute('style')) rewriteStyleAttr(root)
+    if (isEl(root) && root.hasAttribute('style')) rewriteStyleAttr(root)
     root.querySelectorAll?.('[style]').forEach(rewriteStyleAttr)
-    if (root instanceof Element && root.namespaceURI === 'http://www.w3.org/2000/svg') rewriteSvgAttrs(root)
+    if (isEl(root) && root.namespaceURI === 'http://www.w3.org/2000/svg') rewriteSvgAttrs(root)
     root.querySelectorAll?.('svg, svg *').forEach(rewriteSvgAttrs)
-    if (root instanceof HTMLStyleElement) rewriteStyleEl(root)
+    if (isStyleEl(root)) rewriteStyleEl(root)
     root.querySelectorAll?.('style').forEach((s) => rewriteStyleEl(s as HTMLStyleElement))
   }
 
   const mo = new MutationObserver((records) => {
     if (muted) return
     for (const r of records) {
-      if (r.type === 'attributes' && r.target instanceof Element) { if (r.attributeName === 'style') rewriteStyleAttr(r.target); else rewriteSvgAttrs(r.target) }
-      else if (r.type === 'childList') r.addedNodes.forEach((n) => { if (n instanceof Element) sweep(n) })
-      else if (r.type === 'characterData' && r.target.parentElement instanceof HTMLStyleElement) rewriteStyleEl(r.target.parentElement)
+      if (r.type === 'attributes' && isEl(r.target)) { if (r.attributeName === 'style') rewriteStyleAttr(r.target); else rewriteSvgAttrs(r.target) }
+      else if (r.type === 'childList') r.addedNodes.forEach((n) => { if (isEl(n)) sweep(n) })
+      else if (r.type === 'characterData' && isStyleEl(r.target.parentElement)) rewriteStyleEl(r.target.parentElement)
     }
   })
   mo.observe(doc.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'fill', 'stroke', 'stop-color'], characterData: true })

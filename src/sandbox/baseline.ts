@@ -51,12 +51,16 @@ interface AuditLike {
  * `primary-foreground`. */
 const BRAND_NAME = /^(?:--)?(?![\w-]*\bon[_-]?primary)(?:[\w.-]*?[-_.])?(primary|brand)(?:[-_]?(color|colour|base|default|500|600|main|hex))?$/i
 export function brandDeclared(table: SubstitutionTable): string | null {
-  let best: { hex: string; n: number } | null = null
+  // Among the colours NAMED as brand, the one the build paints with most: Ant
+  // Design's site declares `--ant-color-primary: #1677ff` once, in the sheet
+  // every page loads (28,828 uses), and `#00b96b` in ten theme-demo pages —
+  // the count of declaration sites crowned the demo green.
+  let best: { hex: string; n: number; count: number } | null = null
   for (const e of table.ofKind('color')) {
     const c = parseCssColor(e.value)
     if (!c || c.a < 0.99 || c.C < 0.05) continue
     const n = e.sites.filter((s) => BRAND_NAME.test(s.prop) || BRAND_NAME.test(s.prop.replace(/-(rgb|hsl|channels)$/i, ''))).length
-    if (n && (!best || n > best.n)) best = { hex: formatCssColor({ ...c, a: 1 }), n }
+    if (n && (!best || e.count > best.count || (e.count === best.count && n > best.n))) best = { hex: formatCssColor({ ...c, a: 1 }), n, count: e.count }
   }
   return best?.hex ?? null
 }

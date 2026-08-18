@@ -69,8 +69,9 @@ function keyOf(el: Element): string {
     const parent: Element | null = e.parentElement
     if (!parent) {
       // Top of a shadow tree: continue at the host.
-      const rootNode = e.getRootNode()
-      if (rootNode instanceof ShadowRoot) { parts.push('#shadow'); e = rootNode.host; continue }
+      const rootNode = e.getRootNode() as Node & { host?: Element }
+      // Cross-realm: the frame's ShadowRoot is not this window's — duck-type.
+      if (rootNode.nodeType === 11 && rootNode.host) { parts.push('#shadow'); e = rootNode.host; continue }
     }
     e = parent
   }
@@ -84,8 +85,8 @@ function keyOf(el: Element): string {
  * "unpaired" instead of refusing the whole page.
  */
 export function compareDocuments(raw: Document, sandbox: Document, props: readonly string[] = VERIFY_PROPS): VerifyResult {
-  const a = allElements(raw.body).filter((el) => !isOurs(el))
-  const b = allElements(sandbox.body).filter((el) => !isOurs(el))
+  const a = allElements(raw.body).filter((el) => !isOurs(el) && inFlatTree(el))
+  const b = allElements(sandbox.body).filter((el) => !isOurs(el) && inFlatTree(el))
   if (!a.length || !b.length) return { ok: false, refusal: 'One of the documents has no elements to compare.', elements: 0, unpaired: { raw: a.length, sandbox: b.length }, mismatches: [] }
   const bByKey = new Map<string, Element>()
   for (const el of b) { const k = keyOf(el); if (!bByKey.has(k)) bByKey.set(k, el) }
@@ -112,6 +113,26 @@ export function compareDocuments(raw: Document, sandbox: Document, props: readon
     return { ok: false, refusal: `Only ${paired} of ${Math.min(a.length, b.length)} elements could be paired — the two loads render too differently to compare.`, elements: paired, unpaired, mismatches }
   }
   return { ok: mismatches.length === 0, elements: paired, unpaired, mismatches }
+}
+
+/** A light-DOM child of a shadow host that no <slot> took (Spectrum's docs
+ *  keep a fallback `<a id="logo" slot="logo">` beside the rendered one) is not
+ *  in the flat tree: never painted, and — the trap — computed WITHOUT inherited
+ *  custom properties, so a `var()` reads as unset there while the literal it
+ *  replaced reads fine. Not a difference anyone can see; not compared. */
+export function inFlatTree(el: Element): boolean {
+  let e: Element | null = el
+  while (e) {
+    const parent: Element | null = e.parentElement
+    if (parent) {
+      if (parent.shadowRoot && !e.assignedSlot) return false
+      e = parent
+      continue
+    }
+    const root = e.getRootNode() as Node & { host?: Element }
+    e = root.nodeType === 11 && root.host ? root.host : null
+  }
+  return true
 }
 
 /** Our injected style block is not part of their page. */

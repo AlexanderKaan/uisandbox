@@ -73,9 +73,10 @@ if (typeof window !== 'undefined') (window as unknown as { __usRewriteRule?: typ
 
 /** The REAL path plus the sandbox id: `/about/?__sb=<sid>` — a client-side
  *  router then sees the pathname it was deployed for (see public/sw.js). */
-export const sandboxUrl = (sid: string, path: string) => {
+export const sandboxUrl = (sid: string, path: string, base = '') => {
   const p = path.replace(/^\//, '').replace(/(^|\/)index\.html?$/i, '$1')
-  return `/${p}?__sb=${sid}`
+  const b = base.replace(/^\/|\/$/g, '')
+  return `/${b ? b + '/' : ''}${p}?__sb=${sid}`
 }
 export const rawSid = (id: string) => `${id}-raw`
 export const identitySid = (id: string) => `${id}-id`

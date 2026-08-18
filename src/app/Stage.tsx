@@ -37,7 +37,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
   const [leftSandbox, setLeftSandbox] = useState(false)
   const hiddenHost = useRef<HTMLDivElement>(null)
   const w = WIDTHS.find((x) => x.id === width)?.w ?? null
-  const src = sandboxUrl(project.id, screen.path)
+  const src = sandboxUrl(project.id, screen.path, project.base)
 
   // A new project or screen invalidates the last measurement.
   useEffect(() => { setVerify(null); setLeftSandbox(false) }, [project.id, screen.path])
@@ -51,8 +51,8 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
     const fw = frame?.clientWidth ?? 1200, fh = frame?.clientHeight ?? 800
     try {
       const [raw, idn] = await Promise.all([
-        loadHidden(sandboxUrl(rawSid(project.id), screen.path), host, fw, fh),
-        loadHidden(sandboxUrl(identitySid(project.id), screen.path), host, fw, fh),
+        loadHidden(sandboxUrl(rawSid(project.id), screen.path, project.base), host, fw, fh),
+        loadHidden(sandboxUrl(identitySid(project.id), screen.path, project.base), host, fw, fh),
       ])
       setVerify(compareDocuments(raw.doc, idn.doc))
     } catch (err) {

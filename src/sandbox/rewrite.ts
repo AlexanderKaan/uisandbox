@@ -148,6 +148,8 @@ const DURATION_PROP = /^(transition|transition-duration|animation|animation-dura
 const DURATION = /(?<![\w.#-])(\d*\.?\d+)(ms|s)(?![\w%])/g
 const SPACE_PROP = /^(padding|margin|padding-(top|right|bottom|left|block|inline)(-(start|end))?|margin-(top|right|bottom|left|block|inline)(-(start|end))?|gap|row-gap|column-gap|grid-gap|grid-row-gap|grid-column-gap)$/
 
+/** Values a font-* custom property can hold that are not a family. */
+const FONT_KEYWORD = /^(antialiased|subpixel-antialiased|grayscale|auto|none|normal|italic|oblique|smaller|larger|inherit|initial|unset|small-caps|swap|block|fallback|optional)$/i
 /** A custom property's ROLE is only knowable from its name. */
 const CUSTOM_ROLE: Array<[RegExp, Kind]> = [
   [/radius|rounded/i, 'radius'],
@@ -350,8 +352,11 @@ export function splicesFor(prop: string, value: string): Splice[] {
     for (const [rx, kind] of CUSTOM_ROLE) {
       if (!rx.test(prop)) continue
       if (kind === 'font-family') {
-        // Must look like a family list, not a size or a weight.
-        if (/^[a-z"'][^;{}]*$/i.test(value.trim()) && !/var\(/i.test(m) && !/^(normal|bold|\d{3})/.test(bare)) {
+        // Must look like a family list, not a size, a weight, a function or a
+        // keyword: `-apple-system, …` IS one (a system stack starts with a dash;
+        // Mantine's --mantine-font-family was skipped for it), `antialiased`
+        // (…-font-smoothing) and `clamp(6px, …)` are not.
+        if (/^-?[a-z"'][^;{}()]*$/i.test(value.trim()) && !/var\(/i.test(m) && !/^(normal|bold|\d{3})/.test(bare) && !FONT_KEYWORD.test(bare)) {
           return [{ start: 0, end: value.length, kind: 'font-family', raw: value }]
         }
         return []

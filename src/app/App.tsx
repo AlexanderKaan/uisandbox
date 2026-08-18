@@ -168,7 +168,8 @@ export function App() {
     const cur = loadedRef.current
     const win = frameRef.current?.contentWindow
     if (!cur || !win) return
-    const path = win.location.pathname.replace(/^\/__sb\/[^/]+\//, '/').replace(/\/+$/, '') || '/'
+    let path = win.location.pathname.replace(/^\/__sb\/[^/]+\//, '/').replace(/\/+$/, '') || '/'
+    if (cur.project.base && path.startsWith('/' + cur.project.base)) path = path.slice(cur.project.base.length + 1) || '/'
     if (cur.project.screens.some((s) => s.label === path)) return
     cur.project.screens = [...cur.project.screens, { path: path.replace(/^\//, ''), label: path, source: 'pinned' }]
     setLoaded({ ...cur })

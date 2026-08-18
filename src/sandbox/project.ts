@@ -40,6 +40,13 @@ export interface SandboxProject {
   id: string
   name: string
   root: string
+  /** The URL prefix the build was deployed under — Vite `base`, CRA `homepage`,
+   *  a gh-pages project site: `vitepress` for pages that ask for
+   *  `/vitepress/v1/assets/x.js` while the archive holds `v1/assets/x.js`.
+   *  Screens are served UNDER it so a client router sees its own path
+   *  (VitePress rendered its 404 at `/v1/` because its base is `/vitepress/`).
+   *  '' when the build sits at the origin root. */
+  base: string
   candidates: string[]
   screens: Screen[]
   raw: Map<string, ServedFile>
@@ -92,6 +99,23 @@ export function findRoots(paths: string[]): string[] {
   return [...roots].sort((a, b) => score(a) - score(b) || a.localeCompare(b))
 }
 
+const sortKey = (p: string) => p.replace(/(^|\/)index\.html?$/i, '$1\u0000')
+
+/** One page's vote for the deploy prefix: every root-absolute script/stylesheet
+ *  URL that the archive holds only once its leading segments are stripped
+ *  (`/vitepress/v1/assets/x.js` → `v1/assets/x.js` ⇒ `vitepress`); a URL the
+ *  archive holds as is votes for '' (deployed at the origin root). */
+export function voteBase(html: string, underPaths: Set<string>, votes: Map<string, number>): void {
+  for (const m of html.matchAll(/(?:src|href)=["'](\/[^"'?#]+\.(?:js|mjs|css))["']/gi)) {
+    const abs = m[1]!.slice(1)
+    if (underPaths.has(abs)) { votes.set('', (votes.get('') ?? 0) + 1); continue }
+    const segs = abs.split('/')
+    for (let k = 1; k < segs.length && k <= 3; k++) {
+      if (underPaths.has(segs.slice(k).join('/'))) { const b = segs.slice(0, k).join('/'); votes.set(b, (votes.get(b) ?? 0) + 1); break }
+    }
+  }
+}
+
 let seq = 0
 const newId = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`
 
@@ -136,6 +160,8 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   const raw = new Map<string, ServedFile>()
   const rewritten = new Map<string, ServedFile>()
   const redirects = new Set<string>()
+  const underPaths = new Set(under.map((e) => e.path.slice(prefix.length)))
+  const baseVotes = new Map<string, number>()
   const table = new SubstitutionTable()
   const scheme: Scheme = { media: false, hooks: [] }
   let cssBytes = 0
@@ -165,6 +191,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
       const html = await blob.text()
       // A page whose only job is to send you elsewhere is not a screen.
       if (/<meta[^>]+http-equiv=["']?refresh["']?[^>]*>/i.test(html) && html.length < 4000) redirects.add(rel)
+      voteBase(html, underPaths, baseVotes)
       // Inlined <style> counts as stylesheet too (Astro, Next inline critical CSS).
       for (const m of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)) { cssBytes += m[1]!.length; detectScheme(m[1]!, scheme) }
       // The control keeps every byte except <link integrity> — see stripLinkIntegrity.
@@ -180,12 +207,16 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   const NOT_A_SCREEN = /(^|\/)(tests?|__tests__|mocks?|fixtures?|spec|e2e|cypress|playwright|storybook-static|coverage)\//i
   const screens: Screen[] = [...raw.keys()]
     .filter((p) => /\.html?$/i.test(p) && !ERROR_PAGE.test(p) && !NOT_A_SCREEN.test(p) && !redirects.has(p))
-    .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)))
+    // An index sorts before its folder's siblings at EVERY level (v1/index.html
+    // before v1/es/…), so the first screen is a home, not the deepest a-page.
+    .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
     .map((p) => ({ path: p, label: '/' + p.replace(/(^|\/)index\.html?$/i, '').replace(/\.html?$/i, ''), source: 'file' as const }))
     .map((s) => ({ ...s, label: s.label === '/' ? '/' : s.label.replace(/\/$/, '') || '/' }))
 
   const platform = detectPlatform(paths, screens.length > 0 || anyPage, heads)
-  return { id: newId(), name: archive.rootName, root, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme, archive }
+  // The deploy prefix: the one most root-absolute asset URLs agree on.
+  const base = [...baseVotes.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+  return { id: newId(), name: archive.rootName, root, base, candidates, screens: platform.renders ? screens : [], raw, rewritten, table, cssBytes, platform, scheme, archive }
 }
 
 /** The `<style>` block that defines the sheet's variables, for injection into a page's head. */
@@ -204,7 +235,11 @@ export function varsStyleTag(vars: Record<string, string>): string {
 export function hookScriptTag(sid: string): string {
   // Polymer 1 (2015) resolves var() with its own shim and never sees ours; it
   // honours a settings object defined before it loads. Harmless elsewhere.
-  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};if(!window.Polymer)window.Polymer={useNativeCSSProperties:true};var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
+  // Their own service worker (a PWA, Spectrum's docs) is refused QUIETLY: a
+  // second worker on this origin would fight the one serving the sandbox, and
+  // the registration would fail on the host anyway (a loud MIME error) — a
+  // clean rejection lets their code take its no-offline path deterministically.
+  return `<script id="us-hook">(function(){try{var SID=${JSON.stringify(sid)};if(!window.Polymer)window.Polymer={useNativeCSSProperties:true};try{if(navigator.serviceWorker){navigator.serviceWorker.register=function(){return Promise.reject(new DOMException('UISandbox: a page inside the sandbox cannot register its own service worker.','SecurityError'))}}}catch(e){}var P=CSSStyleSheet.prototype;var rw=function(t){try{var f=window.parent&&window.parent.__usRewriteRule;return f?f(String(t),window,SID):t}catch(e){return t}};var ins=P.insertRule;P.insertRule=function(r,i){return ins.call(this,rw(r),i)};if(P.replaceSync){var rs=P.replaceSync;P.replaceSync=function(t){return rs.call(this,rw(t))}}if(P.replace){var rp=P.replace;P.replace=function(t){return rp.call(this,rw(t))}}}catch(e){}})()</script>`
 }
 
 /** Put the variables (and the CSSOM hook) into a served HTML document, before anything else in <head>. */
