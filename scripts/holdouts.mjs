@@ -8,6 +8,8 @@
  *   pnpm holdouts -- --only s11   a subset (substring of the file name)
  *   pnpm holdouts -- --record     write the current verdicts as the expectations
  *   pnpm holdouts -- --base http://localhost:5190   use a running server
+ *   pnpm holdouts -- --base https://uisandbox.org --fixtures http://localhost:5190/fixtures
+ *                                 the live site, fixtures from a local dev server
  *
  * The verdict is what the app itself says: `ok` (1:1 verified), `differs`
  * (mismatches — a rewriter gap), `refused` (the check declined: worker gone,
@@ -29,6 +31,10 @@ const opt = (name, def) => { const i = args.indexOf(name); return i >= 0 ? args[
 const only = opt('--only', '')
 const record = args.includes('--record')
 const baseArg = opt('--base', '')
+// Where the fixture zips are served from — the app origin by default (the dev
+// server serves /fixtures); a production build or the live site has none, so
+// point at a dev server (CORS is on) with --fixtures http://localhost:5190/fixtures
+const fixturesBase = opt('--fixtures', '')
 const perFixtureMs = Number(opt('--timeout', '150000'))
 const expectPath = join(root, 'scripts', 'holdouts.expect.json')
 const outDir = join(root, '.holdouts')
@@ -61,12 +67,15 @@ for (const [i, f] of fixtures.entries()) {
   const started = Date.now()
   const r = { fixture: f, verdict: 'timeout', paired: 0, reach: '', note: '' }
   try {
-    await page.goto(`${base}/?load=/fixtures/${encodeURIComponent(f)}&r=${i}`, { waitUntil: 'domcontentloaded' })
+    const zipUrl = fixturesBase ? `${fixturesBase.replace(/\/$/, '')}/${encodeURIComponent(f)}` : `/fixtures/${encodeURIComponent(f)}`
+    await page.goto(`${base}/?load=${encodeURIComponent(zipUrl)}&r=${i}`, { waitUntil: 'domcontentloaded' })
     // Loaded, or refused at the door.
     const state = await page.waitForFunction(() => {
       const err = document.querySelector('.intake__error')
       if (err) return { refused: err.textContent }
-      if (window.__us) return { loaded: true }
+      // The stage foot exists only once a project is loaded (no dev-only hook needed:
+      // the runner must measure a production build the same way).
+      if (document.querySelector('.stage__foot')) return { loaded: true }
       return null
     }, null, { timeout: perFixtureMs }).then((h) => h.jsonValue())
     if (state.refused) { r.verdict = 'no-load'; r.note = String(state.refused).slice(0, 160); results.push(r); await page.close(); log(r, i); continue }

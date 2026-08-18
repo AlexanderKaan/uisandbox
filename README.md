@@ -1,19 +1,36 @@
 # UISandbox
 
-Your existing app, 1:1, in a sandbox — then turn the knobs. Open source, MIT.
+**Test your design on the real thing.** Drop your built web app, see it 1:1 in a sandbox, then turn the knobs — brand, colour families, background, fonts, size, spacing, radius, elevation, motion — and every value that moves is *your* value. Export exactly what you see. Open source, MIT, free forever · [uisandbox.org](https://uisandbox.org)
 
-Drop the **built** site (`dist/`, `build/`, `out/`, or any folder with an `index.html`) as a zip or folder. Every colour, radius, font, size, spacing, line-height, letter-spacing, weight, border-width, duration and shadow literal in its CSS becomes a variable holding the very same value — so the page renders exactly as it was — and the knobs then move *your* values, live: brand and the colour families your CSS actually contains (secondary, accent, success/warning/danger/info), grey tint, background and border tone, display and body font, dials for text size, line height, letter spacing, weight, spacing, radius, border width, elevation and motion — every dial with **×1 = as in your code** at its centre — and three global colour dials (hue, saturation, contrast) that reach every colour, chart palettes and CSS-drawn icons included. A reach meter in the stage foot says how much of what you see the knobs touch, and what lies outside (images, canvas). Export what you see: your values as CSS/JSON/a patch list, the `--k-*` tokens for web, and Swift constants + an asset catalog for iOS.
+## What it does
 
-Nothing leaves the tab: files are read in the page and served to the frame by a service worker on this origin.
+1. **Drop the build** — the `dist/`, `build/`, `out/` folder or any folder with an `index.html`, as a zip or a folder. Nothing leaves the tab: files are read in the page and served to the frame by a service worker on this origin.
+2. **See it 1:1.** Every colour, radius, font, size, spacing, line-height, letter-spacing, weight, border-width, duration, gradient angle and shadow literal in your CSS becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles too (`style=""` set by JS, `<style>` your framework appends, `insertRule`/`replaceSync` from styled-components, Emotion, Lit, Ant's cssinjs; CDN stylesheets through a same-origin proxy; nested same-origin frames such as Storybook's).
+3. **Turn the knobs.** Brand, and the colour families your CSS actually contains (secondary, accent, the status set, a palette row for what is neither); page background; grey tint and border tone; display and body font (yours listed first, then alternatives by character); dials for text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion and gradient angle — every dial with **×1 = as in your code** at its centre; global hue, saturation and contrast that reach every colour, chart palettes and CSS-drawn icons included; your dark mode, switched on your own hooks.
+4. **Export.** Your values as CSS / JSON / a patch list, your files patched in place, `--k-*` tokens for web (CSS, Tailwind, shadcn), Swift constants + an asset catalog for iOS, `colors.xml` + Kotlin for Android.
+
+## Honest by construction
+
+- **"1:1" is measured, not felt.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
+- **A reach meter** in the stage foot says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).
+- **It refuses what it cannot show.** iOS/Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so ("that usually means source, not the built output").
+- **A hostile archive** cannot navigate the tool away, register its own service worker or unregister ours, or smuggle a zip-slip path back out of an export. What it can do — reach the tool's DOM, because the frames are same-origin by design — reaches nothing worth having: no server, no credentials, no state. Read [`notes/security.md`](notes/security.md); deploy on an origin of its own.
+
+## Run it
 
 ```bash
 pnpm install
 pnpm dev        # http://localhost:5190
 pnpm test       # vitest + node:test (audit engine)
-pnpm build
+pnpm build      # dist/ — static; public/_headers and _redirects ride along
+pnpm holdouts   # every fixture zip through the real app in headless Chromium (see below)
 ```
 
-Demo: `http://localhost:5190/?load=/fixtures/acme-dist.zip` (a small static site) — `?load=` accepts any same-origin/CORS zip URL, which is also the door an agent uses.
+`http://localhost:5190/?load=<zip-url>` loads a zip by URL (same-origin or CORS) — the door an agent uses.
+
+## Hold it to account
+
+`pnpm holdouts` runs every archive in `fixtures/` (real builds from public repos — gitignored, [`notes/decisions.md`](notes/decisions.md) says where each came from) through the app: load, Check 1:1, reach, and a host check (same origin, one worker). Verdicts are held against [`scripts/holdouts.expect.json`](scripts/holdouts.expect.json); a fixture expected `ok` that is not fails the run. `--only <name>`, `--record`, `--base <url> --fixtures <url>` for a production build or the live site.
 
 ## How it works
 
@@ -22,25 +39,27 @@ src/
   sandbox/
     rewrite.ts   their CSS/HTML → literals replaced by var(--us-vN); byte-preserving
     table.ts     the substitution sheet: one entry per (kind, value), with sites
-    mapping.ts   knob → their values, RELATIVE to the baseline (identity at rest)
-    baseline.ts  the knobs on the stand of THEIR code (audit + the sheet itself)
-    project.ts   root detection · screens (HTML entries) · raw + rewritten files
+    mapping.ts   knob → their values, RELATIVE to the baseline (identity at rest); families
+    baseline.ts  the knobs on the stand of THEIR code (audit + the sheet + the rendered page)
+    project.ts   root and deploy-base detection · screens · raw + rewritten files · guard + hook
     host.ts      owns the sandboxes, answers the service worker; live vars injected into HTML
     verify.ts    the 1:1 check: raw vs identity, computed styles per element
+    coverage.ts  the reach meter
     live.ts      MutationObserver: runtime style="" and <style> get the same rewrite
-  public/sw.js   serves /__sb/<sid>/… (and root-relative URLs of a sandbox document) from the page
-  tokens/ panel/ state/ export/ audit/   from UIcockpit — see HANDOFF.md
+    scheme.ts    their dark mode: hooks found in their CSS, switched
+  public/sw.js   serves a sandbox document's URLs from the page; /__ext/ proxies CDN CSS
+  tokens/ panel/ state/ export/ audit/   the knob engine, panel, undo/hash, exporters, source audit
+notes/           decisions (numbered), traps, lessons, security, roadmap
 ```
 
-The claim "1:1" is measured, not felt: **Check 1:1** loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties). Zero differences or it says what differs.
+## Deploy
 
-## Scope, honestly (sprint 1)
+Static, one origin, service worker at the root. Cloudflare Pages: build command `pnpm build`, output `dist/`; `public/_headers` keeps `sw.js` uncached and sets the security headers; `public/_redirects` sends deep links to the app. Put nothing else on the origin.
 
-- **Web builds** render 1:1. Source repos are audited for the knob stand; rendering needs the build output inside the archive.
-- **Screens** = the HTML entries under the root. Routes of a single-page app (the JS router) are not enumerated yet; the frame navigates, and the worker falls back to `index.html` for extension-less paths.
-- **Runtime styles** are caught live: `style=""` set by JS and appended `<style>` by a MutationObserver; rules inserted through `CSSStyleSheet.insertRule`/`replaceSync` (styled-components, Emotion, Lit) by a hook installed before their bundle runs.
-- **Cross-origin stylesheets** (a CDN `<link>`) cannot be rewritten by the worker; their literals stay literal.
-- **iOS**: no browser renders SwiftUI. Export Swift constants + an asset catalog from the knobs; a simulator-screenshot render is a later step.
-- **MCP**: not yet — the engine is one function per step (`buildProject` · `deriveBaseline` · `computeVars` · `gen*`), so the server is a thin shell over it.
+## Roadmap
 
-Read `PROMPT.md` (the idea, the hard nuts), `HANDOFF.md` (what came from UIcockpit) and `notes/` (the traps that cost time) before changing the token plumbing.
+[`notes/roadmap.md`](notes/roadmap.md): ship (uisandbox.org) · the intake as a front door · being found (SEO, `llms.txt`, analytics) · the MCP server · after launch.
+
+---
+
+Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE), free forever

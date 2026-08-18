@@ -7,7 +7,7 @@ import { shuffle } from '../sandbox/shuffle'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
-import { Mark } from './Mark'
+import { Mark, GithubMark } from './Mark'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { varName } from '../sandbox/table'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
@@ -318,6 +318,7 @@ export function App() {
       <header className="app__topbar">
         <span className="app__brand"><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>your app, 1:1, then the knobs</small></span>
         <span className="app__spacer" />
+        <a className="btn btn--ghost btn--icon" href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener" title="Source on GitHub" aria-label="Source on GitHub"><GithubMark /></a>
         {loaded && (
           <>
             <button type="button" className="btn btn--ghost btn--icon" onClick={undo} disabled={!canUndo} title="Undo (⌘Z)"><Undo2 size={15} /></button>

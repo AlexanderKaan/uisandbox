@@ -1,0 +1,20 @@
+# Cloudflare Pages / Netlify headers.
+#
+# The service worker must never be stale: a cached sw.js is a cached sandbox.
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  Service-Worker-Allowed: /
+
+# Hashed assets are immutable by name.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The app itself, and everything else: sensible defaults. No CSP script-src
+# yet — the sandbox needs Google Fonts, blob: fonts and CORS zip fetches, and a
+# policy is measured against the hold-outs before it is set (notes/roadmap.md).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: frame-ancestors 'self'
+  X-Frame-Options: SAMEORIGIN

@@ -1,0 +1,3 @@
+# The app is one page; a deep URL (a shared /?load=… link, or a sandbox path
+# opened before the worker took over) lands on it.
+/*  /index.html  200
