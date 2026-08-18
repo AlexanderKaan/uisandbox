@@ -1,13 +1,16 @@
 {
-  // Cloudflare Workers with static assets — the whole app is static; the
-  // service worker (public/sw.js) does the serving inside the tab. `_headers`
-  // and `_redirects` from public/ are honoured for assets. Nothing else lives
-  // on this origin (notes/security.md).
+  // Cloudflare Worker: the static app (dist/) plus one dynamic route,
+  // /__repo/ (worker/repo.mjs) — the GitHub zip fetch a browser cannot do
+  // itself. `_headers` from public/ are honoured for assets. Nothing else
+  // lives on this origin (notes/security.md).
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "uisandbox",
+  "main": "worker/index.mjs",
   "compatibility_date": "2026-08-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/__repo/*"]
   }
 }

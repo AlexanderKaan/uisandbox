@@ -228,3 +228,24 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 /* The one bar the app ever shows: analytics consent (GA only; the cookieless
    Cloudflare beacon needs none). */
 .consent { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 90; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: var(--app-surface); border: 1px solid var(--app-border); box-shadow: var(--app-shadow-md); font-size: 13px; color: var(--app-fg-muted); max-width: min(680px, 94vw); }
+
+/* === Intake: three ways in, and the stages while it works === */
+.intake__ways { display: inline-flex; gap: 2px; padding: 3px; margin: 4px auto 14px; background: var(--app-surface-2, var(--app-hover)); border: 1px solid var(--app-border); border-radius: 10px; }
+.intake__way { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--app-fg-muted); }
+.intake__way:hover { color: var(--app-fg); }
+.intake__way--on, .intake__way--on:hover { background: var(--app-fg); color: var(--app-bg); }
+.intake__drop--repo { cursor: default; }
+.intake__repo { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+.intake__input { flex: 1; max-width: 420px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--app-border); background: var(--app-bg); color: var(--app-fg); font-size: 13px; }
+.intake__input:focus { outline: none; border-color: var(--app-fg-muted); }
+.intake__note { margin-top: 12px; font-size: 12px; color: var(--app-fg-faint); max-width: 52ch; margin-left: auto; margin-right: auto; }
+.intake__stages { list-style: none; margin: 8px 0 0; padding: 18px 20px; text-align: left; border: 1px solid var(--app-border); border-radius: 12px; }
+.intake__stage { display: grid; grid-template-columns: 18px 1fr; column-gap: 12px; align-items: baseline; padding: 6px 0; font-size: 13.5px; color: var(--app-fg-faint); }
+.intake__stage-dot { width: 14px; height: 14px; border-radius: 99px; border: 1.5px solid var(--app-border); display: inline-grid; place-items: center; align-self: center; }
+.intake__stage--done { color: var(--app-fg-muted); }
+.intake__stage--done .intake__stage-dot { background: var(--app-fg); border-color: var(--app-fg); color: var(--app-bg); }
+.intake__stage--now { color: var(--app-fg); font-weight: 500; }
+.intake__stage--now .intake__stage-dot { border-color: var(--app-fg); animation: intake-pulse 1.1s ease-in-out infinite; }
+.intake__stage-detail { grid-column: 2; font-weight: 400; font-size: 12.5px; color: var(--app-fg-muted); font-variant-numeric: tabular-nums; }
+@keyframes intake-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-fg) 35%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
+@media (prefers-reduced-motion: reduce) { .intake__stage--now .intake__stage-dot { animation: none; } }

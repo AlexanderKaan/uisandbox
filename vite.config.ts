@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import { handleRepo } from './worker/repo.mjs'
 
 /* Dev-only scratch store for the hold-out comparison (scripts/census.js): the
  * census of a LIVE site is POSTed here from its own tab, the sandbox tab GETs
@@ -28,10 +29,30 @@ function censusStore(): Plugin {
   }
 }
 
+/* The repo route in dev — the same handler the Worker runs (worker/repo.mjs). */
+function repoRoute(): Plugin {
+  return {
+    name: 'repo-route',
+    configureServer(server) {
+      server.middlewares.use('/__repo', async (req, res) => {
+        const headers = new Headers()
+        for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v)
+        const r = await handleRepo(new Request(`http://${req.headers.host}${req.originalUrl ?? req.url}`, { headers }))
+        res.statusCode = r.status
+        r.headers.forEach((v, k) => res.setHeader(k, v))
+        if (!r.body) { res.end(); return }
+        const reader = r.body.getReader()
+        for (;;) { const { done, value } = await reader.read(); if (done) break; res.write(Buffer.from(value)) }
+        res.end()
+      })
+    },
+  }
+}
+
 export default defineConfig({
   server: { port: 5190, strictPort: true },
   preview: { port: 5190, strictPort: true },
-  plugins: [react(), censusStore()],
+  plugins: [react(), censusStore(), repoRoute()],
   test: {
     projects: [
       {

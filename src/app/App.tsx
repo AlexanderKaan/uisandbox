@@ -8,6 +8,7 @@ import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
 import { Mark, GithubMark } from './Mark'
+import type { Progress } from './progress'
 import { track, needsConsent, setConsent } from '../analytics'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { varName } from '../sandbox/table'
@@ -40,7 +41,9 @@ interface Loaded {
 export function App() {
   const { cfg, tokens, dispatch, undo, redo, reset, canUndo, canRedo } = useConfig()
   const [loaded, setLoaded] = useState<Loaded | null>(null)
-  const [busy, setBusy] = useState<string | null>(null)
+  const [busy, setBusyRaw] = useState<Progress | null>(null)
+  const fromUrlRef = useRef(false)
+  const setBusy = (p: Progress | null) => setBusyRaw(p ? { ...p, fromUrl: fromUrlRef.current } : null)
   const [error, setError] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
   const [showExport, setShowExport] = useState(false)
@@ -263,18 +266,20 @@ export function App() {
   const onArchive = async (archive: Archive, root?: string) => {
     setError(null)
     track('drop')
+    if (!busy) fromUrlRef.current = false
     try {
-      setBusy('Registering the sandbox worker…')
+      setBusy({ stage: 'read', done: 0, total: archive.entries.length, bytes: 0, what: archive.rootName })
       await ensureWorker()
-      setBusy('Reading files…')
+      let lastAt = 0
       const project = await buildProject(archive, {
         root,
-        onProgress: (d, t) => { if (d % 25 === 0 || d === t) setBusy(`Reading files… ${d}/${t}`) },
+        onProgress: (d, t, css) => { const now = Date.now(); if (now - lastAt > 120 || d === t) { lastAt = now; setBusy({ stage: 'read', done: d, total: t, bytes: css, what: archive.rootName }) } },
       })
       // The door opens for what renders 1:1, and for nothing else.
       if (!project.platform.renders || !project.screens.length) throw new Error(refusalFor(project.platform, { files: archive.entries.length }))
-      setBusy('Deriving the knobs from your code…')
+      setBusy({ stage: 'derive', total: project.table.entries.length, what: archive.rootName })
       const report = await deriveBaseline(archive, project.table)
+      setBusy({ stage: 'open', what: archive.rootName })
       if (loaded) disown(loaded.project)
       own(project, () => varsRef.current)
       // A fresh project is a fresh start: no history, no hash from the last one.
@@ -293,21 +298,34 @@ export function App() {
   // `?load=<url-to-zip>` opens an archive fetched from a URL (same-origin or
   // CORS-enabled) — for demos, tests and agents; the drop zone stays the door.
   const loadedFromUrl = useRef(false)
+  /** A zip by URL — `?load=` (same-origin or CORS) or the repo proxy. */
+  const loadFromUrl = async (url: string) => {
+    setError(null)
+    fromUrlRef.current = true
+    try {
+      const host = (() => { try { const u = new URL(url, location.href); return u.pathname.startsWith('/__repo/') ? (new URL(u.searchParams.get('u') ?? '', location.href).host || 'github.com') : u.host } catch { return url } })()
+      setBusy({ stage: 'fetch', what: host, bytes: 0 })
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(res.status === 404 ? `Nothing at ${host} for that URL (${res.status}).` : `${res.status} fetching from ${host}.`)
+      // Read the body in chunks so the door can count the megabytes coming in.
+      const size = Number(res.headers.get('content-length') || 0) || undefined
+      const chunks: BlobPart[] = []
+      let got = 0
+      const reader = res.body?.getReader()
+      if (reader) {
+        for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.byteLength; setBusy({ stage: 'fetch', what: host, bytes: got, size }) }
+      }
+      const blob = reader ? new Blob(chunks) : await res.blob()
+      const name = decodeURIComponent((res.headers.get('content-disposition')?.match(/filename="?([^";]+)"?/)?.[1]) || url.split('/').pop() || 'archive.zip')
+      await onArchive(await openZip(new File([blob], name.endsWith('.zip') ? name : `${name}.zip`, { type: 'application/zip' })))
+    } catch (err) { setError((err as Error).message); setBusy(null) }
+  }
   useEffect(() => {
     if (loadedFromUrl.current) return
     const url = new URLSearchParams(location.search).get('load')
     if (!url) return
     loadedFromUrl.current = true
-    ;(async () => {
-      try {
-        setBusy(`Fetching ${url}…`)
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`${res.status} fetching ${url}`)
-        const blob = await res.blob()
-        const name = url.split('/').pop() || 'archive.zip'
-        await onArchive(await openZip(new File([blob], name, { type: 'application/zip' })))
-      } catch (err) { setError((err as Error).message); setBusy(null) }
-    })()
+    void loadFromUrl(url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -391,7 +409,7 @@ export function App() {
             />
           </>
         )}
-        {!loaded && <Intake onArchive={onArchive} busy={busy} error={error} />}
+        {!loaded && <Intake onArchive={onArchive} onUrl={(u) => void loadFromUrl(`/__repo/?u=${encodeURIComponent(u)}`)} busy={busy} error={error} />}
         {askConsent && (
           <div className="consent" role="dialog" aria-label="Analytics">
             <span>We count visits with Google Analytics — no names, nothing about your files. OK?</span>

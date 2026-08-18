@@ -696,3 +696,18 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     never index.html, so it can never run inside a sandboxed frame. Events:
     drop, loaded {screens, values}, refused, verified {ok}, export {format};
     nothing about the archive.
+
+## Sprint B — the door (2026-08-19)
+
+109. **Three ways in, one screen**: Upload a zip · Upload a codebase (a build
+    renders; a source folder is read for the knob stand only — the door says
+    so before the drop) · Connect a repo (a public GitHub URL, default branch
+    or `/tree/branch`). **Progress is stages with numbers**: Fetching (MB from
+    host) → Reading & tokenising (files n/m, KB of CSS) → Deriving the knobs
+    (values) → Opening — a 49 MB drop reads as work, not a hang.
+110. **The repo route** `/__repo/?u=` (worker/repo.mjs; the same handler as
+    Vite middleware in dev): GitHub sends no CORS on its zips, so the Worker
+    fetches and streams. Public repos, github.com only, same-origin callers,
+    200 MB cap, nothing stored — and the intake says in one sentence that this
+    is the one thing that leaves the tab. `?load=` and the route share one
+    loader that counts the bytes coming in.

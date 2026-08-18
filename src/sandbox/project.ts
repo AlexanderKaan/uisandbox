@@ -123,7 +123,7 @@ const newId = () => `p${Date.now().toString(36)}${(seq++).toString(36)}`
  * Materialise a project from an archive: read every file under the root,
  * rewrite what is CSS, keep the rest as bytes.
  */
-export async function buildProject(archive: Archive, opts: { root?: string; onProgress?: (done: number, total: number) => void } = {}): Promise<SandboxProject> {
+export async function buildProject(archive: Archive, opts: { root?: string; onProgress?: (done: number, total: number, cssBytes: number) => void } = {}): Promise<SandboxProject> {
   const paths = archive.entries.map((e) => e.path)
   // A first look at the platform from the paths alone; a WordPress theme's
   // `templates/index.html` is a block template, not a page, and must not be
@@ -178,7 +178,7 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
     const rel = e.path.slice(prefix.length)
     const blob = await archive.readBlob(e)
     done++
-    opts.onProgress?.(done, sorted.length)
+    opts.onProgress?.(done, sorted.length, cssBytes)
     if (!blob) continue
     const type = mimeOf(rel)
     raw.set(rel, { blob, type })
