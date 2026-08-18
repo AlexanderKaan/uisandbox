@@ -224,3 +224,7 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 /* The credit line's links stay in the chrome's own ink. */
 .intake__fine a { color: var(--app-fg-muted); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--app-fg-muted) 40%, transparent); text-underline-offset: 2px; }
 .intake__fine a:hover { color: var(--app-fg); }
+
+/* The one bar the app ever shows: analytics consent (GA only; the cookieless
+   Cloudflare beacon needs none). */
+.consent { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 90; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: var(--app-surface); border: 1px solid var(--app-border); box-shadow: var(--app-shadow-md); font-size: 13px; color: var(--app-fg-muted); max-width: min(680px, 94vw); }

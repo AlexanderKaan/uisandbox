@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
+import { initAnalytics } from './analytics'
 import { buildTokens } from './tokens/buildTokens'
 import { DEFAULT_CONFIG } from './tokens/defaults'
 import './styles/chrome.css'
@@ -12,6 +13,7 @@ import './styles/panel.css'
 const root = document.documentElement
 for (const [k, v] of Object.entries(buildTokens(DEFAULT_CONFIG).vars)) root.style.setProperty(k, String(v))
 
+initAnalytics()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

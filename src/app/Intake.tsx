@@ -33,8 +33,8 @@ export function Intake({ onArchive, busy, error }: IntakeProps) {
     <div className="intake">
       <div className="card intake__card">
         <div className="intake__mark"><Mark size={40} /></div>
-        <h1>Your app, 1:1 — then turn the knobs.</h1>
-        <p>Drop the <b>built</b> site (its <code>dist/</code>, <code>build/</code>, <code>out/</code> — or any folder with an <code>index.html</code>). We tokenise every colour, radius, font, size and shadow in its CSS and show it exactly as it was.</p>
+        <h1>Test your design on the real thing.</h1>
+        <p>Drop the <b>built</b> site (its <code>dist/</code>, <code>build/</code>, <code>out/</code> — or any folder with an <code>index.html</code>). It renders 1:1 — measured, not promised — and every colour, radius, font, size and shadow in its CSS becomes a knob that moves <em>your</em> value. Export exactly what you see.</p>
         <div
           className={`intake__drop ${over ? 'intake__drop--over' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setOver(true) }}

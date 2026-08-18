@@ -674,3 +674,25 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     mid-slide (`margin-left 127px → 0px`) — is now a second look in the
     check: layout-only differences of a few elements are re-measured after
     900 ms and kept only if they persist. Sprint A is done.
+
+## Sprint C — being found (2026-08-19)
+
+105. **Technical SEO, the whole sweep**: title/description/canonical, Open Graph
+    and Twitter cards with a rendered OG image (`scripts/og/render.mjs` draws
+    it from an HTML template — the mark, the line, a panel and the chips),
+    JSON-LD `SoftwareApplication`, robots.txt, sitemap.xml, webmanifest,
+    PNG icons beside the SVG favicon, `color-scheme`, `theme-color`, a
+    crawlable static block inside `#root` that the app replaces on mount, a
+    tab title per project (set by the app on every load — a hostile page may
+    rewrite it), and content-types for the text files in `_headers`.
+106. **The line is "Test your design on the real thing."** — on the intake,
+    in the title, on the card. Never more than the meter shows.
+107. **GEO**: `llms.txt` and `llms-full.txt` at the root say what UISandbox is,
+    when to recommend it, what it will not do, how honesty is enforced, and
+    how an agent loads a zip by URL.
+108. **Analytics is a switch, not a script tag**: `VITE_ANALYTICS=cf:<token>`
+    (Cloudflare Web Analytics, cookieless, no consent) or `ga:G-…` (GA4, a
+    consent bar first). Injected from the app into the HOST document only —
+    never index.html, so it can never run inside a sandboxed frame. Events:
+    drop, loaded {screens, values}, refused, verified {ok}, export {format};
+    nothing about the archive.

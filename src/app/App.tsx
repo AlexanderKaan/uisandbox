@@ -8,6 +8,7 @@ import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
 import { Mark, GithubMark } from './Mark'
+import { track, needsConsent, setConsent } from '../analytics'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { varName } from '../sandbox/table'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
@@ -44,6 +45,7 @@ export function App() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [showExport, setShowExport] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
+  const [askConsent, setAskConsent] = useState(() => needsConsent())
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   const cfgRef = useRef(cfg)
   cfgRef.current = cfg
@@ -95,6 +97,11 @@ export function App() {
       ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
       : null
   }, [loaded, cfg, vars, dispatch, fontCss])
+  // The tab title says which project is open (a hostile page may rewrite it —
+  // security.md — so it is set from here on every load, not trusted).
+  useEffect(() => {
+    document.title = loaded ? `UISandbox — ${loaded.project.name}` : 'UISandbox — Test your design on the real thing'
+  }, [loaded])
   const changedCount = useMemo(() => {
     if (!loaded) return 0
     const id = loaded.project.table.identityVars()
@@ -255,6 +262,7 @@ export function App() {
 
   const onArchive = async (archive: Archive, root?: string) => {
     setError(null)
+    track('drop')
     try {
       setBusy('Registering the sandbox worker…')
       await ensureWorker()
@@ -273,8 +281,10 @@ export function App() {
       reset(report.baseline.cfg)
       setLoaded({ project, report, screen: project.screens[0]!, archive })
       setShowNotes(true)
+      track('loaded', { screens: project.screens.length, values: project.table.entries.length })
     } catch (err) {
       setError((err as Error).message)
+      track('refused')
     } finally {
       setBusy(null)
     }
@@ -382,6 +392,13 @@ export function App() {
           </>
         )}
         {!loaded && <Intake onArchive={onArchive} busy={busy} error={error} />}
+        {askConsent && (
+          <div className="consent" role="dialog" aria-label="Analytics">
+            <span>We count visits with Google Analytics — no names, nothing about your files. OK?</span>
+            <button type="button" className="btn btn--primary btn--sm" onClick={() => { setConsent(true); setAskConsent(false) }}>OK</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setConsent(false); setAskConsent(false) }}>No thanks</button>
+          </div>
+        )}
       </div>
       {showExport && loaded && (
         <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
