@@ -1,3 +1,4 @@
+import { Mark } from './Mark'
 import { useRef, useState } from 'react'
 import { FileArchive, FolderOpen } from 'lucide-react'
 import { archiveFromFiles, isZip, openZip, type Archive } from '../audit/intake/readZip'
@@ -31,6 +32,7 @@ export function Intake({ onArchive, busy, error }: IntakeProps) {
   return (
     <div className="intake">
       <div className="card intake__card">
+        <div className="intake__mark"><Mark size={40} /></div>
         <h1>Your app, 1:1 — then turn the knobs.</h1>
         <p>Drop the <b>built</b> site (its <code>dist/</code>, <code>build/</code>, <code>out/</code> — or any folder with an <code>index.html</code>). We tokenise every colour, radius, font, size and shadow in its CSS and show it exactly as it was.</p>
         <div

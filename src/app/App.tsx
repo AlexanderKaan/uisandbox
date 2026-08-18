@@ -7,6 +7,7 @@ import { shuffle } from '../sandbox/shuffle'
 import { openZip, type Archive } from '../audit/intake/readZip'
 import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '../sandbox/project'
 import { refusalFor } from '../sandbox/platform'
+import { Mark } from './Mark'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
@@ -279,7 +280,7 @@ export function App() {
   return (
     <div className="app">
       <header className="app__topbar">
-        <span className="app__brand"><span className="app__brand-mark" />UISandbox <small>your app, 1:1, then the knobs</small></span>
+        <span className="app__brand"><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>your app, 1:1, then the knobs</small></span>
         <span className="app__spacer" />
         {loaded && (
           <>

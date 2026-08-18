@@ -119,7 +119,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   background: var(--app-bg);
 }
 .app__brand { font-weight: 700; letter-spacing: -0.02em; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
-.app__brand-mark { width: 16px; height: 16px; border-radius: 5px; background: linear-gradient(135deg, #4f39f6, #e11d48); }
+.app__brand-mark { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; overflow: hidden; color: var(--app-fg); }
 .app__brand small { font-weight: 500; color: var(--app-fg-faint); }
 .app__spacer { flex: 1; }
 .app__body { flex: 1; min-height: 0; display: flex; }
@@ -176,6 +176,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 /* === Intake === */
 .intake { flex: 1; display: grid; place-items: center; padding: 24px; }
 .intake__card { width: min(640px, 100%); padding: 36px 32px 28px; text-align: center; }
+.intake__mark { display: inline-flex; color: var(--app-fg); margin-bottom: 4px; }
 .intake__card h1 { font-size: 22px; letter-spacing: -0.02em; margin: 10px 0 6px; }
 .intake__card p { color: var(--app-fg-muted); margin: 0 auto 18px; max-width: 46ch; }
 .intake__drop {
