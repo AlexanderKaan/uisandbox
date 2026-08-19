@@ -269,3 +269,14 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .intake__stage-detail { grid-column: 2; font-weight: 400; font-size: 12.5px; color: var(--app-fg-muted); font-variant-numeric: tabular-nums; }
 @keyframes intake-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-fg) 35%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
 @media (prefers-reduced-motion: reduce) { .intake__stage--now .intake__stage-dot { animation: none; } }
+
+/* === MCP: the install line, one click away === */
+.mcp { position: relative; }
+.mcp__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(460px, 92vw); padding: 14px 16px; text-align: left; }
+.mcp__pop h3 { margin: 0 0 6px; font-size: 13px; }
+.mcp__pop p { margin: 0 0 10px; font-size: 12.5px; color: var(--app-fg-muted); }
+.mcp__row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.mcp__row--block { align-items: flex-start; }
+.mcp__code { flex: 1; margin: 0; padding: 7px 10px; border-radius: 8px; background: var(--app-hover); border: 1px solid var(--app-border); font: 12px/1.5 "JetBrains Mono", ui-monospace, monospace; color: var(--app-fg); white-space: pre; overflow-x: auto; user-select: all; }
+.mcp__fine { font-size: 11.5px; color: var(--app-fg-faint); margin: 6px 0 0; }
+.mcp__fine a { color: var(--app-fg-muted); }
