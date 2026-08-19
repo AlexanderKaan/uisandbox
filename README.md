@@ -1,6 +1,34 @@
-# UISandbox
+<p align="center">
+  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox — Restyle your app without rebuilding it" width="880"></a>
+</p>
 
-**Restyle your app without rebuilding it.** Try a new look on your real app in seconds: drop your built web app, see it 1:1 in a sandbox, then turn the knobs — brand, colour families, background, fonts, size, spacing, radius, elevation, motion — and every value that moves is *your* value. Export exactly what you see. Open source, MIT, free forever · [uisandbox.org](https://uisandbox.org)
+<h1 align="center">UISandbox</h1>
+
+<p align="center"><b>Restyle your app without rebuilding it.</b><br>
+Try a new look on your real app — in seconds. Drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
+<sub>Test your design on the real thing.</sub></p>
+
+<p align="center">
+  <a href="https://uisandbox.org">uisandbox.org</a> ·
+  <a href="https://www.npmjs.com/package/uisandbox-mcp">npm: uisandbox-mcp</a> ·
+  <a href="https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox">MCP registry</a> ·
+  <a href="LICENSE">MIT</a>
+</p>
+
+<p align="center">
+  <img alt="MIT" src="https://img.shields.io/badge/license-MIT-black">
+  <img alt="npm" src="https://img.shields.io/npm/v/uisandbox-mcp?label=uisandbox-mcp&color=black">
+  <img alt="nothing leaves your tab" src="https://img.shields.io/badge/nothing%20leaves-your%20tab-black">
+  <img alt="1:1 measured" src="https://img.shields.io/badge/1%3A1-measured%2C%20not%20promised-black">
+</p>
+
+```bash
+npx uisandbox-mcp open ./dist     # the sandbox opens in your browser with your build — no agent needed
+```
+
+Or drop a zip on **[uisandbox.org](https://uisandbox.org)**. Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
+
+<p align="center"><img src="brand/marketing/stage-acme-brand-crimson.png" alt="A real build in the sandbox: the Brand knob turned to crimson, the page following, five values moved" width="880"></p>
 
 ## What it does
 
@@ -66,4 +94,4 @@ Static, one origin, service worker at the root. Cloudflare Pages: build command 
 
 ---
 
-Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE), free forever
+Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE), free forever · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)

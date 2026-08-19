@@ -12,3 +12,9 @@ All rendered from the real app (nothing drawn by hand) — regenerate after a de
 | `verify-card.png` | the 1:1 check card | idem |
 
 Lines to use with them: *Restyle your app without rebuilding it.* · *Try a new look on your real app — in seconds.* · kicker: *Test your design on the real thing.*
+
+## Social preview (GitHub)
+
+Repo → Settings → General → *Social preview* → Edit → upload `og-site-light.png` (1200×630; the same image the site's link card uses). Topics to set: `design-tokens`, `design-system`, `theming`, `css`, `sandbox`, `mcp`, `mcp-server`, `claude-code`.
+
+Copy per channel: [`copy.md`](copy.md).
