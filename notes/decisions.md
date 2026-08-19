@@ -849,3 +849,15 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     line said what you save (no rebuild); the old line lives on as the second
     line under How it works and in the bodycopy. The sub-line names the two
     doors — browser, or your agent via MCP — and the OG image was reshot.
+129. Pre-launch audit (claims vs. reality, measured): live redirects, headers,
+    robots, sitemap, llms, OG, samples, repo route (200/403/400) all as
+    documented; the repo-link door and a sample load and verify 1:1 on the
+    live site; the CLI opens a folder; manifests valid. Two things were wrong
+    and are fixed: (1) from npm, verify/screenshot died with "Cannot find
+    package 'playwright'" — it was an optional peer that npx never installs;
+    Playwright is now a dependency (0.3.1), only Chromium is downloaded, and
+    a missing browser returns one clear line; (2) verify and the hold-out
+    runner clicked "the last chip in the foot" — since the "Useful? Star it"
+    chip that is GitHub; both pick the 1:1 chip by name now. The samples are
+    kept out of the npm package (19 MB). README's Deploy paragraph said Pages
+    + _redirects; it is the Worker. llms.txt had a duplicated bullet.

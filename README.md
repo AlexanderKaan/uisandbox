@@ -26,7 +26,7 @@ Restyle your app without rebuilding it — drop the build, turn the knobs, watch
 npx uisandbox-mcp open ./dist     # the sandbox opens in your browser with your build — no agent needed
 ```
 
-Or drop a zip on **[uisandbox.org](https://uisandbox.org)**. Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
+Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand? *Try a sample* under the drop zone (the Bootstrap docs, a VitePress site, an admin dashboard). Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
 
 <p align="center"><img src="brand/marketing/stage-acme-brand-crimson.png" alt="A real build in the sandbox: the Brand knob turned to crimson, the page following, five values moved" width="880"></p>
 
@@ -86,7 +86,7 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 ## Deploy
 
-Static, one origin, service worker at the root. Cloudflare Pages: build command `pnpm build`, output `dist/`; `public/_headers` keeps `sw.js` uncached and sets the security headers; `public/_redirects` sends deep links to the app. Put nothing else on the origin.
+One origin, one Cloudflare Worker (`worker/index.mjs`, `wrangler.jsonc`): static assets from `dist/`, the SPA fallback for `?load=`, http→https and www→apex redirects, and the `/__repo/` route that fetches a public GitHub zip for "Connect a repo" (nothing stored; same-origin callers only; a rate-limit rule in the zone). `public/_headers` keeps `sw.js` uncached and sets the security headers. Put nothing else on the origin — the sandboxed frames are same-origin by design ([`notes/security.md`](notes/security.md)).
 
 ## Roadmap
 

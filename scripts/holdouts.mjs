@@ -110,7 +110,7 @@ for (const [i, f] of fixtures.entries()) {
     if (state.refused) { r.verdict = 'no-load'; r.note = String(state.refused).slice(0, 160); results.push(r); await page.close(); log(r, i); continue }
     await page.waitForTimeout(2500)
     // Check 1:1 — the last chip in the foot.
-    await page.evaluate(() => { const c = document.querySelectorAll('.stage__foot .chip'); c[c.length - 1].click() })
+    await page.evaluate(() => { const c = Array.from(document.querySelectorAll('.stage__foot .chip')); (c.find((x) => /Check 1:1|1:1 /.test(x.textContent || '')) ?? c[c.length - 1]).click() })
     const verifyText = await page.waitForFunction(() => {
       // The 1:1 card specifically — a warning card shares the .verify class.
       const v = document.querySelector('.verify[aria-label="1:1 check"]')
@@ -120,7 +120,7 @@ for (const [i, f] of fixtures.entries()) {
     const foot = await page.evaluate(() => (document.querySelector('.stage__foot')?.textContent || '').replace(/\s+/g, ' '))
     const paired = Number((verifyText.match(/(\d[\d,]*) elements paired/) || [])[1]?.replace(/,/g, '') || 0)
     r.paired = paired
-    r.reach = (foot.match(/reach [^|]*?radii/) || [''])[0].replace(/\s+/g, ' ').trim()
+    r.reach = (foot.match(/reach \d+% colours · \d+% type · \d+% radii(?: · \d+ outside)?/) || [''])[0].trim()
     if (/✓/.test(verifyText)) r.verdict = 'ok'
     else if (/✗/.test(verifyText)) { r.verdict = 'differs'; r.note = (verifyText.match(/✗[^\n]{0,200}/) || [''])[0] }
     else if (/⚠/.test(verifyText)) { r.verdict = 'refused'; r.note = (verifyText.match(/⚠[^\n]{0,200}/) || [''])[0] }

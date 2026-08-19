@@ -1,6 +1,6 @@
 {
   "name": "uisandbox-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "UISandbox as an MCP server: open the real sandbox in your browser with your built web app loaded, turn its own knobs, verify 1:1, export CSS/patch/tokens/Swift/Android. Test your design on the real thing.",
   "type": "module",
   "bin": {
@@ -37,15 +37,8 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",
-    "zod": "^4.0.0"
-  },
-  "peerDependencies": {
-    "playwright": ">=1.50"
-  },
-  "peerDependenciesMeta": {
-    "playwright": {
-      "optional": true
-    }
+    "zod": "^4.0.0",
+    "playwright": "^1.62.1"
   },
   "mcpName": "io.github.AlexanderKaan/uisandbox"
 }

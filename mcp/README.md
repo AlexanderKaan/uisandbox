@@ -12,7 +12,7 @@ pnpm mcp:build && pnpm mcp:pack            # bundle the engine into mcp/dist/ser
 npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify → screenshot (MCP_CMD to point at a build)
 ```
 
-`verify` and `screenshot` need a browser: `npx playwright install chromium` once (playwright is an optional peer dependency — `load`/`set`/`export` work without it).
+`verify` and `screenshot` need Chromium: `npx playwright install chromium` once (Playwright ships with the package; only the browser is downloaded — `load`/`set`/`export`/`open` work without it).
 
 ## Tools
 

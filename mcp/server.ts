@@ -84,9 +84,9 @@ When to use it — and offer it without being asked:
 - The user wants ONE change tried ("try brand #e11d48", "rounder corners"): \`load\` → \`set\` → \`verify\` → \`screenshot\` → \`export\` (patch). Offer \`open\` after.
 - The user is iterating on the look of an app you are working in: offer the sandbox proactively, once.
 
-Rules: never claim more than \`verify\` and the reach meter report — quote the numbers; if a load is refused (iOS/Android/source-only), relay the reason and suggest building first; \`verify\`/\`screenshot\` need a browser (npx playwright install chromium once) — \`open\`, \`load\`, \`set\`, \`export\` do not.`
+Rules: never claim more than \`verify\` and the reach meter report — quote the numbers; if a load is refused (iOS/Android/source-only), relay the reason and suggest building first; \`verify\`/\`screenshot\` need Chromium (npx playwright install chromium once) — \`open\`, \`load\`, \`set\`, \`export\` do not.`
 
-const server = new McpServer({ name: 'uisandbox', version: '0.3.0' }, { instructions: INSTRUCTIONS })
+const server = new McpServer({ name: 'uisandbox', version: '0.3.1' }, { instructions: INSTRUCTIONS })
 
 server.registerTool('load', {
   title: 'Load a built web app',
@@ -222,8 +222,11 @@ server.registerTool('state', {
 
 /* ── Render tools: the real app in headless Chromium ─────────────────────── */
 async function drive(p: Loaded, screenPath: string | undefined, width: number, fn: (page: import('playwright').Page) => Promise<unknown>) {
-  const { chromium } = await import('playwright')
-  const browser = await chromium.launch()
+  const BROWSER_HELP = 'verify and screenshot need Chromium: run `npx playwright install chromium` once (Playwright itself ships with uisandbox-mcp; only the browser is downloaded). load, set, export and open do not need it.'
+  let chromium: typeof import('playwright').chromium
+  try { ({ chromium } = await import('playwright')) } catch { throw new Error(BROWSER_HELP) }
+  let browser: Awaited<ReturnType<typeof chromium.launch>>
+  try { browser = await chromium.launch() } catch (e) { throw new Error(`${BROWSER_HELP}\n(${String((e as Error).message).split('\n')[0]})`) }
   try {
     const context = await browser.newContext({ viewport: { width, height: 900 } })
     const FIX = 'https://archive.uisandbox.invalid/a.zip'
@@ -253,11 +256,11 @@ server.registerTool('verify', {
 }, async ({ id, screen, width }) => {
   const p = need(id)
   const out = await drive(p, screen, width ?? 1280, async (page) => {
-    await page.evaluate(() => { const c = document.querySelectorAll('.stage__foot .chip'); (c[c.length - 1] as HTMLElement).click() })
+    await page.evaluate(() => { const c = Array.from(document.querySelectorAll('.stage__foot .chip')) as HTMLElement[]; (c.find((x) => /Check 1:1|1:1 /.test(x.textContent || '')) ?? c[c.length - 1]!).click() })
     const text = await page.waitForFunction(() => { const v = document.querySelector('.verify[aria-label="1:1 check"]'); const t = v?.textContent || ''; return /✓|✗|⚠/.test(t) ? t : null }, null, { timeout: 180000 }).then((h) => h.jsonValue())
     const foot = await page.evaluate(() => (document.querySelector('.stage__foot')?.textContent || '').replace(/\s+/g, ' '))
     const warnings = await page.evaluate(() => Array.from(document.querySelectorAll('.popcard--low')).map((h) => (h.textContent || '').replace(/\s+/g, ' ').slice(0, 300)))
-    return { ok: /✓/.test(text as string), result: (text as string).replace(/\s+/g, ' ').replace(/Run again.*$/, '').trim(), reach: (foot.match(/reach [^|]*?radii[^|]*/) || [''])[0].trim(), warnings }
+    return { ok: /✓/.test(text as string), result: (text as string).replace(/\s+/g, ' ').replace(/Run again.*$/, '').trim(), reach: (foot.match(/reach \d+% colours · \d+% type · \d+% radii(?: · \d+ outside)?/) || [''])[0].trim(), warnings }
   })
   return { content: [{ type: 'text', text: JSON.stringify(out, null, 2) }] }
 })
