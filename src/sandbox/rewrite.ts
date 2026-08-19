@@ -436,6 +436,8 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string, 
     // Same value → leave their bytes exactly as they are.
     return cur === cssValue(e.value) ? null : cur
   }
+  // Tokenising (not patching): note how often the sheet reads each custom property.
+  if (!values) for (const m of css.matchAll(/var\(\s*(--[\w-]+)/g)) table.ref(m[1]!)
   const decls = scanDeclarations(css)
   // Splice from the end so earlier offsets stay valid.
   const edits: Array<{ start: number; end: number; text: string }> = []

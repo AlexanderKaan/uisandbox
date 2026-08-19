@@ -23,7 +23,7 @@ import { ALL_FONTS, CUSTOM_FONT_PREFIX, SYSTEM_FONT } from '../tokens/fonts'
 import type { Config } from '../tokens/types'
 import { formatCssColor, parseCssColor } from './cssColor'
 import { familiesOf, fontRole, toPx, type Baseline } from './mapping'
-import type { SubstitutionTable } from './table'
+import type { Site, SubstitutionTable } from './table'
 
 export interface BaselineReport {
   baseline: Baseline
@@ -55,12 +55,34 @@ export function brandDeclared(table: SubstitutionTable): string | null {
   // Design's site declares `--ant-color-primary: #1677ff` once, in the sheet
   // every page loads (28,828 uses), and `#00b96b` in ten theme-demo pages —
   // the count of declaration sites crowned the demo green.
+  // The cascade counts too: Docusaurus ships Infima's `--ifm-color-primary:
+  // #3578e5` and the site's own `:root { --ifm-color-primary: #ef4242 }` later
+  // in the same sheet — the blue is declared, the red is painted. A later
+  // declaration of the same property on the same selector in the same file
+  // overrides the earlier; only the surviving declaration names a brand.
+  const isBrand = (s: Site) => BRAND_NAME.test(s.prop) || BRAND_NAME.test(s.prop.replace(/-(rgb|hsl|channels)$/i, ''))
+  const latest = new Map<string, number>()
+  for (const e of table.ofKind('color')) for (const s of e.sites) {
+    if (!isBrand(s) || s.seq === undefined) continue
+    const k = `${s.file}\n${s.selector ?? ''}\n${s.prop}`
+    latest.set(k, Math.max(latest.get(k) ?? 0, s.seq))
+  }
+  const survives = (s: Site) => s.seq === undefined || latest.get(`${s.file}\n${s.selector ?? ''}\n${s.prop}`) === s.seq
   let best: { hex: string; n: number; count: number } | null = null
   for (const e of table.ofKind('color')) {
     const c = parseCssColor(e.value)
     if (!c || c.a < 0.99 || c.C < 0.05) continue
-    const n = e.sites.filter((s) => BRAND_NAME.test(s.prop) || BRAND_NAME.test(s.prop.replace(/-(rgb|hsl|channels)$/i, ''))).length
-    if (n && (!best || e.count > best.count || (e.count === best.count && n > best.n))) best = { hex: formatCssColor({ ...c, a: 1 }), n, count: e.count }
+    const named = e.sites.filter((s) => isBrand(s) && survives(s))
+    const n = named.length
+    // What the build leans on: the literal's own paint count plus every
+    // `var(--ifm-color-primary)` read of the properties that name it (Metro:
+    // the red `--ifm-color-primary` is written twice and read 22 times; the
+    // DocSearch widget's `--docsearch-primary-color` literal is painted 20
+    // times and read once).
+    const props = new Set(named.map((s) => s.prop))
+    let count = e.count
+    for (const p of props) count += table.refs.get(p) ?? 0
+    if (n && (!best || count > best.count || (count === best.count && n > best.n))) best = { hex: formatCssColor({ ...c, a: 1 }), n, count }
   }
   return best?.hex ?? null
 }

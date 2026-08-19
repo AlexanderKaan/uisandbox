@@ -29,6 +29,20 @@ describe('brandDeclared', () => {
     const t = sheet(`:root{--bs-blue:#0d6efd;--bs-primary:#0d6efd;--bd-accent:#ffe484;--bd-violet:#712cf9}.x{color:#ffe484}.y{color:#ffe484}`)
     expect(brandDeclared(t)).toBe('#0d6efd')
   })
+  it('the LATER declaration on the same selector wins, however often the earlier value is painted (measured on Metro: Infima blue, site red)', () => {
+    const t = sheet(`:root{--ifm-color-primary:#3578e5}.a{color:#3578e5}.b{color:#3578e5}.c{background:#3578e5}:root{--docusaurus-x:1;--ifm-color-primary:#ef4242}`)
+    expect(brandDeclared(t)).toBe('#ef4242')
+  })
+  it("a widget's primary (DocSearch, painted 20×, read once) loses to the site's primary (written twice, read 22×) — measured on Metro", () => {
+    const reads = Array.from({ length: 22 }, (_, i) => `.r${i}{color:var(--ifm-color-primary)}`).join('')
+    const paints = Array.from({ length: 20 }, (_, i) => `.d${i}{color:#003dff}`).join('')
+    const t = sheet(`:root{--ifm-color-primary:#ef4242;--docsearch-primary-color:#003dff}${reads}${paints}.s{fill:var(--docsearch-primary-color)}`)
+    expect(brandDeclared(t)).toBe('#ef4242')
+  })
+  it('CONTROL: the same two declarations on DIFFERENT selectors — the more-painted one keeps the brand', () => {
+    const t = sheet(`:root{--ifm-color-primary:#3578e5}.a{color:#3578e5}.b{color:#3578e5}[data-theme=dark]{--ifm-color-primary:#ef4242}`)
+    expect(brandDeclared(t)).toBe('#3578e5')
+  })
   it('nothing declared → null (the audit or the count decides)', () => {
     expect(brandDeclared(sheet(`.a{color:#4f39f6}`))).toBeNull()
   })

@@ -816,3 +816,12 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     (MCP · Star with live count | the project's work). The drop glyph the way
     macOS draws a drag: the file, a dotted arc with an arrowhead, a dotted
     landing field — the dots flow along the arc.
+124. Brand by cascade and by use (measured on Metro, a Docusaurus site): Infima
+    declares `--ifm-color-primary: #3578e5` and the site re-declares it red
+    later in the same sheet; DocSearch's `--docsearch-primary-color: #003dff`
+    is painted 20 times. The declared-brand pick now drops a declaration that a
+    later one on the same file/selector/property overrides (each site carries
+    its `seq`), and weighs a value by its paint count PLUS how often the build
+    reads the properties that name it (`var(--x)` counts per custom property,
+    kept on the table as `refs`): red 2 + 22 reads beats DocSearch 20 + 1.
+    Across all 79 fixtures only Metro's brand moved (before/after recorded).

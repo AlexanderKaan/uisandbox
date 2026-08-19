@@ -100,7 +100,7 @@ describe('rewriteCss', () => {
     expect(t.entries.map((e) => [e.kind, e.value, e.count])).toEqual([
       ['color', '#4f39f6', 2], ['radius', '12px', 1], ['space', '12px', 1],
     ])
-    expect(t.entries[0]!.sites[0]).toEqual({ file: 'x.css', prop: 'color', selector: '.a' })
+    expect(t.entries[0]!.sites[0]).toEqual({ file: 'x.css', prop: 'color', selector: '.a', seq: 1 })
   })
   it('CONTROL: a sheet with nothing to tokenise comes back byte-identical', () => {
     const t = sheet()

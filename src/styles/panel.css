@@ -960,4 +960,4 @@
 .fmrow__dots { display: inline-flex; gap: 4px; align-items: center; }
 
 /* A near-white dot needs an edge to be seen at all. */
-.fmrow__dot--ring { box-shadow: inset 0 0 0 1px var(--app-border); }
+.fmrow__dot--ring { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2); }

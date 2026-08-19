@@ -27,6 +27,9 @@ export interface Site {
   prop: string
   /** The enclosing rule's selector (innermost), when there is one. */
   selector?: string
+  /** Declaration order across the build (the cascade within a file): a later
+   *  declaration of the same property on the same selector overrides an earlier. */
+  seq?: number
 }
 
 export interface Entry {
@@ -45,6 +48,11 @@ export const varName = (id: number): string => `--us-v${id}`
 
 export class SubstitutionTable {
   private byKey = new Map<string, Entry>()
+  private seq = 0
+  /** How often the build reads each custom property (`var(--x)`): a brand
+   *  variable is told from a widget's by how much the sheets lean on it. */
+  refs = new Map<string, number>()
+  ref(name: string): void { this.refs.set(name, (this.refs.get(name) ?? 0) + 1) }
   readonly entries: Entry[] = []
 
   /** Register one occurrence; returns the variable reference to write in its place. */
@@ -58,6 +66,7 @@ export class SubstitutionTable {
       this.entries.push(e)
     }
     e.count++
+    if (site.seq === undefined) site.seq = ++this.seq
     if (e.sites.length < SITE_CAP) e.sites.push(site)
     return `var(${varName(e.id)})`
   }
@@ -82,12 +91,13 @@ export class SubstitutionTable {
     return out
   }
 
-  toJSON(): { entries: Entry[] } {
-    return { entries: this.entries }
+  toJSON(): { entries: Entry[]; refs?: Record<string, number> } {
+    return { entries: this.entries, refs: Object.fromEntries(this.refs) }
   }
 
-  static fromJSON(json: { entries: Entry[] }): SubstitutionTable {
+  static fromJSON(json: { entries: Entry[]; refs?: Record<string, number> }): SubstitutionTable {
     const t = new SubstitutionTable()
+    for (const [k, v] of Object.entries(json.refs ?? {})) t.refs.set(k, v)
     for (const e of json.entries) {
       const copy = { ...e, sites: [...e.sites] }
       t.entries.push(copy)
