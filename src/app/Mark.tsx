@@ -17,35 +17,35 @@ export function GithubMark({ size = 15 }: { size?: number }) {
   )
 }
 
-/** The drop zone's glyph: a tray with depth and a file (or a folder) that
- *  settles into it every few seconds. Drawn with weight — filled shapes, a
- *  soft shadow, 2px strokes — so it reads as an object, not a wire. */
+/** The drop zone's glyph, the way macOS shows a drag: the file (or folder) on
+ *  the left, a dotted arrow with a gentle arc, a dotted landing field on the
+ *  right. The dots flow along the arc; nothing disappears into anything. */
 export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
   return (
-    <svg className="dropglyph" width="88" height="64" viewBox="0 0 88 64" aria-hidden="true" focusable="false">
+    <svg className="dropglyph" width="132" height="56" viewBox="0 0 132 56" aria-hidden="true" focusable="false">
       <defs>
-        <linearGradient id="dg-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".10" /><stop offset="1" stopColor="currentColor" stopOpacity=".22" /></linearGradient>
         <linearGradient id="dg-item" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--app-surface, #fff)" /><stop offset="1" stopColor="var(--app-hover, #f4f4f6)" /></linearGradient>
-        <filter id="dg-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#000" floodOpacity=".18" /></filter>
+        <filter id="dg-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.8" floodColor="#000" floodOpacity=".16" /></filter>
       </defs>
-      {/* an open box: back wall, the item falls in, the front panel covers it */}
-      <path className="dropglyph__back" d="M16 30h56v22a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V30z" />
-      <path className="dropglyph__rim" d="M16 30h56" />
       <g className="dropglyph__item" filter="url(#dg-shadow)">
         {kind === 'zip' ? (
           <>
-            <path className="dropglyph__paper" d="M30 8h19l11 11v25a3 3 0 0 1-3 3H30a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3z" />
-            <path className="dropglyph__fold" d="M49 8v11h11" />
-            <path className="dropglyph__lines" d="M36 22h14M36 28h14M36 34h9" />
+            <path className="dropglyph__paper" d="M9 8h15l8 8v24a2.5 2.5 0 0 1-2.5 2.5H9A2.5 2.5 0 0 1 6.5 40V10.5A2.5 2.5 0 0 1 9 8z" />
+            <path className="dropglyph__fold" d="M24 8v8h8" />
+            <path className="dropglyph__lines" d="M12 22h11M12 27h11M12 32h7" />
           </>
         ) : (
           <>
-            <path className="dropglyph__paper" d="M26 14h14l5 5h18a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H26a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3z" />
-            <path className="dropglyph__fold" d="M23 24h43" />
+            <path className="dropglyph__paper" d="M6.5 14h12l4 4h13a2.5 2.5 0 0 1 2.5 2.5V38a2.5 2.5 0 0 1-2.5 2.5H9A2.5 2.5 0 0 1 6.5 38V14z" />
+            <path className="dropglyph__fold" d="M6.5 22h31.5" />
           </>
         )}
       </g>
-      <path className="dropglyph__front" d="M16 40h56v12a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V40z" />
+      {/* the arc: a dotted path the dots flow along, with an arrowhead */}
+      <path className="dropglyph__arc" d="M40 34 C 56 14, 74 14, 88 30" pathLength={100} />
+      <path className="dropglyph__head" d="M82 24 L 89 31 L 80 33" />
+      {/* the landing field */}
+      <rect className="dropglyph__field" x="96" y="12" width="30" height="30" rx="7" pathLength={100} />
     </svg>
   )
 }

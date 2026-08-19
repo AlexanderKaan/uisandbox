@@ -793,3 +793,26 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     line that has to explain the tool. Carried through title, description,
     OG image (re-rendered), Twitter, JSON-LD, the crawlable block, manifest,
     README, llms.txt.
+
+## Pre-launch sweep (2026-08-19)
+
+122. Measured before the promotion round: typecheck/tests/build green; no
+    secrets, `pnpm audit` clean; live headers right (sw.js uncached, assets
+    immutable, nosniff/no-referrer/frame-ancestors); **http and www now 301 to
+    https://uisandbox.org** (the Worker runs first); repo route 200
+    same-origin / 403 cross-site; 79 hold-outs against the live URL: 70 ok ·
+    2 known differs · 5 refused · 2 skipped (size); sec-evil cannot touch the
+    host; desktop/mobile: one H1, heading order, alt texts, canonical, JSON-LD
+    valid, no console errors, no horizontal scroll; perf on a 4G profile:
+    TTFB 169 ms, FCP/LCP 324 ms, 155 KB JS — **CLS 0.17 → 0.002** by laying
+    the crawlable `#root` block out like the hero it is replaced by; fetch
+    errors say what happened (a page instead of a zip; CORS/offline with the
+    repo-route hint); faint text lifted to AA contrast. Found and left for the
+    human: Cloudflare's managed robots.txt / AI-bot blocking rewrites our
+    robots.txt with `Disallow` for ClaudeBot, GPTBot, Google-Extended, CCBot…
+    — the opposite of the GEO goal; it is a zone setting (Security → Bots /
+    AI Crawl Control) and must be switched off.
+123. Topbar: tagline "Interface Design Playground"; right side in two groups
+    (MCP · Star with live count | the project's work). The drop glyph the way
+    macOS draws a drag: the file, a dotted arc with an arrowhead, a dotted
+    landing field — the dots flow along the arc.
