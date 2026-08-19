@@ -102,7 +102,7 @@ it works.
   few weeks; a model asked "how can I test a colour change on my built site"
   has a document to cite.
 
-## Sprint D — The MCP server, and being on the lists  ✅ server done 2026-08-19 · listings: the human's step
+## Sprint D — The MCP server, and being on the lists  ✅ done 2026-08-19 (npm `uisandbox-mcp`, official MCP registry; other directories: a form each)
 
 The engine is already one function per step (`buildProject` ·
 `deriveBaseline` · `computeVars` · `gen*`), so the server is a shell.

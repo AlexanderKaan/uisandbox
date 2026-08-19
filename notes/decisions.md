@@ -744,3 +744,8 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     smoke): load → set (brand becomes the pick) → patch → verify ✓ against
     uisandbox.org → screenshot, 8 s. llms.txt and README say `npx -y
     uisandbox-mcp`.
+116. **Listed on the official MCP registry** (2026-08-19):
+    `io.github.AlexanderKaan/uisandbox` 0.1.0 → npm `uisandbox-mcp`
+    (`mcp-publisher login github` + `publish` from mcp/, description ≤ 100
+    chars). Directories that read the registry (Smithery, PulseMCP, Glama,
+    mcp.so) pick it up from there; submitting there directly is a form each.
