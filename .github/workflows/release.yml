@@ -1,0 +1,28 @@
+# A GitHub Release for every MCP version: when mcp/package.json's version
+# changes on main and no tag vX.Y.Z exists yet, tag it and publish a release
+# with generated notes. npm publish stays a human step (it needs 2FA);
+# the release follows the version on its own.
+name: release
+on:
+  push:
+    branches: [main]
+    paths: [mcp/package.json]
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: v
+        run: |
+          V=$(node -p "require('./mcp/package.json').version")
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.v.outputs.exists == 'false'
+        env: { GH_TOKEN: "${{ github.token }}", V: "${{ steps.v.outputs.version }}" }
+        run: |
+          git tag "v$V" && git push origin "v$V"
+          gh release create "v$V" --title "v$V" --generate-notes \
+            --notes "**UISandbox $V** — [uisandbox.org](https://uisandbox.org) · npm \`uisandbox-mcp@$V\` (\`npx -y uisandbox-mcp\`) · on the [MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox). Restyle your app without rebuilding it — play with your real app's design, live."
