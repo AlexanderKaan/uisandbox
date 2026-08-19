@@ -17,11 +17,11 @@ interface IntakeProps {
 }
 type Way = 'zip' | 'folder' | 'repo'
 
-/** Three real open-source builds (MIT) served from this origin — a docs site, a landing page, a dashboard. */
+/** Three real open-source builds (MIT) served from this origin — names people know, with colour everywhere the knobs reach. */
 const SAMPLES = [
-  { path: '/samples/metro-docs.zip', label: 'Docs site', title: 'Metro (Docusaurus) — the gh-pages build, 2 MB' },
-  { path: '/samples/agency-landing.zip', label: 'Landing page', title: 'Start Bootstrap Agency — 2 MB' },
-  { path: '/samples/sb-admin-dashboard.zip', label: 'Dashboard', title: 'Start Bootstrap SB Admin 2 — 6 MB' },
+  { path: '/samples/bootstrap-docs.zip', label: 'Bootstrap docs', title: 'getbootstrap.com — the Bootstrap 5.3 docs build, 114 screens, 8 MB' },
+  { path: '/samples/vitepress-site.zip', label: 'VitePress site', title: 'vitepress.dev — 259 screens, 5 MB' },
+  { path: '/samples/sb-admin-dashboard.zip', label: 'Admin dashboard', title: 'Start Bootstrap SB Admin 2 — 13 screens, 6 MB' },
 ]
 
 /**
