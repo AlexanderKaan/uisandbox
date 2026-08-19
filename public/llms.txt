@@ -26,6 +26,7 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 ## For agents
 
 - Load by link — any agent can say this to a user: `https://uisandbox.org/?load=https://github.com/user/repo` (a public repo; its default branch — or `/tree/branch` — is fetched as a zip through the site's own route; the build must be inside the repo, e.g. a gh-pages branch), or `?load=<zip-url>` for a zip the browser may fetch (CORS).
+- Claude Code plugin: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` (skill + MCP server).
 - In Claude Code / Claude Desktop / Cursor with the MCP server: say "open this app in UISandbox" — the agent builds the app, loads it and opens the real sandbox in the browser (`open`), and can export what you turned afterwards (`state` → `export`). Prompts `/uisandbox:open` and `/uisandbox:try` exist where the client shows MCP prompts.
 - MCP server (stdio, same engine): tools `open` (the real sandbox in the user's browser, served locally), `state`, `load` (zip URL/path), `screens`, `set` (knobs), `export` (sheet-css, sheet-json, patch, tokens-css, tokens-json, tailwind, shadcn, swift, android-xml, android-kotlin), `verify` (the 1:1 check in headless Chromium), `screenshot`. Install: `npx -y uisandbox-mcp` (npm: https://www.npmjs.com/package/uisandbox-mcp); config and a prompt to paste: https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md
 

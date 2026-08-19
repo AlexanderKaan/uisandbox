@@ -1,0 +1,13 @@
+{
+  "name": "uisandbox",
+  "version": "0.3.0",
+  "description": "Test your design on the real thing: open a built web app in UISandbox — 1:1, with its own knobs — from the chat; try a change, verify, export the patch. Bundles the /uisandbox skill and the uisandbox MCP server.",
+  "author": { "name": "Alexander Kaan", "url": "https://pageminds.com/" },
+  "homepage": "https://uisandbox.org",
+  "repository": "https://github.com/AlexanderKaan/uisandbox",
+  "license": "MIT",
+  "keywords": ["design", "design-tokens", "design-system", "theming", "css", "sandbox", "mcp"],
+  "mcpServers": {
+    "uisandbox": { "command": "npx", "args": ["-y", "uisandbox-mcp"] }
+  }
+}

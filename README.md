@@ -54,7 +54,7 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 ## MCP
 
-`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. A Claude Code skill that drives it — `/uisandbox` "test this design on my build" — lives in [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md): copy the folder into `.claude/skills/` (project) or `~/.claude/skills/` (user).
+`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. **Claude Code plugin** (skill + server in one): `/plugin marketplace add AlexanderKaan/uisandbox` then `/plugin install uisandbox@uisandbox` — gives `/uisandbox` ("open this app in a sandbox", "try brand #e11d48") and the `uisandbox` MCP server. The skill alone is [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md) (copy into `.claude/skills/`). Codex / Cursor / others: add the MCP server (`npx -y uisandbox-mcp`); the server sends its own instructions and prompts.
 
 ## Deploy
 

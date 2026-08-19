@@ -770,3 +770,10 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     ./dist` (folder or zip). For any model without MCP: a link it can say —
     `uisandbox.org/?load=https://github.com/user/repo` goes through the repo
     route.
+119. **The repo is a Claude Code plugin + marketplace** (`.claude-plugin/`):
+    `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install
+    uisandbox@uisandbox` brings the `/uisandbox` skill and the MCP server
+    (`npx -y uisandbox-mcp`) in one step; the skill shows up in the skills
+    list like any other. The official Anthropic marketplace is a submission
+    (the human's step). Codex/Cursor have no marketplace yet: there the
+    server's own `instructions` and prompts carry the behaviour.

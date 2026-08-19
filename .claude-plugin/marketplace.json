@@ -1,0 +1,15 @@
+{
+  "name": "uisandbox",
+  "owner": { "name": "Alexander Kaan", "url": "https://github.com/AlexanderKaan" },
+  "metadata": { "description": "UISandbox — test your design on the real thing.", "homepage": "https://uisandbox.org" },
+  "plugins": [
+    {
+      "name": "uisandbox",
+      "source": "./",
+      "description": "Open a built web app in UISandbox from the chat (1:1, its own knobs), try a change, verify, export the patch. Skill + MCP server.",
+      "version": "0.3.0",
+      "category": "design",
+      "keywords": ["design", "design-tokens", "theming", "css", "sandbox", "mcp"]
+    }
+  ]
+}
