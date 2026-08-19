@@ -4,7 +4,7 @@ import { Check, Copy } from 'lucide-react'
 const LINES: Array<{ id: string; label: string; cmd: string; hint: string }> = [
   { id: 'cli', label: 'Terminal', cmd: 'npx uisandbox-mcp open ./dist', hint: 'Opens the sandbox in your browser with your build folder (or a zip).' },
   { id: 'claude', label: 'Claude Code', cmd: 'claude mcp add uisandbox -- npx -y uisandbox-mcp', hint: 'Then: "open this app in UISandbox" — it builds, loads, opens.' },
-  { id: 'plugin', label: 'Claude Code plugin', cmd: '/plugin marketplace add AlexanderKaan/uisandbox', hint: 'Then /plugin install uisandbox@uisandbox — the /uisandbox skill and the MCP server in one.' },
+  { id: 'plugin', label: '/uisandbox skill', cmd: '/plugin marketplace add AlexanderKaan/uisandbox\n/plugin install uisandbox@uisandbox', hint: 'Two commands in Claude Code: the /uisandbox skill and the MCP server in one plugin.' },
   { id: 'mcp', label: 'Any MCP client', cmd: 'npx -y uisandbox-mcp', hint: 'Cursor, Claude Desktop, Codex: add as a stdio server.' },
 ]
 
@@ -34,7 +34,7 @@ export function InstallLine({ compact = false }: { compact?: boolean } = {}) {
       </div>
       <div className="install__pill">
         <span className="install__prompt" aria-hidden>$</span>
-        <code className="install__cmd">{line.cmd}</code>
+        <code className="install__cmd">{line.cmd.split('\n').map((l, i) => <span key={i} className="install__line">{l}</span>)}</code>
         <button type="button" className="install__copy" onClick={copy} aria-label="Copy" title="Copy">{copied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} />}</button>
       </div>
       <div className="install__hint">{line.hint} · <a href="https://www.npmjs.com/package/uisandbox-mcp" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md" target="_blank" rel="noopener">docs</a></div>
