@@ -10,17 +10,26 @@ interface IntakeProps {
   onArchive: (archive: Archive) => void
   /** A zip by URL — the repo route (App fetches, through the proxy when needed). */
   onUrl?: (url: string) => void
+  /** A sample build shipped with the site (same origin) — for the visitor without a zip at hand. */
+  onSample?: (path: string) => void
   busy: Progress | null
   error: string | null
 }
 type Way = 'zip' | 'folder' | 'repo'
+
+/** Three real open-source builds (MIT) served from this origin — a docs site, a landing page, a dashboard. */
+const SAMPLES = [
+  { path: '/samples/metro-docs.zip', label: 'Docs site', title: 'Metro (Docusaurus) — the gh-pages build, 2 MB' },
+  { path: '/samples/agency-landing.zip', label: 'Landing page', title: 'Start Bootstrap Agency — 2 MB' },
+  { path: '/samples/sb-admin-dashboard.zip', label: 'Dashboard', title: 'Start Bootstrap SB Admin 2 — 6 MB' },
+]
 
 /**
  * The door. Three ways in — a zip of the build, a folder (build or source),
  * a public GitHub repo — and, while it works, the stages with their numbers.
  * Everything stays in the tab; the repo route says the one thing that does not.
  */
-export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
+export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps) {
   const [way, setWay] = useState<Way>('zip')
   const [over, setOver] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
@@ -133,6 +142,12 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
                   <button type="submit" className="btn btn--primary"><GitBranch size={15} strokeWidth={1.75} /> Load</button>
                 </form>
                 <div className="intake__note">GitHub does not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it — public repos only, nothing stored. Everything else stays in this tab.</div>
+              </div>
+            )}
+            {onSample && (
+              <div className="intake__samples">
+                <span>No build at hand? Try a sample:</span>
+                {SAMPLES.map((x) => <button key={x.path} type="button" className="intake__sample" onClick={() => onSample(x.path)} title={x.title}>{x.label}</button>)}
               </div>
             )}
             <input ref={zipRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; if (f) void takeFiles([f]); e.target.value = '' }} />

@@ -436,7 +436,7 @@ export function App() {
             />
           </>
         )}
-        {!loaded && <Intake onArchive={onArchive} onUrl={(u) => void loadFromUrl(`/__repo/?u=${encodeURIComponent(u)}`)} busy={busy} error={error} />}
+        {!loaded && <Intake onArchive={onArchive} onUrl={(u) => void loadFromUrl(`/__repo/?u=${encodeURIComponent(u)}`)} onSample={(p) => void loadFromUrl(p)} busy={busy} error={error} />}
         {askConsent && (
           <div className="consent" role="dialog" aria-label="Analytics">
             <span>We count visits with Google Analytics — no names, nothing about your files. OK?</span>

@@ -1,6 +1,6 @@
 import { track } from '../analytics'
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { ExternalLink, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ExternalLink, RefreshCw, ShieldCheck, Star } from 'lucide-react'
 import { ScreenPicker } from './ScreenPicker'
 import type { SandboxProject, Screen } from '../sandbox/project'
 import { identitySid, rawSid, sandboxUrl } from '../sandbox/host'
@@ -182,6 +182,10 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         <button type="button" className="chip" onClick={runVerify} title="Measure: compare the untouched page with the tokenised page, element by element">
           <ShieldCheck size={12} strokeWidth={2} /> {verify && !('busy' in verify) ? (verify.ok ? '1:1 verified' : verify.refusal ? '1:1 unmeasured' : '1:1 differs') : 'Check 1:1'}
         </button>
+        {/* The ask, at the moment it has earned it: once something was turned or the check passed. */}
+        {(changedCount > 0 || (verify && !('busy' in verify) && verify.ok)) && (
+          <a className="chip stage__star" href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener" title="Useful? A star on GitHub helps others find it"><Star size={12} strokeWidth={2} /> Useful? Star it</a>
+        )}
       </div>
     </section>
   )

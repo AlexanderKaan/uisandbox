@@ -161,6 +161,8 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .stage__foot { display: flex; align-items: center; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--app-fg-muted); flex-wrap: wrap; }
 .stage__foot b { color: var(--app-fg); font-weight: 600; }
 .stage__foot .stage__spacer { flex: 1; }
+.stage__star { text-decoration: none; color: var(--app-fg-muted); }
+.stage__star:hover { color: var(--app-fg); }
 .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 999px; border: 1px solid var(--app-border); background: var(--app-surface); font-size: 11.5px; font-weight: 500; }
 .chip--ok { border-color: color-mix(in srgb, var(--app-ok) 40%, var(--app-border)); color: var(--app-ok); }
 .chip--warn { border-color: color-mix(in srgb, var(--app-warn) 40%, var(--app-border)); color: var(--app-warn); }
@@ -334,6 +336,10 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .hero { text-align: center; max-width: 720px; margin-top: 12px; }
 .hero__kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--app-fg-faint); margin-top: 14px; }
 .hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.03em; margin: 8px 0 16px; font-weight: 700; }
+.intake__samples { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; margin-top: 12px; font-size: 12.5px; color: var(--app-fg-faint); }
+.intake__samples span { margin-right: 4px; }
+.intake__sample { font: inherit; font-weight: 600; color: var(--app-fg-muted); background: transparent; border: 1px solid var(--app-border); border-radius: 999px; padding: 3px 10px; cursor: pointer; transition: color var(--app-dur) var(--app-ease), border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease); }
+.intake__sample:hover { color: var(--app-fg); border-color: var(--app-fg-muted); background: var(--app-surface); }
 .hero__proof { list-style: none; margin: 12px 0 0; padding: 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--app-fg-faint); }
 .hero__proof li { display: inline-flex; align-items: center; gap: 5px; }
 .hero__proof svg { color: var(--app-fg-muted); }

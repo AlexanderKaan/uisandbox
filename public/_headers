@@ -34,3 +34,7 @@
   Cache-Control: public, max-age=86400
 /site.webmanifest
   Content-Type: application/manifest+json
+
+# Sample builds: real open-source builds (MIT), a day of cache is plenty.
+/samples/*
+  Cache-Control: public, max-age=86400

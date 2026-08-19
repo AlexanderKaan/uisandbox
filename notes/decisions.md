@@ -837,3 +837,9 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     dark under prefers-color-scheme) from a small inline stylesheet, and the
     meta reads `light dark`. The footer's CSS had been swallowed by a block
     replace in 1627858 (unstyled footer on the live site) — restored.
+127. The visitor from a launch post has no zip at hand: three sample builds
+    ship with the site (public/samples — Metro docs, Start Bootstrap Agency,
+    SB Admin 2; all MIT, all hold-outs that render 1:1) behind "No build at
+    hand? Try a sample" under the drop zone. The ask for a star appears in
+    the stage foot only once something was turned or the 1:1 check passed —
+    at the moment the tool has earned it, not before.
