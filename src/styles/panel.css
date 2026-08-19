@@ -60,6 +60,12 @@
 }
 .panel__reset:hover:not(:disabled) { background: var(--app-hover); color: var(--app-fg); }
 .panel__reset:active:not(:disabled) { transform: scale(0.99); }
+/* History — one segmented pair, as quiet as Reset: what you did with the knobs. */
+.panel__history { flex: none; display: inline-flex; height: 38px; border: 1px solid var(--app-border); border-radius: 11px; overflow: hidden; }
+.panel__hist { display: inline-flex; align-items: center; justify-content: center; width: 34px; border: 0; background: transparent; color: var(--app-fg-muted); cursor: pointer; transition: background var(--app-dur) var(--app-ease), color var(--app-dur) var(--app-ease); }
+.panel__hist + .panel__hist { border-left: 1px solid var(--app-border); }
+.panel__hist:hover:not(:disabled) { background: var(--app-hover); color: var(--app-fg); }
+.panel__hist:disabled { opacity: .38; cursor: default; }
 .panel__reset svg { color: var(--app-fg-muted); }
 .panel__reset:disabled { opacity: 0.4; cursor: default; }
 /* === The control shell (.fmenu) === COMPOSES `.card`.

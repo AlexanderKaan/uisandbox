@@ -825,3 +825,8 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     reads the properties that name it (`var(--x)` counts per custom property,
     kept on the table as `refs`): red 2 + 22 reads beats DocSearch 20 + 1.
     Across all 79 fixtures only Metro's brand moved (before/after recorded).
+125. Topbar follows the context: on the intake, the name and MCP · Star; with
+    a project open, the name becomes the project's and the right side is the
+    work only — Read · Export · Close. Undo/redo moved to the panel foot as one
+    segmented pair next to Shuffle and Reset (all four are "what I did with the
+    knobs"; ⌘Z still works). MCP and Star stay on the homepage and in the footer.

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type Dispatch } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, ChevronRight, PanelLeftClose, RotateCcw, Shuffle } from 'lucide-react'
+import { Check, ChevronRight, PanelLeftClose, Redo2, RotateCcw, Shuffle, Undo2 } from 'lucide-react'
 import { BODY_FONTS, DISPLAY_GROUPS } from '../tokens/fonts'
 import { nameColor } from '../tokens/color'
 import { COLOR_THEMES } from '../tokens/stylesAndThemes'
@@ -30,6 +30,8 @@ interface Props {
   onCollapse: () => void
   onRandomize: () => void
   onReset: () => void
+  /** Knob history — undo/redo live with the knobs, not in the top bar. */
+  history?: { undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }
 }
 
 const THEMES: Array<{ id: ColorTheme; label: string; hex: string }> = (Object.keys(COLOR_THEMES) as ColorTheme[]).map((id) => ({ id, label: id[0]!.toUpperCase() + id.slice(1), hex: COLOR_THEMES[id].cPrimary }))
@@ -50,7 +52,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, varNow, dispatch, onCollapse, onRandomize, onReset }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, varNow, dispatch, onCollapse, onRandomize, onReset, history }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -292,6 +294,12 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
         </div>
       </div>
       <div className="panel__foot">
+        {history && (
+          <span className="panel__history" role="group" aria-label="History">
+            <button type="button" className="panel__hist" onClick={history.undo} disabled={!history.canUndo} title="Undo (⌘Z)" aria-label="Undo"><Undo2 size={15} strokeWidth={1.75} /></button>
+            <button type="button" className="panel__hist" onClick={history.redo} disabled={!history.canRedo} title="Redo (⇧⌘Z)" aria-label="Redo"><Redo2 size={15} strokeWidth={1.75} /></button>
+          </span>
+        )}
         <button type="button" className="btn btn--secondary panel__shuffle" onClick={onRandomize} title="Shuffle — a random stand on every knob"><Shuffle size={15} strokeWidth={1.75} /><span>Shuffle</span></button>
         <button type="button" className="btn btn--ghost panel__reset" onClick={onReset} disabled={atRest} title={atRest ? 'Every knob is on your code' : 'Back to your code — every knob'}><RotateCcw size={15} strokeWidth={1.75} /><span>Reset</span></button>
       </div>

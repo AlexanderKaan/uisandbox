@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Info, PanelLeftOpen, Redo2, Undo2, X } from 'lucide-react'
+import { Download, Info, PanelLeftOpen, X } from 'lucide-react'
 import { SandboxPanel } from '../panel/SandboxPanel'
 import type { Config } from '../tokens/types'
 import { useConfig } from '../state/useConfig'
@@ -366,21 +366,20 @@ export function App() {
   return (
     <div className="app">
       <header className="app__topbar">
-        <span className="app__brand"><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>Interface Design Playground</small></span>
+        <span className="app__brand"><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>{loaded ? loaded.project.name : 'Interface Design Playground'}</small></span>
         <span className="app__spacer" />
-        <div className="app__group">
-          <McpButton />
-          <StarButton />
-        </div>
+        {!loaded && (
+          <div className="app__group">
+            <McpButton />
+            <StarButton />
+          </div>
+        )}
         {loaded && (
-          <>
-            <span className="app__divider" aria-hidden />
-            <button type="button" className="btn btn--ghost btn--icon" onClick={undo} disabled={!canUndo} title="Undo (⌘Z)"><Undo2 size={15} /></button>
-            <button type="button" className="btn btn--ghost btn--icon" onClick={redo} disabled={!canRedo} title="Redo (⇧⌘Z)"><Redo2 size={15} /></button>
+          <div className="app__group">
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes((v) => !v)} title="What we read from your code"><Info size={14} /> Read</button>
             <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowExport(true)}><Download size={14} /> Export</button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => { disown(loaded.project); setLoaded(null); reset(DEFAULT_CONFIG) }} title="Close this project"><X size={14} /> Close</button>
-          </>
+          </div>
         )}
       </header>
       <div className="app__body">
@@ -403,6 +402,7 @@ export function App() {
                 onCollapse={() => setPanelOpen(false)}
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}
                 onReset={() => dispatch({ type: 'REPLACE', cfg: loaded.report.baseline.cfg })}
+                history={{ undo, redo, canUndo, canRedo }}
               />
             )}
             <Stage
