@@ -351,3 +351,22 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .shot--small { border-radius: 10px; }
 .landing__sec--quiet p { font-size: 13.5px; }
 .landing code { font-size: 12.5px; background: var(--app-hover); padding: 1px 5px; border-radius: 4px; }
+
+/* The corona behind the door: soft pastel light, the card as the eclipse in
+   front of it. Low and blurred on purpose — a hint of colour on a black-and-
+   white page, not a feature. Slowly breathes; still under reduced motion. */
+.door { position: relative; width: min(680px, 100%); }
+.door::before {
+  content: ''; position: absolute; inset: -48px -64px; z-index: 0; pointer-events: none; border-radius: 40px;
+  background:
+    radial-gradient(40% 55% at 18% 30%, color-mix(in srgb, #6366f1 34%, transparent), transparent 70%),
+    radial-gradient(38% 50% at 82% 28%, color-mix(in srgb, #22d3ee 30%, transparent), transparent 70%),
+    radial-gradient(42% 52% at 70% 82%, color-mix(in srgb, #f472b6 30%, transparent), transparent 70%),
+    radial-gradient(36% 48% at 25% 85%, color-mix(in srgb, #facc15 26%, transparent), transparent 70%);
+  filter: blur(36px); opacity: .55; animation: corona 14s ease-in-out infinite alternate;
+}
+.door > .card { position: relative; z-index: 1; }
+@keyframes corona { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.06) rotate(3deg); } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .door::before { opacity: .38; } }
+:root[data-theme="dark"] .door::before { opacity: .38; }
+@media (prefers-reduced-motion: reduce) { .door::before { animation: none; } }

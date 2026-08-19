@@ -57,6 +57,7 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
         <p className="hero__sub">Try a new look on your real app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
       </section>
+      <div className="door">
       <div className="card intake__card">
 
         {busy ? (
@@ -134,6 +135,7 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
           </>
         )}
         {(error || localError) && <div className="intake__error">{error || localError}</div>}
+      </div>
       </div>
       {!busy && <Landing />}
     </div>
