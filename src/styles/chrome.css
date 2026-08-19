@@ -190,14 +190,29 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .intake__ants-dash { stroke: var(--app-border); stroke-width: 1.5; stroke-dasharray: 6 6; animation: ants 1.4s linear infinite; transition: stroke var(--app-dur) var(--app-ease); }
 .intake__drop--over .intake__ants-dash { stroke: var(--app-fg); animation-duration: .6s; }
 @keyframes ants { to { stroke-dashoffset: -12; } }
-/* The travelling light: a soft halo and a crisp head on the same path, going
-   round once every 7 s (faster and brighter while something hovers). */
-.intake__glow { stroke-linecap: round; stroke-dasharray: 90 910; animation: glow-run 7s linear infinite; }
-.intake__glow--halo { stroke: var(--app-fg); stroke-width: 6; opacity: .18; filter: blur(4px); }
-.intake__glow--head { stroke: var(--app-fg); stroke-width: 1.5; opacity: .9; stroke-dasharray: 34 966; }
-.intake__drop--over .intake__glow { animation-duration: 2.2s; }
-.intake__drop--over .intake__glow--halo { opacity: .32; }
-@keyframes glow-run { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+/* The shimmer: a long, soft light that sweeps the edge once every ~6 s and
+   rests — not a dot going round. A wide blurred band and a faint thinner one
+   on the same path, fading in and out as they pass. */
+.intake__glow { stroke-linecap: round; stroke: var(--app-fg); animation: shimmer 6s cubic-bezier(.4, 0, .3, 1) infinite; opacity: 0; }
+.intake__glow--halo { stroke-width: 10; stroke-dasharray: 320 680; filter: blur(8px); }
+.intake__glow--head { stroke-width: 1.5; stroke-dasharray: 260 740; filter: blur(.6px); animation-delay: .05s; }
+.intake__drop--over .intake__glow { animation-duration: 2.4s; }
+@keyframes shimmer {
+  0%   { stroke-dashoffset: 1000; opacity: 0; }
+  6%   { opacity: .22; }
+  40%  { stroke-dashoffset: 0; opacity: .22; }
+  52%  { stroke-dashoffset: -120; opacity: 0; }
+  100% { stroke-dashoffset: -120; opacity: 0; }
+}
+.intake__glow--head { --peak: .55; }
+.intake__drop--over .intake__glow--halo { animation-name: shimmer-strong; }
+@keyframes shimmer-strong {
+  0%   { stroke-dashoffset: 1000; opacity: 0; }
+  6%   { opacity: .38; }
+  40%  { stroke-dashoffset: 0; opacity: .38; }
+  52%  { stroke-dashoffset: -120; opacity: 0; }
+  100% { stroke-dashoffset: -120; opacity: 0; }
+}
 /* The file/folder that glides into the tray. */
 .dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg-muted); }
 .dropglyph path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
