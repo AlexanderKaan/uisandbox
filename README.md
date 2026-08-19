@@ -1,6 +1,6 @@
 # UISandbox
 
-**Test your design on the real thing.** Drop your built web app, see it 1:1 in a sandbox, then turn the knobs — brand, colour families, background, fonts, size, spacing, radius, elevation, motion — and every value that moves is *your* value. Export exactly what you see. Open source, MIT, free forever · [uisandbox.org](https://uisandbox.org)
+**Restyle your app without rebuilding it.** Try a new look on your real app in seconds: drop your built web app, see it 1:1 in a sandbox, then turn the knobs — brand, colour families, background, fonts, size, spacing, radius, elevation, motion — and every value that moves is *your* value. Export exactly what you see. Open source, MIT, free forever · [uisandbox.org](https://uisandbox.org)
 
 ## What it does
 

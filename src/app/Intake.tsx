@@ -52,8 +52,9 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
     <div className="intake">
       <section className="hero">
         <div className="intake__mark"><Mark size={44} /></div>
-        <h1>Test your design<br />on the real thing.</h1>
-        <p className="hero__sub">Drop your <b>built</b> web app. It renders here 1:1 — measured, not promised — and every colour, radius, font, size and shadow in its CSS becomes a knob that moves <em>your</em> value. Export exactly what you see.</p>
+        <div className="hero__kicker">Test your design on the real thing</div>
+        <h1>Restyle your app<br />without rebuilding it.</h1>
+        <p className="hero__sub">Try a new look on your real app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
       </section>
       <div className="card intake__card">

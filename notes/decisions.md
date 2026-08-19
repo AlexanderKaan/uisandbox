@@ -785,3 +785,11 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     Nothing leaves your tab · From your terminal or your agent (the install
     tabs) · Who made this. Black and white, no claim the meter would
     contradict. `scripts/og/shots.mjs` renders the screenshots from the app.
+121. **The headline says the job.** H1 "Restyle your app without rebuilding
+    it." — the job, the aha, the contrast with the normal workflow; the sub
+    opens with "Try a new look on your real app — in seconds." and says what
+    a knob is and what comes out (a patch, tokens). "Test your design on the
+    real thing" stays as the kicker/slogan (and JSON-LD `slogan`), not as the
+    line that has to explain the tool. Carried through title, description,
+    OG image (re-rendered), Twitter, JSON-LD, the crawlable block, manifest,
+    README, llms.txt.

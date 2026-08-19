@@ -330,7 +330,8 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 
 /* === The one-pager around the door: black and white, quiet === */
 .hero { text-align: center; max-width: 720px; margin-top: 12px; }
-.hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.03em; margin: 14px 0 16px; font-weight: 700; }
+.hero__kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--app-fg-faint); margin-top: 14px; }
+.hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.03em; margin: 8px 0 16px; font-weight: 700; }
 .hero__sub { font-size: 16px; line-height: 1.5; color: var(--app-fg-muted); max-width: 58ch; margin: 0 auto 18px; }
 .install--compact { max-width: 440px; margin: 0 auto; }
 .landing { width: min(760px, 100%); display: flex; flex-direction: column; gap: 40px; margin-top: 24px; }
