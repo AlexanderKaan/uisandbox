@@ -222,12 +222,15 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .dropglyph__lines { opacity: .45; stroke-width: 1.6; }
 .dropglyph__item { animation: nudge 3.2s ease-in-out infinite; transform-origin: 20px 26px; }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
-.dropglyph__arc { fill: none; stroke: var(--app-fg-muted); stroke-width: 2; stroke-dasharray: 0.01 7; animation: flow 1.6s linear infinite; }
-@keyframes flow { to { stroke-dashoffset: -7; } }
-.dropglyph__head { fill: none; stroke: var(--app-fg-muted); stroke-width: 2; }
-.dropglyph__field { fill: var(--app-hover); stroke: var(--app-fg-muted); stroke-width: 1.8; stroke-dasharray: 3 3; transition: fill var(--app-dur) var(--app-ease), stroke var(--app-dur) var(--app-ease); }
-.intake__drop--over .dropglyph__arc { animation-duration: .6s; stroke: var(--app-fg); }
-.intake__drop--over .dropglyph__head, .intake__drop--over .dropglyph__field { stroke: var(--app-fg); }
+.dropglyph__arc { fill: none; stroke-linecap: round; }
+/* a faint track under the dots, so the path reads even between dots */
+.dropglyph__arc--track { stroke: var(--app-fg); stroke-opacity: .10; stroke-width: 2; }
+/* round dots (width 0, round caps) travelling along the arc, a touch larger near the field */
+.dropglyph__arc--dots { stroke: var(--app-fg-muted); stroke-width: 2.6; stroke-dasharray: 0.01 8; animation: flow 1.4s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -8; } }
+.dropglyph__field { fill: var(--app-hover); stroke: var(--app-fg-muted); stroke-width: 1.8; stroke-dasharray: 3 3.5; transition: fill var(--app-dur) var(--app-ease), stroke var(--app-dur) var(--app-ease); }
+.intake__drop--over .dropglyph__arc--dots { animation-duration: .55s; stroke: var(--app-fg); }
+.intake__drop--over .dropglyph__field { stroke: var(--app-fg); }
 .intake__drop--over .dropglyph__field { fill: color-mix(in srgb, var(--app-fg) 10%, var(--app-hover)); }
 @media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .intake__glow { display: none; } .dropglyph__item, .dropglyph__arc { animation: none; } }
 .intake__choices { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }

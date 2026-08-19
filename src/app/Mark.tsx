@@ -41,11 +41,11 @@ export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
           </>
         )}
       </g>
-      {/* the arc: a dotted path the dots flow along, with an arrowhead */}
-      <path className="dropglyph__arc" d="M40 34 C 56 14, 74 14, 88 30" pathLength={100} />
-      <path className="dropglyph__head" d="M82 24 L 89 31 L 80 33" />
+      {/* the arc: dots that travel from the file to the field — no arrowhead, the motion says it */}
+      <path className="dropglyph__arc dropglyph__arc--track" d="M42 32 C 58 12, 76 12, 92 28" />
+      <path className="dropglyph__arc dropglyph__arc--dots" d="M42 32 C 58 12, 76 12, 92 28" />
       {/* the landing field */}
-      <rect className="dropglyph__field" x="96" y="12" width="30" height="30" rx="7" pathLength={100} />
+      <rect className="dropglyph__field" x="98" y="13" width="28" height="28" rx="8" />
     </svg>
   )
 }
