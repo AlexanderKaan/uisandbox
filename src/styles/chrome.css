@@ -282,9 +282,9 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .mcp__fine a { color: var(--app-fg-muted); }
 
 /* === The footer: one line, muted, on the intake and the stage === */
-.foot { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; justify-content: center; padding: 8px 16px; border-top: 1px solid var(--app-border); background: var(--app-bg); font-size: 11.5px; color: var(--app-fg-faint); line-height: 1.4; }
-.foot a { color: var(--app-fg-muted); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--app-fg-muted) 35%, transparent); text-underline-offset: 2px; }
-.foot a:hover { color: var(--app-fg); }
+.foot { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; justify-content: center; padding: 9px 16px; background: #18191d; color: #8f8fa3; font-size: 11.5px; line-height: 1.4; }
+.foot a { color: #c9c9d3; text-decoration: underline; text-decoration-color: rgba(201, 201, 211, .35); text-underline-offset: 2px; }
+.foot a:hover { color: #ececf1; }
 .foot__links { display: inline-flex; gap: 10px; }
 .foot__sep { opacity: .6; }
 @media (max-width: 720px) { .foot__sep { display: none; } .foot { gap: 4px 12px; } }
