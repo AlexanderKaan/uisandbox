@@ -176,14 +176,26 @@ const NAMED = /(?<![\w-])([a-z]{3,20})(?![\w-])/gi
 
 interface Splice { start: number; end: number; kind: Kind; raw: string }
 
-/** Mask strings and url() so nothing inside them is ever matched. */
+/** Mask strings and url() so nothing inside them is ever matched — and the
+ *  functions Chromium does not know (`-moz-linear-gradient(`, `-o-…(`, `-ms-…(`):
+ *  a declaration holding one is dropped AT PARSE TIME, so the earlier
+ *  `-webkit-gradient(` declaration wins; with a var() inside, the same
+ *  declaration parses, wins the cascade, and only fails at computed-value
+ *  time — background gone (video.js, Ace: the 2011 three-vendor gradient
+ *  stack). Left untouched, it stays as dead as it was. */
+const DEAD_FN = /^-(moz|o|ms)-[a-z-]*\(/i
 function masked(value: string): string {
   let out = ''
   let i = 0
   const n = value.length
   while (i < n) {
     const c = value[i]!
-    if (c === '"' || c === "'") {
+    if (c === '-' && DEAD_FN.test(value.slice(i, i + 40))) {
+      let depth = 0, j = i
+      for (; j < n; j++) { if (value[j] === '(') depth++; else if (value[j] === ')') { depth--; if (depth === 0) break } }
+      out += ' '.repeat(Math.min(j + 1, n) - i)
+      i = Math.min(j + 1, n)
+    } else if (c === '"' || c === "'") {
       const q = c
       let j = i + 1
       while (j < n && value[j] !== q) { if (value[j] === '\\') j++; j++ }
@@ -337,6 +349,9 @@ export function splicesFor(prop: string, value: string): Splice[] {
   const bare = m.trim().toLowerCase()
   const svgs = /data:image\/svg\+xml/i.test(value) ? findSvgUrls(value) : []
   if (KEYWORD_ONLY.test(bare)) return []
+  // A declaration holding a function Chromium does not know is dropped whole at
+  // parse time (see DEAD_FN); a var() anywhere in it would make it parse. Skip it.
+  if (/(^|[\s,(])-(moz|o|ms)-[a-z-]*\(/i.test(value)) return []
   // A CSS-wide keyword INSIDE a value (`font: 600 14px inherit`) makes the
   // whole declaration invalid, and the browser drops it at parse time. With a
   // var() in it the same declaration would parse and only fail at computed-

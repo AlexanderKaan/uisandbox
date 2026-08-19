@@ -19,6 +19,8 @@ interface StageProps {
   changedCount: number
   /** A doubt about the render worth saying out loud (a shell, not the app). */
   warning?: string | null
+  /** The warning card's heading; default asks whether this is the built app. */
+  warningTitle?: string
   /** How much of what is painted the knobs reach — measured on the frame. */
   coverage?: Coverage | null
   /** The "What we read from your code" card — shown in the top-right slot
@@ -37,7 +39,7 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
 /** What a sandboxed document may do — everything a page needs, minus top navigation. */
 export const SANDBOX_FLAGS = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock'
 
-export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, coverage, notes }: StageProps) {
+export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, warningTitle, coverage, notes }: StageProps) {
   const [showCov, setShowCov] = useState(false)
   const [width, setWidth] = useState<string>('fit')
   const [verify, setVerify] = useState<VerifyResult | { busy: true } | null>(null)
@@ -134,7 +136,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
           </div>
         )}
         {warning && !leftSandbox && (
-          <div className="card popcard popcard--low verify" role="status"><h3>Is this the built app?</h3><div>{warning}</div></div>
+          <div className="card popcard popcard--low verify" role="status"><h3>{warningTitle ?? 'Is this the built app?'}</h3><div>{warning}</div></div>
         )}
         {leftSandbox && (
           <div className="card popcard popcard--low verify" role="status">

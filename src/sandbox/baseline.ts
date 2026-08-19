@@ -251,7 +251,11 @@ const DEFAULT_FONT = configFromAudit({}).fontBody
  * `next/font` class on <body>, and only the browser knows. Returns the fields
  * that differ from the current baseline, or null.
  */
-export function refineFromDocument(doc: Document, cfg: Config, opts: { brand?: boolean } = {}): Partial<Config> | null {
+/** opts.brand: true — the paint decides the brand (nothing declared); 'if-absent' —
+ *  a brand IS declared, but if that colour is painted nowhere on the first screen
+ *  (docusaurus.io declares Infima's #3578e5 at :root and then overrides it with
+ *  an hsl(var()) the sheet cannot read — the page is green), the paint decides. */
+export function refineFromDocument(doc: Document, cfg: Config, opts: { brand?: boolean | 'if-absent' } = {}): Partial<Config> | null {
   const win = doc.defaultView
   if (!win || !doc.body) return null
   const mode = (els: Element[]) => {
@@ -290,15 +294,33 @@ export function refineFromDocument(doc: Document, cfg: Config, opts: { brand?: b
       fills.set(hex, (fills.get(hex) ?? 0) + weight)
     }
     const top = [...fills.entries()].sort((a, b) => b[1] - a[1])[0]
-    if (top && top[0].toLowerCase() !== cfg.cPrimary.toLowerCase() && !fills.has(cfg.cPrimary.toLowerCase())) out.cPrimary = top[0] as Config['cPrimary']
+    let declaredAbsent = true
+    if (opts.brand === 'if-absent') {
+      // Is the declared brand painted anywhere at all — a fill, a text, a border?
+      const want = parseCssColor(cfg.cPrimary); const wantKey = want ? formatCssColor({ ...want, a: 1 }).toLowerCase() : ''
+      for (const el of Array.from(doc.querySelectorAll('body *')).slice(0, 1500)) {
+        const cs = win.getComputedStyle(el)
+        for (const v of [cs.backgroundColor, cs.color, cs.borderTopColor, cs.fill]) {
+          const c = parseCssColor(v); if (!c || c.a < 0.5) continue
+          if (formatCssColor({ ...c, a: 1 }).toLowerCase() === wantKey) { declaredAbsent = false; break }
+        }
+        if (!declaredAbsent) break
+      }
+    }
+    if (top && top[0].toLowerCase() !== cfg.cPrimary.toLowerCase() && !fills.has(cfg.cPrimary.toLowerCase()) && (opts.brand === true || declaredAbsent)) out.cPrimary = top[0] as Config['cPrimary']
   }
+  // The UA's own default ("Times" on a page whose CSS never loaded) is not a
+  // family their code chose: a rendered family the sheets never name and that is
+  // the browser default is left alone (measured on gentelella v2's dev entry).
+  const UA_DEFAULT = /^(times|times new roman|serif)$/i
+  const uaDefault = (fam: string) => UA_DEFAULT.test(fam.split(',')[0]!.trim().replace(/^["']|["']$/g, ''))
   const bodyFam = mode(Array.from(doc.querySelectorAll('p, li, td, th, span, a, label, dd, dt, small, div, section, article, main, body')).slice(0, 600))
-  if (bodyFam) {
+  if (bodyFam && !uaDefault(bodyFam)) {
     const k = knobFont(bodyFam)
     if (k !== cfg.fontBody) out.fontBody = k
   }
   const headFam = mode(Array.from(doc.querySelectorAll('h1, h2, h3, [class*="title"], [class*="heading"]')).slice(0, 100))
-  if (headFam) {
+  if (headFam && !uaDefault(headFam)) {
     const k = knobFont(headFam)
     if (k !== cfg.fontDisplay) out.fontDisplay = k
   } else if (out.fontBody && cfg.fontDisplay === cfg.fontBody) {

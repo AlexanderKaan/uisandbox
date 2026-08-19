@@ -47,8 +47,10 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
   const submitRepo = () => {
     setLocalError(null)
     const m = repo.trim().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?(?:\/(?:tree|commits?)\/([\w./-]+))?\/?$/i)
-    if (!m) { setLocalError('Paste a public GitHub repository URL, like https://github.com/user/repo (a branch path is fine).'); return }
-    onUrl?.(`https://github.com/${m[1]}/${m[2]}${m[3] ? `/tree/${m[3]}` : ''}`)
+    const gl = repo.trim().match(/^(?:https?:\/\/)?(?:www\.)?gitlab\.com\/([\w./-]+?)(?:\.git)?(?:\/-\/(?:tree|commits?)\/([\w./-]+))?\/?$/i)
+    if (m) onUrl?.(`https://github.com/${m[1]}/${m[2]}${m[3] ? `/tree/${m[3]}` : ''}`)
+    else if (gl) onUrl?.(`https://gitlab.com/${gl[1]!.replace(/\/$/, '')}${gl[2] ? `/-/tree/${gl[2]}` : ''}`)
+    else setLocalError('Paste a public GitHub or GitLab repository URL, like https://github.com/user/repo (a branch path is fine).')
   }
 
   const ways: Array<{ id: Way; label: React.ReactNode; icon: React.ReactNode }> = [
@@ -136,12 +138,12 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
               </div>
             ) : (
               <div className="intake__drop intake__drop--repo">
-                <div>Paste a <b>public</b> GitHub repository — its default branch (or a <code>/tree/branch</code> URL) is fetched as a zip and loaded here</div>
+                <div>Paste a <b>public</b> GitHub or GitLab repository — its default branch (or a <code>/tree/branch</code> URL) is fetched as a zip and loaded here</div>
                 <form className="intake__repo" onSubmit={(e) => { e.preventDefault(); submitRepo() }}>
-                  <input className="intake__input" type="url" placeholder="https://github.com/user/repo" value={repo} onChange={(e) => setRepo(e.target.value)} aria-label="GitHub repository URL" spellCheck={false} />
+                  <input className="intake__input" type="url" placeholder="https://github.com/user/repo" value={repo} onChange={(e) => setRepo(e.target.value)} aria-label="GitHub or GitLab repository URL" spellCheck={false} />
                   <button type="submit" className="btn btn--primary"><GitBranch size={15} strokeWidth={1.75} /> Load</button>
                 </form>
-                <div className="intake__note">GitHub does not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it — public repos only, nothing stored. Everything else stays in this tab.</div>
+                <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it — public repos only, nothing stored. Everything else stays in this tab.</div>
               </div>
             )}
             {onSample && (
@@ -170,7 +172,7 @@ function Landing() {
         <h2>How it works</h2>
         <p className="landing__lead">Restyle your app without rebuilding it — try a new look on the real thing, in seconds.</p>
         <ol className="steps">
-          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub repo. Files are read in this tab and served to the frame by a service worker — nothing is uploaded.</li>
+          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in this tab and served to the frame by a service worker — nothing is uploaded.</li>
           <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles, CDN stylesheets and nested frames included.</li>
           <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode — every dial with <em>×1 = as in your code</em> at its centre.</li>
           <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
@@ -196,7 +198,7 @@ function Landing() {
       </section>
       <section className="landing__sec">
         <h2>Nothing leaves your tab</h2>
-        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub URL goes through uisandbox.org to fetch the zip, because GitHub will not let a browser fetch it directly — nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly — nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>

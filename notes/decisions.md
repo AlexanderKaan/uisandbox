@@ -861,3 +861,37 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     chip that is GitHub; both pick the 1:1 chip by name now. The samples are
     kept out of the npm package (19 MB). README's Deploy paragraph said Pages
     + _redirects; it is the Worker. llms.txt had a duplicated bullet.
+
+## Sweep 13 — hardening before launch (2026-08-20)
+
+130. 23 new fixtures: unknown dashboards (AdminLTE, Material Dashboard,
+    Gentelella), docs sites (Docusaurus's own site, monaco, ace, materialize,
+    video.js, bootstrap-icons), squoosh's live build, Flutter WEB builds
+    (fwidget, bmi, cardiohelp, cpu-rendering, MeshSight), source repos that
+    must refuse (Android sunflower, IceCubes iOS, flutter/gallery, expo
+    examples, hugo/PaperMod sources, GitLab hugo), and GitLab archives.
+    86 ok · 4 differs (Polymer 1, docsify, material-dashboard's scroll-JS
+    shadow, ace before the fix) · 12 honest refusals · 0 silent failures.
+131. The 2011 vendor-gradient stack: a declaration holding `-moz-*()`/`-o-*()`/
+    `-ms-*()` is dropped by Chromium at parse time, so the `-webkit-gradient()`
+    one before it wins; a var() inside made it parse, win, and fail at
+    computed-value time — background gone (video.js, ace). Literals inside
+    such declarations stay untouched (DEAD_FN mask + whole-declaration skip).
+132. The door now reads page HEADS, not just names: an index.html that loads
+    `/src/main.ts` (a dev entry) is source (gentelella v2); Flutter source
+    (pubspec.yaml, no main.dart.js, pages only under web/) and Expo/React
+    Native source refuse with the build command to run; a Flutter WEB build
+    loads and the stage says why the knobs find so little CSS (canvas paint).
+133. Brand by paint over a declared-but-absent brand: docusaurus.io declares
+    Infima's #3578e5 and overrides it with hsl(var(--site-…)) the sheet cannot
+    read — the page is green; when the declared colour is painted NOWHERE on
+    the first screen, the paint decides (VitePress's DocSearch default and
+    TodoMVC's unused indigo fell the same way; 76 of 79 unchanged, the three
+    changes all match the visible page). The refine step also never adopts the
+    UA's Times as a font: a family the sheets never name and the browser
+    defaults to is not a choice their code made.
+134. Connect a repo speaks GitLab too: gitlab.com project URLs (nested groups,
+    `/-/tree/branch`) through the same `/__repo/` route via GitLab's API
+    archive endpoint (the web archive answers 406 to a non-browser fetch;
+    `accept-encoding: identity` is required — measured). Default branch from
+    the project API. Copy updated everywhere GitHub was named alone.

@@ -102,6 +102,14 @@ describe('rewriteCss', () => {
     ])
     expect(t.entries[0]!.sites[0]).toEqual({ file: 'x.css', prop: 'color', selector: '.a', seq: 1 })
   })
+  it('leaves literals inside -moz-/-o-/-ms- functions alone: Chromium drops those declarations at parse time; a var() inside would make them win and fail later (measured on video.js, Ace)', () => {
+    const t = new SubstitutionTable()
+    const css = '.a{background:#1F3744 -webkit-gradient(linear,left top,left bottom,from(#0B151A),to(#1F3744));background:#1F3744 -moz-linear-gradient(top,#0B151A,#1F3744);background:-o-linear-gradient(top,#0B151A,#1F3744)}'
+    const out = rewriteCss(css, t, 'x.css')
+    expect(out).toContain('-webkit-gradient(linear,left top,left bottom,from(var(--us-v2)),to(var(--us-v1)))')
+    expect(out).toContain('background:#1F3744 -moz-linear-gradient(top,#0B151A,#1F3744)')
+    expect(out).toContain('-o-linear-gradient(top,#0B151A,#1F3744)')
+  })
   it('CONTROL: a sheet with nothing to tokenise comes back byte-identical', () => {
     const t = sheet()
     const css = `@import url(x.css);\n/* c */\n.a{display:flex;width:50%;transform:translateX(10px)}\n@media (min-width:640px){.b{grid-template-columns:repeat(2,1fr)}}\n@keyframes k{from{opacity:0}to{opacity:1}}\n@font-face{font-family:"X";src:url(x.woff2)}`

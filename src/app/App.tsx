@@ -172,8 +172,9 @@ export function App() {
     if (!untouched) return
     const fromTable = refineFromTable(cur.project.table, base)
     const mid = { ...base, ...(fromTable ?? {}) }
-    // The paint may decide the brand once per project, and never over a declared one.
-    const brandFromPaint = !cur.report.brandDeclared && !cur.brandSeen
+    // The paint may decide the brand once per project — freely when nothing is
+    // declared; over a declared one only when that colour is painted nowhere.
+    const brandFromPaint = cur.brandSeen ? false : cur.report.brandDeclared ? 'if-absent' as const : true
     cur.brandSeen = true
     const fromDoc = refineFromDocument(doc, mid, { brand: brandFromPaint })
     // The canvas the page PAINTS (html/body computed) corrects a body rule from
@@ -217,6 +218,8 @@ export function App() {
     setLoaded({ ...cur })
   }, [])
   const [thin, setThin] = useState<string | null>(null)
+  // A Flutter web build renders to a canvas: the sandbox shows it 1:1, the knobs find no CSS.
+  const flutterWeb = !!loaded && loaded.project.archive.entries.some((e) => /(^|\/)(main\.dart\.js|flutter_bootstrap\.js)$/.test(e.path)) && loaded.project.table.entries.length < 40
   const [missingFiles, setMissingFiles] = useState<string[]>([])
   useEffect(() => onMissing((project) => { if (loadedRef.current?.project.id === project.id) setMissingFiles(missingFor(project)) }), [])
   useEffect(() => { setMissingFiles(loaded ? missingFor(loaded.project) : []) }, [loaded])
@@ -344,9 +347,9 @@ export function App() {
     const url = new URLSearchParams(location.search).get('load')
     if (!url) return
     loadedFromUrl.current = true
-    // A GitHub repository URL works too — `?load=https://github.com/user/repo[/tree/branch]`
+    // A GitHub or GitLab repository URL works too — `?load=https://github.com/user/repo[/tree/branch]`
     // goes through the repo route — so any agent can say a working link.
-    const gh = url.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/[\w.-]+\/[\w.-]+/i) && !/\.zip($|\?)/i.test(url) && !/\/archive\//i.test(url)
+    const gh = url.match(/^(?:https?:\/\/)?(?:www\.)?(github|gitlab)\.com\/[\w.-]+\/[\w.-]+/i) && !/\.zip($|\?)/i.test(url) && !/\/archive\//i.test(url)
     void loadFromUrl(gh ? `/__repo/?u=${encodeURIComponent(url.startsWith('http') ? url : `https://${url}`)}` : url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -414,7 +417,8 @@ export function App() {
               onLoaded={onFrameLoaded}
               onPin={pinCurrent}
               changedCount={changedCount}
-              warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive — ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : null)}
+              warningTitle={!thin && !missingFiles.length && flutterWeb ? 'A Flutter web build' : undefined}
+              warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive — ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : flutterWeb ? `Flutter paints this app into a <canvas>: there is almost no CSS for the knobs to move (${loaded.project.table.entries.length} values found). The 1:1 check and the reach meter still tell the truth about it; a design pass on a Flutter app belongs in its ThemeData.` : null)}
               coverage={coverage}
               notes={showNotes ? (
               <div className="card popcard" role="dialog" aria-label="What was read">

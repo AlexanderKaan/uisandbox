@@ -39,13 +39,13 @@ those reads `host-tampered`.
 
 ## The one thing that leaves the tab: the repo route
 
-"Connect a repo" pastes a public GitHub URL. GitHub's zip endpoint sends no
-CORS headers, so the browser cannot fetch it; `/__repo/?u=…` (worker/repo.mjs,
+"Connect a repo" pastes a public GitHub or GitLab URL. Neither host sends CORS
+headers on repository zips, so the browser cannot fetch them; `/__repo/?u=…` (worker/repo.mjs,
 the same code in the Vite dev server) fetches the zip on the visitor's behalf
 and streams it back. What leaves the tab is the repository URL and the bytes
 of a PUBLIC zip passing through; nothing is stored, no token is ever involved
-(private repos are refused with a clear line), only `github.com` targets are
-accepted, only same-origin callers (`Sec-Fetch-Site: same-origin` / Origin),
+(private repos are refused with a clear line), only `github.com` and
+`gitlab.com` targets are accepted, only same-origin callers (`Sec-Fetch-Site: same-origin` / Origin),
 200 MB cap. The intake says this in one sentence next to the field.
 
 ## What is NOT covered, and what to do about it

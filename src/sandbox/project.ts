@@ -129,10 +129,16 @@ export async function buildProject(archive: Archive, opts: { root?: string; onPr
   // `templates/index.html` is a block template, not a page, and must not be
   // taken for a web root.
   const heads: Array<{ path: string; head: string }> = []
+  let pagesRead = 0
   for (const e of archive.entries) {
-    if (/(^|\/)(package\.json|style\.css)$/.test(e.path) && e.size < 200000) {
+    if (/(^|\/)(package\.json|style\.css|app\.json|pubspec\.yaml)$/.test(e.path) && e.size < 200000) {
       const t = await archive.readText(e)
       if (t) heads.push({ path: e.path, head: t.slice(0, 2000) })
+    } else if (/\.html?$/i.test(e.path) && e.size < 200000 && pagesRead < 80 && !/(^|\/)node_modules\//.test(e.path)) {
+      // The head of every page: a source repo's only "pages" are build
+      // templates (Vite's index.html loading /src/main.ts, Flutter's web/index.html).
+      const t = await archive.readText(e)
+      if (t) { heads.push({ path: e.path, head: t.slice(0, 4000) }); pagesRead++ }
     }
   }
   // Any page counts, not only index.html — JavaScript30's thirty mini-apps are
