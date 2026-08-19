@@ -56,6 +56,11 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
         <h1>Restyle your app<br />without rebuilding it.</h1>
         <p className="hero__sub">Try a new look on your real web app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
+        <ul className="hero__proof" aria-label="In short">
+          <li><Check size={13} strokeWidth={2.5} /> Free</li>
+          <li><Check size={13} strokeWidth={2.5} /> Open source <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">(MIT)</a></li>
+          <li><Check size={13} strokeWidth={2.5} /> Nothing leaves your tab</li>
+        </ul>
       </section>
       <div className="door">
       <div className="card intake__card">
