@@ -31,6 +31,16 @@ npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify 
 
 The conversation this is built for: *"Can I look at this app in a sandbox and change the design a bit?"* → the agent builds, `load`s, `open`s; you play in the real sandbox; *"export what I did"* → `state` → `export`.
 
+## Without an agent
+
+```bash
+npx uisandbox-mcp open ./dist          # a folder or a zip: the sandbox opens in your browser, served from 127.0.0.1
+```
+
+## Slash commands
+
+Where the client shows MCP prompts (Claude Desktop, Claude Code): `/uisandbox:open` (build the current repo, load, open the sandbox) and `/uisandbox:try <change>` (apply, verify 1:1, screenshot, patch). The server also sends `instructions` to the client, so the model knows when to offer the sandbox on its own.
+
 ## Claude Desktop / Claude Code / Cursor
 
 ```json

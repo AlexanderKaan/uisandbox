@@ -77,7 +77,16 @@ const summarise = (p: Loaded) => {
   }
 }
 
-const server = new McpServer({ name: 'uisandbox', version: '0.1.0' })
+const INSTRUCTIONS = `UISandbox renders a BUILT web app 1:1 in a sandbox and turns every CSS literal into a knob that moves the app's own value; "1:1" is measured (a computed-style diff), not promised.
+
+When to use it — and offer it without being asked:
+- The user wants to LOOK at an app in a sandbox or PLAY with its design ("can I see this in a sandbox", "let me try some changes", "what would a different brand colour look like"): build the app if you are in its repo (npm run build / vite build / nuxi generate / next build with output: 'export'), zip the output folder (dist/, build/, out/ — never node_modules or source), \`load\` it, then \`open\`. The real, interactive sandbox opens in their browser from 127.0.0.1; nothing leaves the machine. Tell them it is open and that whatever they turn comes back here: when they return with "export this" / "what did I change" / "check it", call \`state\`, then \`export\` / \`verify\` / \`screenshot\`.
+- The user wants ONE change tried ("try brand #e11d48", "rounder corners"): \`load\` → \`set\` → \`verify\` → \`screenshot\` → \`export\` (patch). Offer \`open\` after.
+- The user is iterating on the look of an app you are working in: offer the sandbox proactively, once.
+
+Rules: never claim more than \`verify\` and the reach meter report — quote the numbers; if a load is refused (iOS/Android/source-only), relay the reason and suggest building first; \`verify\`/\`screenshot\` need a browser (npx playwright install chromium once) — \`open\`, \`load\`, \`set\`, \`export\` do not.`
+
+const server = new McpServer({ name: 'uisandbox', version: '0.3.0' }, { instructions: INSTRUCTIONS })
 
 server.registerTool('load', {
   title: 'Load a built web app',
@@ -265,6 +274,43 @@ server.registerTool('screenshot', {
   })
   return { content: [{ type: 'image', data: png as string, mimeType: 'image/png' }] }
 })
+
+/* ── Prompts: what a client shows as slash commands (/uisandbox:open …) ───── */
+server.registerPrompt('open', {
+  title: 'Open this app in UISandbox',
+  description: 'Build the app in the current repo (or use a zip), load it and open the real sandbox in the browser to play with the design.',
+  argsSchema: { zip: z.string().optional().describe('A zip path or URL; omit to build the current repo') },
+}, ({ zip }) => ({ messages: [{ role: 'user', content: { type: 'text', text: zip
+  ? `Load ${zip} in UISandbox and open the sandbox so I can look at the app and change the design by hand. Tell me when it is open and what you found (screens, brand, families). When I come back, read the state and export what I changed.`
+  : `Open this app in UISandbox: build it first (the framework's build command), zip the output folder (dist/, build/ or out/ — not source), load it and open the sandbox so I can look at it and change the design by hand. Tell me when it is open and what you found (screens, brand, families). When I come back, read the state and export what I changed.` } }] }))
+server.registerPrompt('try', {
+  title: 'Try a design change and verify it',
+  description: 'Load a build, apply knobs (brand, radius, fonts, spacing…), verify it is still 1:1, show a screenshot, give the patch.',
+  argsSchema: { zip: z.string().optional().describe('A zip path or URL; omit to build the current repo'), change: z.string().describe('What to try, e.g. "brand #e11d48 and radius ×1.5"') },
+}, ({ zip, change }) => ({ messages: [{ role: 'user', content: { type: 'text', text: `${zip ? `Load ${zip} in UISandbox` : 'Build this repo, zip the output and load it in UISandbox'}. Then try: ${change}. Verify it is still 1:1 (quote the numbers and the reach), show me a screenshot, and give me the patch. Offer to open the sandbox afterwards.` } }] }))
+
+/* ── CLI: `uisandbox-mcp open <zip|folder>` for a human without an agent ───── */
+const argv = process.argv.slice(2)
+if (argv[0] === 'open' && argv[1]) {
+  const target = argv[1]
+  let bytes: Uint8Array<ArrayBuffer>, name: string
+  if (statSync(target).isDirectory()) {
+    // Zip the folder in memory (store, no compression — it only travels to the browser on this machine).
+    const { zipFolder } = await import('./zipdir')
+    bytes = await zipFolder(target); name = basename(target) + '.zip'
+  } else { const b = readFileSync(target); bytes = new Uint8Array(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer); name = basename(target) }
+  const archive = await openZip(new File([bytes], name.endsWith('.zip') ? name : `${name}.zip`, { type: 'application/zip' }))
+  const project = await buildProject(archive)
+  if (!project.platform.renders || !project.screens.length) { console.error(refusalFor(project.platform, { files: archive.entries.length })); process.exit(2) }
+  const report = await deriveBaseline(archive, project.table)
+  const id = 'cli'
+  projects.set(id, { id, name: archive.rootName, bytes, project, report, cfg: report.baseline.cfg, archive })
+  const { port } = await localServer()
+  const url = `http://127.0.0.1:${port}/?load=${encodeURIComponent(`/__archive/${id}.zip`)}&sync=${id}`
+  openInBrowser(url)
+  console.log(`UISandbox is open: ${url}\n${project.screens.length} screens · ${project.table.entries.length} values · brand ${report.baseline.cfg.cPrimary}\nCtrl-C to stop.`)
+  await new Promise(() => {})
+}
 
 const transport = new StdioServerTransport()
 await server.connect(transport)

@@ -338,7 +338,10 @@ export function App() {
     const url = new URLSearchParams(location.search).get('load')
     if (!url) return
     loadedFromUrl.current = true
-    void loadFromUrl(url)
+    // A GitHub repository URL works too — `?load=https://github.com/user/repo[/tree/branch]`
+    // goes through the repo route — so any agent can say a working link.
+    const gh = url.match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/[\w.-]+\/[\w.-]+/i) && !/\.zip($|\?)/i.test(url) && !/\/archive\//i.test(url)
+    void loadFromUrl(gh ? `/__repo/?u=${encodeURIComponent(url.startsWith('http') ? url : `https://${url}`)}` : url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

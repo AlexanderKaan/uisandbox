@@ -1,6 +1,6 @@
 {
   "name": "uisandbox-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "UISandbox as an MCP server: open the real sandbox in your browser with your built web app loaded, turn its own knobs, verify 1:1, export CSS/patch/tokens/Swift/Android. Test your design on the real thing.",
   "type": "module",
   "bin": {

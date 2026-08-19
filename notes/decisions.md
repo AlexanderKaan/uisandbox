@@ -761,3 +761,12 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     inside the repo. Noted: the Claude Code browser pane refuses service
     workers on arbitrary localhost ports; a normal Chrome and headless
     Chromium load the local sandbox fine.
+118. **Making a model reach for it** (uisandbox-mcp 0.3.0): the server now
+    sends `instructions` at connect (the host puts them in the system prompt:
+    when to offer the sandbox unasked, build-then-open, the two request
+    shapes, the honesty rules) and two MCP prompts the clients show as slash
+    commands (`/uisandbox:open`, `/uisandbox:try`) — the skill is no longer
+    the only way in. For humans without an agent: `npx uisandbox-mcp open
+    ./dist` (folder or zip). For any model without MCP: a link it can say —
+    `uisandbox.org/?load=https://github.com/user/repo` goes through the repo
+    route.
