@@ -177,7 +177,7 @@ function Landing() {
         </ol>
       </section>
       <figure className="shot">
-        <img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" />
+        <picture><source srcSet="/shot-stage-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" /></picture>
         <figcaption>A real build in the sandbox. Brand turned to crimson — five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
       </figure>
       <section className="landing__sec landing__cols">
@@ -188,9 +188,9 @@ function Landing() {
           <p><b>It refuses what it cannot show.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
         </div>
         <figure className="shot shot--stack" aria-label="Three things the tool says out loud">
-          <img src="/shot-verify.png" alt="The 1:1 check card: 67 elements paired, zero computed-style differences across 18 properties" loading="lazy" width="944" height="358" />
-          <img src="/shot-reach.png" alt="The reach card: of 66 visible elements, how many the knobs touch — colours, type, radii — and what lies outside" loading="lazy" width="936" height="430" />
-          <img src="/shot-refusal.png" alt="A refusal at the door: web source without a built page — build it first, then drop the output folder" loading="lazy" width="1148" height="110" />
+          <picture><source srcSet="/shot-verify-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-verify.png" alt="The 1:1 check card: 67 elements paired, zero computed-style differences across 18 properties" loading="lazy" width="880" height="296" /></picture>
+          <picture><source srcSet="/shot-reach-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-reach.png" alt="The reach card: of 66 visible elements, how many the knobs touch — colours, type, radii — and what lies outside" loading="lazy" width="880" height="376" /></picture>
+          <picture><source srcSet="/shot-refusal-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-refusal.png" alt="A refusal at the door: web source without a built page — build it first, then drop the output folder" loading="lazy" width="1148" height="110" /></picture>
           <figcaption>The check, the reach meter, a refusal — each a real screenshot.</figcaption>
         </figure>
       </section>
