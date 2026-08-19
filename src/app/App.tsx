@@ -9,6 +9,7 @@ import { buildProject, discoverRoutes, type SandboxProject, type Screen } from '
 import { refusalFor } from '../sandbox/platform'
 import { Mark, GithubMark } from './Mark'
 import { McpButton } from './McpButton'
+import { Footer } from './Footer'
 import type { Progress } from './progress'
 import { track, needsConsent, setConsent } from '../analytics'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
@@ -420,6 +421,7 @@ export function App() {
           </div>
         )}
       </div>
+      <Footer />
       {showExport && loaded && (
         <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
       )}

@@ -129,9 +129,6 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
           <li>iOS and Android apps: no browser renders them — the knobs still export Swift and Android constants (Export → iOS / Android).</li>
           <li>Nothing leaves this tab: files are read here and served to the frame by a service worker on this origin.</li>
         </ul>
-        <div className="intake__fine">
-          Made with ♥ by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a> · <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT</a>, free forever · <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">Source</a>
-        </div>
       </div>
     </div>
   )
