@@ -18,3 +18,7 @@ Lines to use with them: *Restyle your app without rebuilding it.* · *Try a new 
 Repo → Settings → General → *Social preview* → Edit → upload `og-site-light.png` (1200×630; the same image the site's link card uses). Topics to set: `design-tokens`, `design-system`, `theming`, `css`, `sandbox`, `mcp`, `mcp-server`, `claude-code`.
 
 Copy per channel: [`copy.md`](copy.md).
+
+## The demo clip (gif/)
+
+`demo-agency.gif|mp4` (the landing page — brand yellow → sky → ember, the whole hero follows) and `demo-metro.gif|mp4` (the docs site). ~8 s, 1200 px mp4 / 1000 px gif, looping, no audio. Recorded from the real app by `node scripts/og/demo-gif.mjs` (Playwright video, dev server on :5190), cut with ffmpeg: hero + click (1.4 s), then the stage at 1.2× from the moment it renders to the 1:1 card. PH gallery first slot, X (mp4), README header (gif).
