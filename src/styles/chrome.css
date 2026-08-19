@@ -25,7 +25,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   --app-surface-2: #f8f9fb;
   --app-fg:        #1a1a1d;
   --app-fg-muted:  #6b6b73;
-  --app-fg-faint:  #9a9aa1;
+  --app-fg-faint:  #6e6e78;
   --app-border:    #e3e5ea;
   --app-hover:     rgba(0, 0, 0, 0.04);
   --app-accent:    #1a1a1d;
@@ -47,7 +47,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
     --app-surface-2: #202028;
     --app-fg:        #ececf1;
     --app-fg-muted:  #a3a3ad;
-    --app-fg-faint:  #6f6f7a;
+    --app-fg-faint:  #8a8a96;
     --app-border:    #2b2b34;
     --app-hover:     rgba(255, 255, 255, 0.06);
     --app-accent:    #ececf1;

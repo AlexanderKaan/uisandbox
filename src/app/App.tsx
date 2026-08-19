@@ -318,8 +318,13 @@ export function App() {
     try {
       const host = (() => { try { const u = new URL(url, location.href); return u.pathname.startsWith('/__repo/') ? (new URL(u.searchParams.get('u') ?? '', location.href).host || 'github.com') : u.host } catch { return url } })()
       setBusy({ stage: 'fetch', what: host, bytes: 0 })
-      const res = await fetch(url)
+      let res: Response
+      try { res = await fetch(url) } catch {
+        throw new Error(`The browser could not fetch that URL from ${host} — the server must allow CORS (or it is offline). A public GitHub repository URL works regardless: it goes through this site's repo route.`)
+      }
       if (!res.ok) throw new Error(res.status === 404 ? `Nothing at ${host} for that URL (${res.status}).` : `${res.status} fetching from ${host}.`)
+      const ct = res.headers.get('content-type') || ''
+      if (/text\/html/i.test(ct)) throw new Error(`That URL answered with a web page, not a zip — check the link (a direct link to a .zip file, or a public GitHub repository).`)
       // Read the body in chunks so the door can count the megabytes coming in.
       const size = Number(res.headers.get('content-length') || 0) || undefined
       const chunks: BlobPart[] = []
