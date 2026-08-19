@@ -40,7 +40,7 @@ export function ExportDialog({ cfg, table, vars, projectName, files, fontCss, on
   const items = useMemo<Item[]>(() => [
     { id: 'files', group: 'Your files, patched', label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet', file: 'patched-files.txt', make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first — then your CSS/HTML appear here with the new values written in place. */' },
     { id: 'sheet-css', group: 'Your values', label: 'CSS variables', file: 'sandbox-values.css', make: () => genSheetCss(table, vars) },
-    { id: 'sheet-changed', group: 'Your values', label: 'CSS — changed only', file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
+    { id: 'sheet-changed', group: 'Your values', label: 'CSS, changed only', file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
     { id: 'sheet-patch', group: 'Your values', label: 'Patch list (find → replace)', file: 'sandbox-patch.txt', make: () => genPatch(table, vars) },
     { id: 'sheet-json', group: 'Your values', label: 'JSON', file: 'sandbox-values.json', make: () => genSheetJson(table, vars) },
     { id: 'tokens-css', group: 'The tokens', label: 'tokens.css', file: 'tokens.css', make: () => genCss(cfg) },
@@ -77,7 +77,7 @@ export function ExportDialog({ cfg, table, vars, projectName, files, fontCss, on
     <div className="dialog__backdrop" onClick={onClose}>
       <div className="card dialog" role="dialog" aria-label="Export" onClick={(e) => e.stopPropagation()}>
         <div className="dialog__head">
-          <h2>Export — exactly what is in the sandbox</h2>
+          <h2>Export: exactly what is in the sandbox</h2>
           <span className="stage__spacer" style={{ flex: 1 }} />
           <button type="button" className="btn btn--secondary btn--sm" onClick={downloadAll}><Download size={13} strokeWidth={2} /> Everything (.zip)</button>
           <button type="button" className="btn btn--ghost btn--icon" onClick={onClose} aria-label="Close"><X size={15} /></button>

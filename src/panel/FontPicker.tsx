@@ -129,7 +129,7 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
       onChange(prefixedName)
       setOpen(false)
     } catch {
-      setError('Could not load font — try a .woff2 file.')
+      setError('Could not load font. Try a .woff2 file.')
     }
   }
 
@@ -197,7 +197,7 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
       {!inline && missingCustom && (
         <div className="fp__warn" role="status">
           <AlertCircle size={12} strokeWidth={1.75} />
-          Custom font was lost on reload — re-upload to preview.
+          Custom font was lost on reload. Re-upload to preview.
         </div>
       )}
       {showMenu && (
@@ -279,7 +279,7 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
                       </button>
                       {error && <div id="font-upload-error" className="fp__error">{error}</div>}
                       <div className="fp__upload-disclaimer">
-                        Stays in this browser session — never uploaded.
+                        Stays in this browser session, never uploaded.
                       </div>
                     </div>
                   )}

@@ -19,9 +19,9 @@ type Way = 'zip' | 'folder' | 'repo'
 
 /** Three real open-source builds (MIT) served from this origin — names people know, with colour everywhere the knobs reach. */
 const SAMPLES = [
-  { path: '/samples/bootstrap-docs.zip', label: 'Bootstrap docs', title: 'getbootstrap.com — the Bootstrap 5.3 docs build, 114 screens, 8 MB' },
-  { path: '/samples/vitepress-site.zip', label: 'VitePress site', title: 'vitepress.dev — 259 screens, 5 MB' },
-  { path: '/samples/sb-admin-dashboard.zip', label: 'Admin dashboard', title: 'Start Bootstrap SB Admin 2 — 13 screens, 6 MB' },
+  { path: '/samples/bootstrap-docs.zip', label: 'Bootstrap docs', title: 'getbootstrap.com: the Bootstrap 5.3 docs build (114 screens, 8 MB)' },
+  { path: '/samples/vitepress-site.zip', label: 'VitePress site', title: 'vitepress.dev (259 screens, 5 MB)' },
+  { path: '/samples/sb-admin-dashboard.zip', label: 'Admin dashboard', title: 'Start Bootstrap SB Admin 2 (13 screens, 6 MB)' },
 ]
 
 /**
@@ -65,7 +65,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
         <div className="intake__mark"><Mark size={44} /></div>
         <div className="hero__kicker">Test your design on the real thing</div>
         <h1>Play with your real<br />app's design, live.</h1>
-        <p className="hero__sub">Drop your built web app — in your browser or from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob; turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+        <p className="hero__sub">Drop your built web app, in your browser or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob; turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
@@ -126,24 +126,24 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
                 <DropGlyph kind={way === 'zip' ? 'zip' : 'folder'} />
                 {way === 'zip' ? (
                   <>
-                    <div>Drop the <b>.zip</b> of your build here — its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, or a whole repo that carries the build inside</div>
+                    <div className="intake__copy">Drop your <b>.zip</b> here. Its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, or a whole repo that carries the build inside.</div>
                     <div className="intake__choices"><button type="button" className="btn btn--primary" onClick={() => zipRef.current?.click()}><FileArchive size={15} strokeWidth={1.75} /> Choose a zip</button></div>
                   </>
                 ) : (
                   <>
-                    <div>Drop a <b>folder</b> here — the build folder renders 1:1; a source folder is read for the knob stand only (a build is needed to render)</div>
+                    <div className="intake__copy">Drop a <b>folder</b> here. The build folder renders 1:1; a source folder is read for the knob stand only.</div>
                     <div className="intake__choices"><button type="button" className="btn btn--primary" onClick={() => dirRef.current?.click()}><FolderOpen size={15} strokeWidth={1.75} /> Choose a folder</button></div>
                   </>
                 )}
               </div>
             ) : (
               <div className="intake__drop intake__drop--repo">
-                <div>Paste a <b>public</b> GitHub or GitLab repository — its default branch (or a <code>/tree/branch</code> URL) is fetched as a zip and loaded here</div>
+                <div className="intake__copy">Paste a <b>public</b> GitHub or GitLab repository. Its default branch (or a <code>/tree/branch</code> URL) is fetched as a zip and loaded here.</div>
                 <form className="intake__repo" onSubmit={(e) => { e.preventDefault(); submitRepo() }}>
                   <input className="intake__input" type="url" placeholder="https://github.com/user/repo" value={repo} onChange={(e) => setRepo(e.target.value)} aria-label="GitHub or GitLab repository URL" spellCheck={false} />
                   <button type="submit" className="btn btn--primary"><GitBranch size={15} strokeWidth={1.75} /> Load</button>
                 </form>
-                <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it — public repos only, nothing stored. Everything else stays in this tab.</div>
+                <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it. Public repos only, nothing stored. Everything else stays in this tab.</div>
               </div>
             )}
             {onSample && (
@@ -170,44 +170,44 @@ function Landing() {
     <div className="landing">
       <section className="landing__sec">
         <h2>How it works</h2>
-        <p className="landing__lead">Restyle your app without rebuilding it — try a new look on the real thing, in seconds.</p>
+        <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, in seconds.</p>
         <ol className="steps">
-          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in this tab and served to the frame by a service worker — nothing is uploaded.</li>
-          <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles, CDN stylesheets and nested frames included.</li>
-          <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode — every dial with <em>×1 = as in your code</em> at its centre.</li>
+          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in this tab and served to the frame by a service worker; nothing is uploaded.</li>
+          <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included.</li>
+          <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode. Every dial has <em>×1 = as in your code</em> at its centre.</li>
           <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
         </ol>
       </section>
       <figure className="shot">
         <picture><source srcSet="/shot-stage-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" /></picture>
-        <figcaption>A real build in the sandbox. Brand turned to crimson — five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
+        <figcaption>A real build in the sandbox. Brand turned to crimson: five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
       </figure>
       <section className="landing__sec landing__cols">
         <div>
           <h2>Honest by construction</h2>
           <p><b>"1:1" is measured.</b> <em>Check 1:1</em> loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences, or it says what differs.</p>
-          <p><b>A reach meter</b> says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).</p>
+          <p><b>A reach meter</b> says how much of what you see the knobs touch (painted colours, families, sizes, radii) and what lies outside: images, canvas, video.</p>
           <p><b>It refuses what it cannot show.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
         </div>
         <figure className="shot shot--stack" aria-label="Three things the tool says out loud">
           <picture><source srcSet="/shot-verify-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-verify.png" alt="The 1:1 check card: 67 elements paired, zero computed-style differences across 18 properties" loading="lazy" width="880" height="296" /></picture>
           <picture><source srcSet="/shot-reach-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-reach.png" alt="The reach card: of 66 visible elements, how many the knobs touch — colours, type, radii — and what lies outside" loading="lazy" width="880" height="376" /></picture>
           <picture><source srcSet="/shot-refusal-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-refusal.png" alt="A refusal at the door: web source without a built page — build it first, then drop the output folder" loading="lazy" width="1148" height="110" /></picture>
-          <figcaption>The check, the reach meter, a refusal — each a real screenshot.</figcaption>
+          <figcaption>The check, the reach meter, a refusal. Each a real screenshot.</figcaption>
         </figure>
       </section>
       <section className="landing__sec">
         <h2>Nothing leaves your tab</h2>
-        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly — nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>
-        <p>The same engine runs as an MCP server, and as a <b>Claude Code skill</b> — <code>/uisandbox</code>. Say <em>"open this app in UISandbox"</em> and it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. The plugin installs the skill and the server in one step; any MCP client (Cursor, Claude Desktop, Codex) gets the server and its own <code>/uisandbox:open</code> prompt. Or <code>npx uisandbox-mcp open ./dist</code> without any agent.</p>
+        <p>The same engine runs as an MCP server, and as a <b>Claude Code skill</b>, <code>/uisandbox</code>. Say <em>"open this app in UISandbox"</em> and it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. The plugin installs the skill and the server in one step; any MCP client (Cursor, Claude Desktop, Codex) gets the server and its own <code>/uisandbox:open</code> prompt. Or <code>npx uisandbox-mcp open ./dist</code> without any agent.</p>
         <InstallLine />
       </section>
       <section className="landing__sec landing__sec--quiet">
         <h2>Who made this</h2>
-        <p>UISandbox is made by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a>. MIT, free forever, <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">open source</a>. Every decision that shaped it — and every trap it fell into — is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a>.</p>
+        <p>UISandbox is made by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a>. MIT, free forever, <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">open source</a>. Every decision that shaped it (and every trap it fell into) is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a>.</p>
       </section>
     </div>
   )

@@ -192,7 +192,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       value: <span className="fmrow__dots">{pal.map((hex, i) => <span key={i} className="fmrow__dot" style={{ background: hex }} title={hex} />)}</span>,
       body: () => (
         <>
-          <p className="sbp__hint">{families.palette!.length} colour famil{families.palette!.length === 1 ? 'y' : 'ies'} in your CSS that are neither the brand nor a status role — pastel tints on cards, categories, chart series. They are not touched by the Status pickers; Hue, Saturation and Contrast move them.</p>
+          <p className="sbp__hint">{families.palette!.length} colour famil{families.palette!.length === 1 ? 'y' : 'ies'} in your CSS that are neither the brand nor a status role: pastel tints on cards, categories, chart series. They are not touched by the Status pickers; Hue, Saturation and Contrast move them.</p>
           <div className="fmrow__dots" style={{ gap: 6, padding: '4px 10px 8px' }}>{pal.map((hex, i) => <span key={i} className="fmrow__dot" style={{ background: hex, width: 14, height: 14 }} title={hex} />)}</div>
         </>
       ),
@@ -266,7 +266,7 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       <div className="card fmenu">
         <div className="fmenu__bar">
           <span className="fmenu__bar-title">Your app · knobs</span>
-          <button type="button" className="btn btn--ghost btn--icon fmenu__collapse" onClick={onCollapse} aria-label="Collapse" title="Collapse — full-width preview"><PanelLeftClose size={15} strokeWidth={1.75} /></button>
+          <button type="button" className="btn btn--ghost btn--icon fmenu__collapse" onClick={onCollapse} aria-label="Collapse" title="Collapse for a full-width preview"><PanelLeftClose size={15} strokeWidth={1.75} /></button>
         </div>
         <div className="fmenu__rows">
           {rows.map((r) => (
@@ -300,8 +300,8 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
             <button type="button" className="panel__hist" onClick={history.redo} disabled={!history.canRedo} title="Redo (⇧⌘Z)" aria-label="Redo"><Redo2 size={15} strokeWidth={1.75} /></button>
           </span>
         )}
-        <button type="button" className="btn btn--secondary panel__shuffle" onClick={onRandomize} title="Shuffle — a random stand on every knob"><Shuffle size={15} strokeWidth={1.75} /><span>Shuffle</span></button>
-        <button type="button" className="btn btn--ghost panel__reset" onClick={onReset} disabled={atRest} title={atRest ? 'Every knob is on your code' : 'Back to your code — every knob'}><RotateCcw size={15} strokeWidth={1.75} /><span>Reset</span></button>
+        <button type="button" className="btn btn--secondary panel__shuffle" onClick={onRandomize} title="Shuffle: a random stand on every knob"><Shuffle size={15} strokeWidth={1.75} /><span>Shuffle</span></button>
+        <button type="button" className="btn btn--ghost panel__reset" onClick={onReset} disabled={atRest} title={atRest ? 'Every knob is on your code' : 'Back to your code, every knob'}><RotateCcw size={15} strokeWidth={1.75} /><span>Reset</span></button>
       </div>
     </aside>
   )

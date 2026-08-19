@@ -113,7 +113,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
           // the TOP window (`top.location = …` in a hostile build hijacked the
           // whole app). No allow-top-navigation, no downloads.
           sandbox={SANDBOX_FLAGS}
-          title={`${project.name} — ${screen.label}`}
+          title={`${project.name} · ${screen.label}`}
           src={src}
           style={w ? { width: w, maxWidth: '100%' } : undefined}
           onLoad={() => {
@@ -131,7 +131,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
           <div className="card popcard popcard--low verify" role="dialog" aria-label="Reach">
             <h3>What the knobs reach on this screen</h3>
             <div>Of {coverage.elements} visible elements: <b>{coverage.colours.hit}/{coverage.colours.total}</b> painted colours (text, backgrounds, borders), <b>{coverage.fonts.hit}/{coverage.fonts.total}</b> text families, <b>{coverage.sizes.hit}/{coverage.sizes.total}</b> text sizes and <b>{coverage.radii.hit}/{coverage.radii.total}</b> corner radii come from your CSS literals and follow the knobs.</div>
-            <div style={{ marginTop: 6 }}>Outside any knob: {coverage.outside.images} image{coverage.outside.images === 1 ? '' : 's'}, {coverage.outside.canvas} canvas, {coverage.outside.video} video, {coverage.outside.backgroundImages} background image{coverage.outside.backgroundImages === 1 ? '' : 's'} — pixels no CSS value can move.</div>
+            <div style={{ marginTop: 6 }}>Outside any knob: {coverage.outside.images} image{coverage.outside.images === 1 ? '' : 's'}, {coverage.outside.canvas} canvas, {coverage.outside.video} video, {coverage.outside.backgroundImages} background image{coverage.outside.backgroundImages === 1 ? '' : 's'}: pixels no CSS value can move.</div>
             <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowCov(false)}>Close</button></div>
           </div>
         )}
@@ -141,14 +141,14 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         {leftSandbox && (
           <div className="card popcard popcard--low verify" role="status">
             <h3>This screen left the sandbox</h3>
-            <div>The page navigated to another origin (a redirect page, or a script that sends visitors elsewhere). Nothing there is yours to tune — pick another screen.</div>
+            <div>The page navigated to another origin (a redirect page, or a script that sends visitors elsewhere). Nothing there is yours to tune; pick another screen.</div>
           </div>
         )}
         </div>
         <div ref={hiddenHost} aria-hidden="true" />
         {showVerify && (
           <div className="card popcard verify" role="dialog" aria-label="1:1 check">
-            <h3>1:1 check — untouched vs. tokenised, identity sheet</h3>
+            <h3>1:1 check: untouched vs. tokenised, identity sheet</h3>
             {!verify || 'busy' in verify ? (
               <div>Loading both versions of this screen and comparing every element…</div>
             ) : verify.refusal ? (
@@ -157,7 +157,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
               <div>✓ <b>{verify.elements}</b> elements paired, <b>0</b> computed-style differences across 18 properties.{verify.unpaired.raw + verify.unpaired.sandbox > 0 ? ` ${verify.unpaired.raw + verify.unpaired.sandbox} elements differed between the two loads (ads, widgets) and were left out.` : ''} What you see is your CSS with its literals replaced by variables holding the very same values.</div>
             ) : (
               <div>
-                ✗ {verify.mismatches.length}{verify.mismatches.length >= 40 ? '+' : ''} differences on {verify.elements} elements — a rewriter gap. Please report the first few:
+                ✗ {verify.mismatches.length}{verify.mismatches.length >= 40 ? '+' : ''} differences on {verify.elements} elements, a rewriter gap. Please report the first few:
                 <ul className="verify__list">
                   {verify.mismatches.slice(0, 12).map((m, i) => (
                     <li key={i}>&lt;{m.tag}&gt;#{m.index} {m.prop}: {m.raw} → {m.sandbox}</li>
@@ -176,11 +176,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         <span><b>{project.name}</b>{project.root ? ` · root ${project.root}/` : ''} · {project.screens.length} screen{project.screens.length === 1 ? '' : 's'} · {project.table.entries.length} values tokenised from {Math.round(project.cssBytes / 1024)} KB of CSS</span>
         <span className="stage__spacer" />
         {coverage && (
-          <button type="button" className={`chip ${pct(coverage.colours) < 80 ? 'chip--warn' : ''}`} onClick={() => setShowCov((v) => !v)} title="How much of what you see the knobs reach — measured on this screen">
+          <button type="button" className={`chip ${pct(coverage.colours) < 80 ? 'chip--warn' : ''}`} onClick={() => setShowCov((v) => !v)} title="How much of what you see the knobs reach, measured on this screen">
             reach {pct(coverage.colours)}% colours · {pct(coverage.fonts)}% type · {pct(coverage.radii)}% radii{coverage.outside.images + coverage.outside.canvas + coverage.outside.backgroundImages ? ` · ${coverage.outside.images + coverage.outside.canvas + coverage.outside.backgroundImages} outside` : ''}
           </button>
         )}
-        {changedCount > 0 ? <span className="chip chip--warn"><span className="chip__dot" />{changedCount} value{changedCount === 1 ? '' : 's'} moved</span> : <span className="chip chip--ok"><span className="chip__dot" />identity — nothing turned</span>}
+        {changedCount > 0 ? <span className="chip chip--warn"><span className="chip__dot" />{changedCount} value{changedCount === 1 ? '' : 's'} moved</span> : <span className="chip chip--ok"><span className="chip__dot" />identity: nothing turned</span>}
         <button type="button" className="chip" onClick={runVerify} title="Measure: compare the untouched page with the tokenised page, element by element">
           <ShieldCheck size={12} strokeWidth={2} /> {verify && !('busy' in verify) ? (verify.ok ? '1:1 verified' : verify.refusal ? '1:1 unmeasured' : '1:1 differs') : 'Check 1:1'}
         </button>

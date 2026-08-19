@@ -23,7 +23,7 @@ export function McpButton() {
         <div className="card mcp__pop" role="dialog" aria-label="MCP server">
           <div className="mcp__head">
             <b>Use it from your agent</b>
-            <span>Load a build, turn the knobs, verify 1:1, export the patch — as MCP tools.</span>
+            <span>Load a build, turn the knobs, verify 1:1, export the patch, as MCP tools.</span>
           </div>
           <InstallLine />
         </div>

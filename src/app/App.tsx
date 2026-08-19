@@ -106,7 +106,7 @@ export function App() {
   // The tab title says which project is open (a hostile page may rewrite it —
   // security.md — so it is set from here on every load, not trusted).
   useEffect(() => {
-    document.title = loaded ? `UISandbox — ${loaded.project.name}` : "UISandbox — Play with your real app's design, live"
+    document.title = loaded ? `UISandbox · ${loaded.project.name}` : "UISandbox · Play with your real app's design, live"
   }, [loaded])
   const changedCount = useMemo(() => {
     if (!loaded) return 0
@@ -260,7 +260,7 @@ export function App() {
         if (!first.shell) { setThin(null); return }
         setTimeout(() => {
           const m = measure()
-          setThin(m.shell ? `This screen rendered ${m.els} element${m.els === 1 ? '' : 's'}, ${m.rules} style rules and ${m.text} characters of visible text — it looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
+          setThin(m.shell ? `This screen rendered ${m.els} element${m.els === 1 ? '' : 's'}, ${m.rules} style rules and ${m.text} characters of visible text. It looks like a shell, not the app (a page the server fills in, a build that needs its API, or a folder without its CSS). What you see here is not what your users see.` : null)
         }, 2800)
       }, 1200)
     }
@@ -324,11 +324,11 @@ export function App() {
       setBusy({ stage: 'fetch', what: host, bytes: 0 })
       let res: Response
       try { res = await fetch(url) } catch {
-        throw new Error(`The browser could not fetch that URL from ${host} — the server must allow CORS (or it is offline). A public GitHub repository URL works regardless: it goes through this site's repo route.`)
+        throw new Error(`The browser could not fetch that URL from ${host}: the server must allow CORS (or it is offline). A public GitHub repository URL works regardless: it goes through this site's repo route.`)
       }
       if (!res.ok) throw new Error(res.status === 404 ? `Nothing at ${host} for that URL (${res.status}).` : `${res.status} fetching from ${host}.`)
       const ct = res.headers.get('content-type') || ''
-      if (/text\/html/i.test(ct)) throw new Error(`That URL answered with a web page, not a zip — check the link (a direct link to a .zip file, or a public GitHub repository).`)
+      if (/text\/html/i.test(ct)) throw new Error(`That URL answered with a web page, not a zip. Check the link (a direct link to a .zip file, or a public GitHub repository).`)
       // Read the body in chunks so the door can count the megabytes coming in.
       const size = Number(res.headers.get('content-length') || 0) || undefined
       const chunks: BlobPart[] = []
@@ -418,7 +418,7 @@ export function App() {
               onPin={pinCurrent}
               changedCount={changedCount}
               warningTitle={!thin && !missingFiles.length && flutterWeb ? 'A Flutter web build' : undefined}
-              warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive — ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : flutterWeb ? `Flutter paints this app into a <canvas>: there is almost no CSS for the knobs to move (${loaded.project.table.entries.length} values found). The 1:1 check and the reach meter still tell the truth about it; a design pass on a Flutter app belongs in its ThemeData.` : null)}
+              warning={thin ?? (missingFiles.length ? `${missingFiles.length === 1 ? 'A file' : `${missingFiles.length} files`} this page asked for ${missingFiles.length === 1 ? 'is' : 'are'} not in the archive: ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '…' : ''}. That usually means source, not the built output: parts of the page cannot run here.` : flutterWeb ? `Flutter paints this app into a <canvas>: there is almost no CSS for the knobs to move (${loaded.project.table.entries.length} values found). The 1:1 check and the reach meter still tell the truth about it; a design pass on a Flutter app belongs in its ThemeData.` : null)}
               coverage={coverage}
               notes={showNotes ? (
               <div className="card popcard" role="dialog" aria-label="What was read">
@@ -443,7 +443,7 @@ export function App() {
         {!loaded && <Intake onArchive={onArchive} onUrl={(u) => void loadFromUrl(`/__repo/?u=${encodeURIComponent(u)}`)} onSample={(p) => void loadFromUrl(p)} busy={busy} error={error} />}
         {askConsent && (
           <div className="consent" role="dialog" aria-label="Analytics">
-            <span>We count visits with Google Analytics — no names, nothing about your files. OK?</span>
+            <span>We count visits with Google Analytics. No names, nothing about your files. OK?</span>
             <button type="button" className="btn btn--primary btn--sm" onClick={() => { setConsent(true); setAskConsent(false) }}>OK</button>
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setConsent(false); setAskConsent(false) }}>No thanks</button>
           </div>

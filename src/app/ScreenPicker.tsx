@@ -71,7 +71,7 @@ export function ScreenPicker({ screens, current, onPick, onPin }: ScreenPickerPr
 
   return (
     <div className="spick" ref={rootRef}>
-      <button type="button" className="spick__btn" onClick={() => setOpen((v) => !v)} aria-haspopup="listbox" aria-expanded={open} title={`${current.path} — ${idx + 1} of ${screens.length} screens · [ ] to step`}>
+      <button type="button" className="spick__btn" onClick={() => setOpen((v) => !v)} aria-haspopup="listbox" aria-expanded={open} title={`${current.path} · ${idx + 1} of ${screens.length} screens · [ ] to step`}>
         <span className="spick__cur">{current.label}</span>
         <span className="spick__n">{idx + 1}/{screens.length}</span>
         <ChevronDown size={13} strokeWidth={2} />
