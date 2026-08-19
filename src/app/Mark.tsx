@@ -32,7 +32,10 @@ export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
           <>
             <path className="dropglyph__paper" d="M9 8h15l8 8v24a2.5 2.5 0 0 1-2.5 2.5H9A2.5 2.5 0 0 1 6.5 40V10.5A2.5 2.5 0 0 1 9 8z" />
             <path className="dropglyph__fold" d="M24 8v8h8" />
-            <path className="dropglyph__lines" d="M12 22h11M12 27h11M12 32h7" />
+            {/* the zipper: teeth down the left, the pull at the bottom */}
+            <path className="dropglyph__zipper" d="M14.5 11v17" />
+            <rect className="dropglyph__pull" x="11.5" y="28" width="6" height="8" rx="1.6" />
+            <path className="dropglyph__pullhole" d="M14.5 31.5v2" />
           </>
         ) : (
           <>

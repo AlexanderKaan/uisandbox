@@ -222,6 +222,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .dropglyph__paper { fill: url(#dg-item); stroke: var(--app-fg); stroke-width: 1.8; }
 .dropglyph__fold, .dropglyph__lines { fill: none; stroke: var(--app-fg); stroke-width: 1.8; }
 .dropglyph__lines { opacity: .45; stroke-width: 1.6; }
+.dropglyph__zipper { fill: none; stroke: var(--app-fg); stroke-width: 1.8; stroke-dasharray: 1.8 1.8; stroke-linecap: butt; }
+.dropglyph__pull { fill: var(--app-surface); stroke: var(--app-fg); stroke-width: 1.6; }
+.dropglyph__pullhole { fill: none; stroke: var(--app-fg); stroke-width: 1.4; stroke-linecap: round; }
 .dropglyph__item { animation: nudge 3.2s ease-in-out infinite; transform-origin: 20px 26px; }
 @keyframes nudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
 .dropglyph__arc { fill: none; stroke-linecap: round; }
