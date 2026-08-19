@@ -10,11 +10,23 @@ const LINES: Array<{ id: string; label: string; cmd: string; hint: string }> = [
 
 /** The one-line install, the way tools show it: `$ npx …`, copy, a small
  *  switch for the shapes it comes in. */
-export function InstallLine() {
+export function InstallLine({ compact = false }: { compact?: boolean } = {}) {
   const [which, setWhich] = useState('cli')
   const [copied, setCopied] = useState(false)
   const line = LINES.find((l) => l.id === which)!
   const copy = async () => { try { await navigator.clipboard.writeText(line.cmd); setCopied(true); setTimeout(() => setCopied(false), 1400) } catch { /* selectable anyway */ } }
+  if (compact) {
+    const cli = LINES[0]!
+    return (
+      <div className="install install--compact">
+        <div className="install__pill">
+          <span className="install__prompt" aria-hidden>$</span>
+          <code className="install__cmd">{cli.cmd}</code>
+          <button type="button" className="install__copy" onClick={async () => { try { await navigator.clipboard.writeText(cli.cmd); setCopied(true); setTimeout(() => setCopied(false), 1400) } catch { /* selectable */ } }} aria-label="Copy" title="Copy">{copied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} />}</button>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="install">
       <div className="install__tabs" role="tablist" aria-label="How to install">

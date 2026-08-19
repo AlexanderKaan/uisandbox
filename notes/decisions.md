@@ -777,3 +777,11 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     list like any other. The official Anthropic marketplace is a submission
     (the human's step). Codex/Cursor have no marketplace yet: there the
     server's own `instructions` and prompts carry the behaviour.
+120. **The one-pager around the door.** The intake card became the hero's
+    centre (upload is the focus, the card holds only the three ways in); the
+    headline, sub and the `$ npx uisandbox-mcp open ./dist` pill sit above it,
+    and below come How it works · a real screenshot (our own acme fixture,
+    Brand turned to crimson) · Honest by construction (+ the 1:1 card) ·
+    Nothing leaves your tab · From your terminal or your agent (the install
+    tabs) · Who made this. Black and white, no claim the meter would
+    contradict. `scripts/og/shots.mjs` renders the screenshots from the app.

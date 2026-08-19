@@ -50,10 +50,13 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
 
   return (
     <div className="intake">
+      <section className="hero">
+        <div className="intake__mark"><Mark size={44} /></div>
+        <h1>Test your design<br />on the real thing.</h1>
+        <p className="hero__sub">Drop your <b>built</b> web app. It renders here 1:1 — measured, not promised — and every colour, radius, font, size and shadow in its CSS becomes a knob that moves <em>your</em> value. Export exactly what you see.</p>
+        <InstallLine compact />
+      </section>
       <div className="card intake__card">
-        <div className="intake__mark"><Mark size={40} /></div>
-        <h1>Test your design on the real thing.</h1>
-        <p>Your <b>built</b> web app renders here 1:1 — measured, not promised — and every colour, radius, font, size and shadow in its CSS becomes a knob that moves <em>your</em> value. Export exactly what you see.</p>
 
         {busy ? (
           <ol className="intake__stages" aria-live="polite">
@@ -125,13 +128,53 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
           </>
         )}
         {(error || localError) && <div className="intake__error">{error || localError}</div>}
-        {!busy && <InstallLine />}
-        <ul className="intake__how">
-          <li>Vite / React / Vue / Svelte: <code>npm run build</code> → <code>dist/</code>. Next.js: <code>output: 'export'</code> → <code>out/</code>. Astro / Eleventy / plain HTML: the output folder.</li>
-          <li>iOS and Android apps: no browser renders them — the knobs still export Swift and Android constants (Export → iOS / Android).</li>
-          <li>Nothing leaves this tab: files are read here and served to the frame by a service worker on this origin.</li>
-        </ul>
       </div>
+      {!busy && <Landing />}
+    </div>
+  )
+}
+
+/** The one-pager under the door: what it does, what moves, how it stays honest, for agents. Plain, black and white, no claims the meter would contradict. */
+function Landing() {
+  return (
+    <div className="landing">
+      <section className="landing__sec">
+        <h2>How it works</h2>
+        <ol className="steps">
+          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub repo. Files are read in this tab and served to the frame by a service worker — nothing is uploaded.</li>
+          <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles, CDN stylesheets and nested frames included.</li>
+          <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode — every dial with <em>×1 = as in your code</em> at its centre.</li>
+          <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
+        </ol>
+      </section>
+      <figure className="shot">
+        <img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" />
+        <figcaption>A real build in the sandbox. Brand turned to crimson — five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
+      </figure>
+      <section className="landing__sec landing__cols">
+        <div>
+          <h2>Honest by construction</h2>
+          <p><b>"1:1" is measured.</b> <em>Check 1:1</em> loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences, or it says what differs.</p>
+          <p><b>A reach meter</b> says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).</p>
+          <p><b>It refuses what it cannot show.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
+        </div>
+        <figure className="shot shot--small">
+          <img src="/shot-verify.png" alt="The 1:1 check card: elements paired, zero computed-style differences" loading="lazy" />
+        </figure>
+      </section>
+      <section className="landing__sec">
+        <h2>Nothing leaves your tab</h2>
+        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub URL goes through uisandbox.org to fetch the zip, because GitHub will not let a browser fetch it directly — nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+      </section>
+      <section className="landing__sec">
+        <h2>From your terminal, or from your agent</h2>
+        <p>The same engine runs as an MCP server. In Claude Code say <em>"open this app in UISandbox"</em> — it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. Or <code>npx uisandbox-mcp open ./dist</code> without any agent.</p>
+        <InstallLine />
+      </section>
+      <section className="landing__sec landing__sec--quiet">
+        <h2>Who made this</h2>
+        <p>UISandbox is made by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a>. MIT, free forever, <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">open source</a>. Every decision that shaped it — and every trap it fell into — is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a>.</p>
+      </section>
     </div>
   )
 }
