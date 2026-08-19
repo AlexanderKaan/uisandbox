@@ -54,7 +54,7 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
         <div className="intake__mark"><Mark size={44} /></div>
         <div className="hero__kicker">Test your design on the real thing</div>
         <h1>Restyle your app<br />without rebuilding it.</h1>
-        <p className="hero__sub">Try a new look on your real app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+        <p className="hero__sub">Try a new look on your real web app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
       </section>
       <div className="door">

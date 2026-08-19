@@ -47,7 +47,7 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 <h1 align="center">UISandbox</h1>
 
 <p align="center"><b>Restyle your app without rebuilding it.</b><br>
-Try a new look on your real app — in seconds. Drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
+Try a new look on your real web app — in seconds. Drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
 <sub>Test your design on the real thing.</sub></p>
 
 <p align="center">

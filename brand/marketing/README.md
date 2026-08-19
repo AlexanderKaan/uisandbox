@@ -11,7 +11,7 @@ All rendered from the real app (nothing drawn by hand) — regenerate after a de
 | `stage-acme-brand-crimson.png` | a real build (our acme fixture) in the sandbox, Brand turned to crimson | `node scripts/og/shots.mjs` |
 | `verify-card.png` | the 1:1 check card | idem |
 
-Lines to use with them: *Restyle your app without rebuilding it.* · *Try a new look on your real app — in seconds.* · kicker: *Test your design on the real thing.*
+Lines to use with them: *Restyle your app without rebuilding it.* · *Try a new look on your real web app — in seconds.* · kicker: *Test your design on the real thing.*
 
 ## Social preview (GitHub)
 

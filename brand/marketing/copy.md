@@ -1,6 +1,6 @@
 # Copy — the lines, per channel
 
-The three lines, in this order of use: **Restyle your app without rebuilding it.** (headline) · *Try a new look on your real app — in seconds.* (body) · *Test your design on the real thing.* (kicker/slogan). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
+The three lines, in this order of use: **Restyle your app without rebuilding it.** (headline) · *Try a new look on your real web app — in seconds.* (body) · *Test your design on the real thing.* (kicker/slogan). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
 
 ## X — the pinned post (with the GIF or `site-hero-light-1440.png`)
 
@@ -31,7 +31,7 @@ What I cared about most is honesty. "1:1" is measured: a check loads the untouch
 
 Nothing leaves the tab — no server behind it. The one exception is "connect a repo" (GitHub sends no CORS on zips, so a same-origin route fetches it; nothing stored). A hostile archive cannot navigate the page away or unregister the worker; the security note is in the repo.
 
-Limits, so you don't have to find them: raster logos are outside any knob; iOS/Android don't render (the knobs still export Swift/Android constants); very large builds (45 MB of CSS) are slow.
+Limits, so you don't have to find them: it is for web apps — a native iOS or Android app does not render here (the door says so; the knobs still export Swift and Android constants); raster logos are outside any knob; very large builds (45 MB of CSS) are slow.
 
 There is also an MCP server (`npx uisandbox-mcp`) — in Claude Code, "open this app in UISandbox" builds, loads and opens the real sandbox; what you turn comes back so "export what I changed" works — and a CLI: `npx uisandbox-mcp open ./dist`.
 
