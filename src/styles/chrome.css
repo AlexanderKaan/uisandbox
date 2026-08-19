@@ -186,9 +186,18 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .intake__drop--over { background: var(--app-hover); }
 /* The dashed edge that walks — an SVG stroke so the dash can move. */
 .intake__ants { position: absolute; inset: -1.5px; width: calc(100% + 3px); height: calc(100% + 3px); pointer-events: none; overflow: visible; }
-.intake__ants rect { fill: none; stroke: var(--app-border); stroke-width: 1.5; stroke-dasharray: 6 6; animation: ants 1.4s linear infinite; transition: stroke var(--app-dur) var(--app-ease); }
-.intake__drop--over .intake__ants rect { stroke: var(--app-fg); animation-duration: .6s; }
+.intake__ants rect { fill: none; }
+.intake__ants-dash { stroke: var(--app-border); stroke-width: 1.5; stroke-dasharray: 6 6; animation: ants 1.4s linear infinite; transition: stroke var(--app-dur) var(--app-ease); }
+.intake__drop--over .intake__ants-dash { stroke: var(--app-fg); animation-duration: .6s; }
 @keyframes ants { to { stroke-dashoffset: -12; } }
+/* The travelling light: a soft halo and a crisp head on the same path, going
+   round once every 7 s (faster and brighter while something hovers). */
+.intake__glow { stroke-linecap: round; stroke-dasharray: 90 910; animation: glow-run 7s linear infinite; }
+.intake__glow--halo { stroke: var(--app-fg); stroke-width: 6; opacity: .18; filter: blur(4px); }
+.intake__glow--head { stroke: var(--app-fg); stroke-width: 1.5; opacity: .9; stroke-dasharray: 34 966; }
+.intake__drop--over .intake__glow { animation-duration: 2.2s; }
+.intake__drop--over .intake__glow--halo { opacity: .32; }
+@keyframes glow-run { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
 /* The file/folder that glides into the tray. */
 .dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg-muted); }
 .dropglyph path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -203,7 +212,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   100% { transform: translateY(6px) scale(.92); opacity: 0; }
 }
 .intake__drop--over .dropglyph__item { animation-duration: 1.2s; }
-@media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .dropglyph__item { animation: none; transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .intake__glow { display: none; } .dropglyph__item { animation: none; transform: none; opacity: 1; } }
 .intake__choices { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 .intake__fine { font-size: 12px; color: var(--app-fg-faint); margin-top: 16px; }
 .intake__error { color: var(--app-danger); margin-top: 12px; font-size: 12.5px; }

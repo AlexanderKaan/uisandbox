@@ -99,7 +99,12 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
                   void takeFiles(files.length ? files : dropped)
                 }}
               >
-                <svg className="intake__ants" aria-hidden="true"><rect x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="12" ry="12" /></svg>
+                <svg className="intake__ants" aria-hidden="true">
+                  <rect className="intake__ants-dash" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="12" ry="12" />
+                  {/* a light that travels the edge: pathLength normalises the dash to any size */}
+                  <rect className="intake__glow intake__glow--halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="12" ry="12" pathLength={1000} />
+                  <rect className="intake__glow intake__glow--head" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="12" ry="12" pathLength={1000} />
+                </svg>
                 <DropGlyph kind={way === 'zip' ? 'zip' : 'folder'} />
                 {way === 'zip' ? (
                   <>
