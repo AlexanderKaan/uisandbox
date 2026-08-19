@@ -7,3 +7,4 @@ fixtures/*.zip
 .holdouts/
 mcp/dist/
 mcp/*.tgz
+mcp/mcp-publisher
