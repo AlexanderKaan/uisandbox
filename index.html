@@ -14,7 +14,7 @@
     <meta name="application-name" content="UISandbox" />
     <meta name="author" content="Alexander Kaan, Pageminds" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="color-scheme" content="light dark" />
     <!-- Open Graph / Twitter -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="UISandbox" />
@@ -61,23 +61,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <style>
+      /* The pre-mount block follows the visitor's scheme like the app does: light first, dark on request. */
+      .pre{--bg:#f4f5f8;--sf:#fff;--fg:#1a1a1d;--mu:#6b6b73;--fa:#6e6e78;--bd:#e3e5ea;--fb:#18191d;--ff:#8f8fa3;--fl:#c9c9d3;display:flex;flex-direction:column;height:100%;font-family:Inter,system-ui,sans-serif;color:var(--fg);background:var(--bg)}
+      @media (prefers-color-scheme: dark){.pre{--bg:#121216;--sf:#1b1b21;--fg:#ececf1;--mu:#a3a3ad;--fa:#8a8a96;--bd:#2b2b34}}
+      .pre header{height:50px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;font-size:14px;font-weight:700}
+      .pre header span{display:inline-block;width:16px;height:16px;background:var(--fg);border-radius:3px;margin-right:8px}
+      .pre main{flex:1;padding:48px 24px 64px;display:flex;flex-direction:column;align-items:center;text-align:center}
+      .pre .m{width:44px;height:44px;background:var(--fg);border-radius:4px;margin-top:12px}
+      .pre .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fa);margin-top:14px}
+      .pre h1{font-size:clamp(34px,6vw,56px);line-height:1.02;letter-spacing:-.03em;margin:8px 0 16px;font-weight:700}
+      .pre .s{font-size:16px;line-height:1.5;color:var(--mu);max-width:58ch;margin:0 auto 18px}
+      .pre .i{width:min(440px,100%);height:48px;border:1px solid var(--bd);border-radius:999px;margin:0 auto 28px;background:var(--sf)}
+      .pre .c{width:min(680px,100%);min-height:320px;border:1px solid var(--bd);border-radius:16px;background:var(--sf);padding:28px 24px;box-sizing:border-box;font-size:14px;color:var(--mu)}
+      .pre .c p{margin:0 0 10px}.pre .c p:last-child{margin:0}.pre .c b{color:var(--fg)}.pre .c a{color:var(--fg)}
+      .pre footer{padding:9px 16px;background:var(--fb);color:var(--ff);font-size:11.5px;text-align:center}.pre footer a{color:var(--fl)}
+    </style>
     <div id="root">
-      <!-- What a crawler or a no-JS visitor sees; the app replaces this on mount. Laid out like the hero it is replaced by, so the swap does not shift the page. -->
-      <div style="display:flex;flex-direction:column;height:100%;font-family:Inter,system-ui,sans-serif;color:#ececf1;background:#121216">
-        <header style="height:50px;border-bottom:1px solid #2b2b34;display:flex;align-items:center;padding:0 16px;font-size:14px;font-weight:700;color:#ececf1"><span style="display:inline-block;width:16px;height:16px;background:#ececf1;border-radius:3px;margin-right:8px"></span>UISandbox</header>
-        <main style="flex:1;padding:48px 24px 64px;display:flex;flex-direction:column;align-items:center;text-align:center">
-          <div style="width:44px;height:44px;background:#ececf1;border-radius:4px;margin-top:12px"></div>
-          <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6f6f7a;margin-top:14px">Test your design on the real thing</div>
-          <h1 style="font-size:clamp(34px,6vw,56px);line-height:1.02;letter-spacing:-.03em;margin:8px 0 16px;font-weight:700">Restyle your app<br>without rebuilding it.</h1>
-          <p style="font-size:16px;line-height:1.5;color:#a3a3ad;max-width:58ch;margin:0 auto 18px">Try a new look on your real app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
-          <div style="width:min(440px,100%);height:48px;border:1px solid #2b2b34;border-radius:999px;margin:0 auto 28px"></div>
-          <div style="width:min(680px,100%);min-height:320px;border:1px solid #2b2b34;border-radius:16px;background:#1b1b21;padding:28px 24px;box-sizing:border-box;font-size:14px;color:#a3a3ad">
-            <p style="margin:0 0 10px">Drop the <b style="color:#ececf1">built</b> site — its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, a zip, or a public GitHub repo. It renders 1:1 in the browser; nothing is uploaded (files are read in the page and served to the frame by a service worker on this origin).</p>
-            <p style="margin:0">Knobs: brand and the colour families your CSS contains, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, your dark mode. Export: CSS, JSON, a patch, your files patched, design tokens, Swift and Android constants. Free, MIT. <a href="https://github.com/AlexanderKaan/uisandbox" style="color:#c9c9d3">Source</a> · <a href="/llms.txt" style="color:#c9c9d3">llms.txt</a> · <a href="https://www.npmjs.com/package/uisandbox-mcp" style="color:#c9c9d3">MCP server</a></p>
+      <!-- What a crawler or a no-JS visitor sees; the app replaces this on mount. Laid out and coloured like the hero it is replaced by, so the swap neither shifts nor flashes. -->
+      <div class="pre">
+        <header><span></span>UISandbox</header>
+        <main>
+          <div class="m"></div>
+          <div class="k">Test your design on the real thing</div>
+          <h1>Restyle your app<br>without rebuilding it.</h1>
+          <p class="s">Try a new look on your real app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+          <div class="i"></div>
+          <div class="c">
+            <p>Drop the <b>built</b> site — its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, a zip, or a public GitHub repo. It renders 1:1 in the browser; nothing is uploaded (files are read in the page and served to the frame by a service worker on this origin).</p>
+            <p>Knobs: brand and the colour families your CSS contains, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, your dark mode. Export: CSS, JSON, a patch, your files patched, design tokens, Swift and Android constants. Free, MIT. <a href="https://github.com/AlexanderKaan/uisandbox">Source</a> · <a href="/llms.txt">llms.txt</a> · <a href="https://www.npmjs.com/package/uisandbox-mcp">MCP server</a></p>
           </div>
-          <noscript><p style="margin-top:16px;color:#a3a3ad">UISandbox needs JavaScript and a browser with service workers.</p></noscript>
+          <noscript><p style="margin-top:16px">UISandbox needs JavaScript and a browser with service workers.</p></noscript>
         </main>
-        <footer style="padding:9px 16px;background:#18191d;color:#8f8fa3;font-size:11.5px;text-align:center">Made with ♥ by <a href="https://github.com/AlexanderKaan" style="color:#c9c9d3">Alexander Kaan</a> at <a href="https://pageminds.com/" style="color:#c9c9d3">Pageminds</a> · © Pageminds · MIT, free forever</footer>
+        <footer>Made with ♥ by <a href="https://github.com/AlexanderKaan">Alexander Kaan</a> at <a href="https://pageminds.com/">Pageminds</a> · © Pageminds · MIT, free forever</footer>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

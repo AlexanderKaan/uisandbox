@@ -830,3 +830,10 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     work only — Read · Export · Close. Undo/redo moved to the panel foot as one
     segmented pair next to Shuffle and Reset (all four are "what I did with the
     knobs"; ⌘Z still works). MCP and Star stay on the homepage and in the footer.
+126. The dark flash on load was the pre-mount block in index.html: it was
+    authored dark, and `color-scheme: dark light` told the browser to prefer
+    dark before any CSS — a second of dark canvas for every light visitor.
+    The block now follows the visitor's scheme like the app (light first,
+    dark under prefers-color-scheme) from a small inline stylesheet, and the
+    meta reads `light dark`. The footer's CSS had been swallowed by a block
+    replace in 1627858 (unstyled footer on the live site) — restored.
