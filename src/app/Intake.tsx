@@ -186,8 +186,11 @@ function Landing() {
           <p><b>A reach meter</b> says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).</p>
           <p><b>It refuses what it cannot show.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
         </div>
-        <figure className="shot shot--small">
-          <img src="/shot-verify.png" alt="The 1:1 check card: elements paired, zero computed-style differences" loading="lazy" />
+        <figure className="shot shot--stack" aria-label="Three things the tool says out loud">
+          <img src="/shot-verify.png" alt="The 1:1 check card: 67 elements paired, zero computed-style differences across 18 properties" loading="lazy" width="944" height="358" />
+          <img src="/shot-reach.png" alt="The reach card: of 66 visible elements, how many the knobs touch — colours, type, radii — and what lies outside" loading="lazy" width="936" height="430" />
+          <img src="/shot-refusal.png" alt="A refusal at the door: web source without a built page — build it first, then drop the output folder" loading="lazy" width="1148" height="110" />
+          <figcaption>The check, the reach meter, a refusal — each a real screenshot.</figcaption>
         </figure>
       </section>
       <section className="landing__sec">

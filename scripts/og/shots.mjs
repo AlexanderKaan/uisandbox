@@ -21,3 +21,19 @@ const card = await p.$('.verify[aria-label="1:1 check"]')
 const box = await card.boundingBox()
 await p.screenshot({ path: 'public/shot-verify.png', clip: { x: box.x - 16, y: box.y - 16, width: box.width + 32, height: box.height + 32 } })
 await b.close(); console.log('wrote shot-stage.png, shot-verify.png')
+
+// --- The other two artefacts in "Honest by construction": the reach card and a refusal at the door.
+{
+  const b2 = await chromium.launch(); const p2 = await b2.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
+  await p2.goto(`${base}/?load=/fixtures/acme-dist.zip`, { waitUntil: 'domcontentloaded' })
+  await p2.waitForSelector('.stage__foot', { timeout: 60000 }); await p2.waitForTimeout(2000)
+  await p2.evaluate(() => { document.querySelectorAll('.popcard button').forEach((b) => { if (/^Close$/.test(b.textContent || '')) b.click() }) })
+  await p2.click('.stage__foot .chip:has-text("reach")'); await p2.waitForTimeout(400)
+  const bb = await (await p2.$('.popcard')).boundingBox()
+  await p2.screenshot({ path: 'public/shot-reach.png', clip: { x: bb.x - 14, y: bb.y - 14, width: bb.width + 28, height: bb.height + 28 } })
+  await p2.setViewportSize({ width: 900, height: 900 })
+  await p2.goto(`${base}/?load=/fixtures/twentytwentyfour-trunk.zip`, { waitUntil: 'domcontentloaded' })
+  await p2.waitForSelector('.intake__error', { timeout: 60000 }); await p2.waitForTimeout(300)
+  const err = p2.locator('.intake__error'); await err.scrollIntoViewIfNeeded(); await err.screenshot({ path: 'public/shot-refusal.png' })
+  await b2.close(); console.log('wrote shot-reach.png, shot-refusal.png')
+}

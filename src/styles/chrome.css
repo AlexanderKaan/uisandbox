@@ -362,6 +362,10 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .shot img { display: block; width: 100%; height: auto; }
 .shot figcaption { padding: 10px 14px; font-size: 12.5px; color: var(--app-fg-faint); border-top: 1px solid var(--app-border); }
 .shot--small { border-radius: 10px; }
+/* Three artefacts stacked to the column's height: the 1:1 card, the reach chips, a refusal. */
+.shot--stack { border: 0; background: transparent; overflow: visible; display: flex; flex-direction: column; gap: 12px; align-self: center; }
+.shot--stack img { border: 1px solid var(--app-border); border-radius: 10px; background: var(--app-surface); box-shadow: var(--app-shadow-sm); }
+.shot--stack figcaption { border: 0; padding: 0 2px; }
 .landing__sec--quiet p { font-size: 13.5px; }
 .landing code { font-size: 12.5px; background: var(--app-hover); padding: 1px 5px; border-radius: 4px; }
 
