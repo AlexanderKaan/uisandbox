@@ -363,10 +363,11 @@ export function App() {
   }, [undo, redo])
 
 
+  const closeProject = () => { if (!loaded) return; disown(loaded.project); setLoaded(null); reset(DEFAULT_CONFIG) }
   return (
     <div className="app">
       <header className="app__topbar">
-        <span className="app__brand"><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>{loaded ? loaded.project.name : 'Interface Design Playground'}</small></span>
+        <a className="app__brand" href="/" title={loaded ? 'Close this project and go home' : 'UISandbox'} onClick={(e) => { if (loaded) { e.preventDefault(); closeProject() } }}><span className="app__brand-mark"><Mark size={16} /></span>UISandbox <small>{loaded ? loaded.project.name : 'Interface Design Playground'}</small></a>
         <span className="app__spacer" />
         {!loaded && (
           <div className="app__group">
@@ -378,7 +379,7 @@ export function App() {
           <div className="app__group">
             <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes((v) => !v)} title="What we read from your code"><Info size={14} /> Read</button>
             <button type="button" className="btn btn--primary btn--sm" onClick={() => setShowExport(true)}><Download size={14} /> Export</button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { disown(loaded.project); setLoaded(null); reset(DEFAULT_CONFIG) }} title="Close this project"><X size={14} /> Close</button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={closeProject} title="Close this project"><X size={14} /> Close</button>
           </div>
         )}
       </header>

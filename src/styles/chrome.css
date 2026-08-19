@@ -118,7 +118,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   border-bottom: 1px solid var(--app-border);
   background: var(--app-bg);
 }
-.app__brand { font-weight: 700; letter-spacing: -0.02em; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+.app__brand { color: inherit; text-decoration: none; font-weight: 700; letter-spacing: -0.02em; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
 .app__brand-mark { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; overflow: hidden; color: var(--app-fg); }
 .app__brand small { font-weight: 500; color: var(--app-fg-faint); }
 .app__spacer { flex: 1; }
@@ -299,24 +299,21 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 @keyframes intake-pulse { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-fg) 35%, transparent); } 50% { box-shadow: 0 0 0 5px transparent; } }
 @media (prefers-reduced-motion: reduce) { .intake__stage--now .intake__stage-dot { animation: none; } }
 
-/* === MCP: the install line, one click away === */
+/* === MCP: the install line, one click away — the same jacket as Star === */
 .mcp { position: relative; }
-.mcp__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(460px, 92vw); padding: 14px 16px; text-align: left; }
-.mcp__pop h3 { margin: 0 0 6px; font-size: 13px; }
-.mcp__pop p { margin: 0 0 10px; font-size: 12.5px; color: var(--app-fg-muted); }
-.mcp__row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-.mcp__row--block { align-items: flex-start; }
-.mcp__code { flex: 1; margin: 0; padding: 7px 10px; border-radius: 8px; background: var(--app-hover); border: 1px solid var(--app-border); font: 12px/1.5 "JetBrains Mono", ui-monospace, monospace; color: var(--app-fg); white-space: pre; overflow-x: auto; user-select: all; }
-.mcp__fine { font-size: 11.5px; color: var(--app-fg-faint); margin: 6px 0 0; }
-.mcp__fine a { color: var(--app-fg-muted); }
-
-/* === The footer: one line, muted, on the intake and the stage === */
-.foot { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; justify-content: center; padding: 9px 16px; background: #18191d; color: #8f8fa3; font-size: 11.5px; line-height: 1.4; }
-.foot a { color: #c9c9d3; text-decoration: underline; text-decoration-color: rgba(201, 201, 211, .35); text-underline-offset: 2px; }
-.foot a:hover { color: #ececf1; }
-.foot__links { display: inline-flex; gap: 10px; }
-.foot__sep { opacity: .6; }
-@media (max-width: 720px) { .foot__sep { display: none; } .foot { gap: 4px 12px; } }
+.mcp__btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px 0 10px; border: 1px solid var(--app-border); border-radius: 8px; background: var(--app-surface); color: var(--app-fg); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease); }
+.mcp__btn:hover, .mcp__btn--on { border-color: var(--app-fg-muted); }
+.mcp__btn--on { background: var(--app-hover); }
+.mcp__btn svg:first-child { color: var(--app-fg-muted); }
+.mcp__chev { color: var(--app-fg-faint); transition: transform var(--app-dur) var(--app-ease); }
+.mcp__btn--on .mcp__chev { transform: rotate(180deg); }
+.mcp__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(440px, 92vw); padding: 14px 16px 16px; text-align: left; }
+.mcp__head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.mcp__head b { font-size: 13px; }
+.mcp__head span { font-size: 12px; color: var(--app-fg-muted); }
+.mcp__pop .install { margin: 0; max-width: none; }
+.mcp__pop .install__pill { border-radius: 10px; padding: 7px 6px 7px 12px; font-size: 12.5px; }
+.mcp__pop .install__copy { width: 28px; height: 28px; }
 
 /* === The install line on the intake: `$ npx …`, copy, four shapes === */
 .install { margin: 18px auto 0; max-width: 560px; }
