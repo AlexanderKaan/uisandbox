@@ -4,7 +4,7 @@ import { Check, Copy } from 'lucide-react'
 const LINES: Array<{ id: string; label: string; cmd: string; hint: string }> = [
   { id: 'cli', label: 'Terminal', cmd: 'npx uisandbox-mcp open ./dist', hint: 'Opens the sandbox in your browser with your build folder (or a zip).' },
   { id: 'claude', label: 'Claude Code', cmd: 'claude mcp add uisandbox -- npx -y uisandbox-mcp', hint: 'Then: "open this app in UISandbox" — it builds, loads, opens.' },
-  { id: 'plugin', label: 'Plugin', cmd: '/plugin marketplace add AlexanderKaan/uisandbox', hint: 'Then /plugin install uisandbox@uisandbox — the /uisandbox skill + server.' },
+  { id: 'plugin', label: 'Claude Code plugin', cmd: '/plugin marketplace add AlexanderKaan/uisandbox', hint: 'Then /plugin install uisandbox@uisandbox — the /uisandbox skill and the MCP server in one.' },
   { id: 'mcp', label: 'Any MCP client', cmd: 'npx -y uisandbox-mcp', hint: 'Cursor, Claude Desktop, Codex: add as a stdio server.' },
 ]
 
