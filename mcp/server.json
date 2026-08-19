@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.AlexanderKaan/uisandbox",
+  "description": "Test your design on the real thing: load a built web app, turn its own knobs (colours, fonts, radii, spacing), verify it is still 1:1, export CSS/patch/tokens/Swift/Android.",
+  "title": "UISandbox",
+  "repository": { "url": "https://github.com/AlexanderKaan/uisandbox", "source": "github" },
+  "websiteUrl": "https://uisandbox.org",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "uisandbox-mcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        { "name": "UISANDBOX_URL", "description": "The app the render tools drive (verify, screenshot). Default https://uisandbox.org", "isRequired": false, "format": "string" }
+      ]
+    }
+  ]
+}

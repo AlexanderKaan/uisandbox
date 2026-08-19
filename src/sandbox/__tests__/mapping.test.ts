@@ -74,13 +74,14 @@ describe('families come from THEIR sheet', () => {
 
 describe('brand knob', () => {
   const rose = { ...theirCfg, cPrimary: COLOR_THEMES.rose.cPrimary }
-  it('rotates the brand family by the hue delta of --k-primary, and only that family', () => {
+  it('the brand centre becomes the pick exactly; its family moves by the same delta; nothing else moves', () => {
     const { table, out } = vars(rose)
-    const b = parseCssColor(byValue(table, out, 'color', '#4f39f6'))!
-    const base = parseCssColor(String(buildTokens(theirCfg).vars['--k-primary']))!
-    const now = parseCssColor(String(buildTokens(rose).vars['--k-primary']))!
-    const expectedH = ((parseCssColor('#4f39f6')!.H + hueDelta(base.H, now.H)) % 360 + 360) % 360
-    expect(Math.abs(hueDelta(b.H, expectedH))).toBeLessThan(2)
+    // THEIR literal → the pick, not the kit's normalised --k-primary (a crimson
+    // pick on a cyan brand came out pink through that).
+    expect(byValue(table, out, 'color', '#4f39f6')).toBe(rose.cPrimary.toLowerCase())
+    const hover = parseCssColor(byValue(table, out, 'color', '#4338ca'))!
+    const expectedH = ((parseCssColor('#4338ca')!.H + hueDelta(parseCssColor('#4f39f6')!.H, parseCssColor(rose.cPrimary)!.H)) % 360 + 360) % 360
+    expect(Math.abs(hueDelta(hover.H, expectedH))).toBeLessThan(2)
     expect(byValue(table, out, 'color', '#0d9488')).toBe('#0d9488') // secondary untouched
     expect(byValue(table, out, 'color', '#16a34a')).toBe('#16a34a')
     expect(byValue(table, out, 'color', '#ffffff')).toBe('#ffffff')

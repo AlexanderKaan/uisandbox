@@ -354,7 +354,7 @@ function applyGlobal(c: Okla, sb: Dials): Okla {
 }
 
 /** One colour through its family mapping, then the global dials. */
-function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, sb: Dials, fams: Families): Okla {
+function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, sb: Dials, fams: Families, brandPick = ''): Okla {
   let mapped: Okla
   // The Background picker: the canvas itself, and every background neutral in
   // its lightness zone (surfaces, cards, stripes — a dark footer stays), move
@@ -373,7 +373,11 @@ function mapColor(c: Okla, fam: Family, e: Entry | null, base: Vars, now: Vars, 
   if (fam === 'keep' || fam === 'palette') mapped = c
   else if (fam === 'neutral') mapped = e ? mapNeutral(c, e, base, now, sb) : c
   else if (fam === 'brand') {
-    const b = parseCssColor(str(base['--k-primary'])), n = parseCssColor(str(now['--k-primary']))
+    // THEIR brand literal is the centre and the PICK is the target — not the
+    // kit's `--k-primary`, which normalises lightness/chroma for its own
+    // contrast rules: mapped through that, a crimson pick on a cyan brand came
+    // out pink (#1eaedb → #ff737d), and the centre never became the pick.
+    const b = fams.centre.brand ?? parseCssColor(str(base['--k-primary'])), n = parseCssColor(brandPick) ?? parseCssColor(str(now['--k-primary']))
     mapped = b && n ? mapByDelta(c, b, n) : c
   } else {
     const pick = sb[FAMILY_DIAL[fam]!] as string | undefined
@@ -393,7 +397,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       const c = parseCssColor(e.value)
       if (!c) return e.value
       const fam = fams.of.get(e.id) ?? 'keep'
-      const mapped = mapColor(c, fam, e, base, now, sb, fams)
+      const mapped = mapColor(c, fam, e, base, now, sb, fams, cfg.cPrimary)
       if (same(mapped, c)) return e.value
       const printed = formatLike(e.value, mapped)
       // The same pixels in another spelling are not a change (a black hairline
@@ -443,7 +447,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       let out = e.value.replace(/(%23|#)([0-9a-f]{3,8})\b/gi, (m0, hash: string, hex: string) => {
         const c = parseCssColor('#' + hex)
         if (!c) return m0
-        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams)
+        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams, cfg.cPrimary)
         if (same(mapped, c)) return m0
         changed = true
         const printed = formatLike('#000000', { ...mapped, a: 1 })
@@ -453,7 +457,7 @@ export function mapEntry(e: Entry, base: Vars, now: Vars, baseCfg: Config, cfg: 
       out = out.replace(/(rgba?)(\(|%28)([^)%]*?)(\)|%29)/gi, (m0, fn: string, open: string, inner: string, closeP: string) => {
         const c = parseCssColor(`${fn}(${inner.replace(/%2c/gi, ',')})`)
         if (!c) return m0
-        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams)
+        const mapped = mapColor(c, familyOfColor(c, fams), null, base, now, sb, fams, cfg.cPrimary)
         if (same(mapped, c)) return m0
         changed = true
         const printed = formatLike('rgb(0 0 0 / 0.5)', mapped) // → rgb(r g b / a) or #hex

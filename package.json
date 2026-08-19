@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json",
     "holdouts": "node scripts/holdouts.mjs",
-    "mcp": "tsx mcp/server.ts"
+    "mcp": "tsx mcp/server.ts",
+    "mcp:build": "vite build --config mcp/vite.config.ts",
+    "mcp:pack": "pnpm mcp:build && cd mcp && npm pack"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

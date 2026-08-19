@@ -5,3 +5,5 @@ bench/audit-*/
 *.tsbuildinfo
 fixtures/*.zip
 .holdouts/
+mcp/dist/
+mcp/*.tgz

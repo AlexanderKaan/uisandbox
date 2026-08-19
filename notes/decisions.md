@@ -727,3 +727,15 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
 112. Listings (registries, directories) are the human's step; the repo now
     carries what they ask for (mcp/README.md: tools, config, a prompt to
     paste) and llms.txt points at it.
+113. **`uisandbox-mcp` on npm** (pack-ready; publishing is the human's `npm
+    login`): the engine bundled into one Node ESM file by Vite (`pnpm
+    mcp:build`), the SDK and zod as dependencies, playwright an optional
+    peer (only `verify`/`screenshot` need a browser). Tested from a clean
+    `npm i <tarball>`: load → set → patch → verify ✓ (against the live site)
+    → screenshot in 8 s. `mcp/server.json` for the official registry.
+114. **Brand mapping bug, found by the smoke test**: the brand family was
+    mapped through the kit's `--k-primary`, which normalises lightness and
+    chroma for its own contrast rules — a crimson pick on Skeleton's cyan came
+    out pink (#1eaedb → #ff737d) and the centre never became the pick. The
+    centre is THEIR brand literal and the target is the pick; the test now
+    asserts the centre becomes the pick exactly.

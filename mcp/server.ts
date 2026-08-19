@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx tsx
+#!/usr/bin/env node
 /**
  * UISandbox as an MCP server — the same engine the browser runs, no second
  * implementation (notes/lessons.md: one source, no mirror).
@@ -41,6 +41,7 @@ import { genShadcn } from '../src/export/genShadcn'
 import { genSwift } from '../src/export/genSwift'
 import { genAndroidColorsXml, genAndroidKotlin } from '../src/export/genAndroid'
 import type { Config } from '../src/tokens/types'
+import { refusalFor } from '../src/sandbox/platform'
 
 const APP = (process.env.UISANDBOX_URL ?? 'https://uisandbox.org').replace(/\/$/, '')
 
@@ -84,7 +85,6 @@ server.registerTool('load', {
   const archive = await openZip(new File([bytes], name.endsWith('.zip') ? name : `${name}.zip`, { type: 'application/zip' }))
   const project = await buildProject(archive)
   if (!project.platform.renders || !project.screens.length) {
-    const { refusalFor } = await import('../src/sandbox/platform')
     return { content: [{ type: 'text', text: JSON.stringify({ refused: true, reason: refusalFor(project.platform, { files: archive.entries.length }) }, null, 2) }], isError: true }
   }
   const report = await deriveBaseline(archive, project.table)

@@ -3,10 +3,16 @@
 The same engine the browser runs, as tools for an agent — no second implementation.
 
 ```bash
-pnpm mcp                                   # stdio server (from a clone of the repo)
-UISANDBOX_URL=http://localhost:5190 pnpm mcp   # render tools against a local app instead of uisandbox.org
-npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify → screenshot
+npx uisandbox-mcp                          # the published package (stdio); add it to your client as below
+UISANDBOX_URL=http://localhost:5190 npx uisandbox-mcp   # render tools against a local app instead of uisandbox.org
+
+# from a clone of the repo:
+pnpm mcp                                   # stdio server straight from the sources (tsx)
+pnpm mcp:build && pnpm mcp:pack            # bundle the engine into mcp/dist/server.mjs and pack uisandbox-mcp
+npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify → screenshot (MCP_CMD to point at a build)
 ```
+
+`verify` and `screenshot` need a browser: `npx playwright install chromium` once (playwright is an optional peer dependency — `load`/`set`/`export` work without it).
 
 ## Tools
 
@@ -26,15 +32,16 @@ npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify 
 ```json
 {
   "mcpServers": {
-    "uisandbox": {
-      "command": "npx",
-      "args": ["tsx", "/path/to/uisandbox/mcp/server.ts"]
-    }
+    "uisandbox": { "command": "npx", "args": ["-y", "uisandbox-mcp"] }
   }
 }
 ```
 
-Claude Code: `claude mcp add uisandbox -- npx tsx /path/to/uisandbox/mcp/server.ts`
+Claude Code: `claude mcp add uisandbox -- npx -y uisandbox-mcp`
+
+## Publishing (maintainer)
+
+`pnpm mcp:pack` → `cd mcp && npm publish` (the `files` field ships `dist/server.mjs`, README, LICENSE only). `mcp/server.json` is the manifest for the official MCP registry (`mcp-publisher publish` from `mcp/`); the other directories (Smithery, PulseMCP, Glama, mcp.so) take the npm name.
 
 ## A prompt to paste
 

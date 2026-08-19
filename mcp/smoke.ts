@@ -4,7 +4,9 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 const zip = process.argv[2] ?? 'fixtures/s10-Skeleton.zip'
 const client = new Client({ name: 'smoke', version: '0' })
-await client.connect(new StdioClientTransport({ command: 'npx', args: ['tsx', 'mcp/server.ts'], env: { ...process.env } as Record<string, string> }))
+// MCP_CMD overrides the server command, e.g. MCP_CMD="node mcp/dist/server.mjs" or "npx uisandbox-mcp"
+const cmd = (process.env.MCP_CMD ?? 'npx tsx mcp/server.ts').split(' ')
+await client.connect(new StdioClientTransport({ command: cmd[0]!, args: cmd.slice(1), env: { ...process.env } as Record<string, string> }))
 const text = (r: unknown) => ((r as { content: Array<{ type: string; text?: string }> }).content.find((c) => c.type === 'text')?.text ?? '')
 const t0 = Date.now()
 const loaded = JSON.parse(text(await client.callTool({ name: 'load', arguments: { zipPath: zip } })))
