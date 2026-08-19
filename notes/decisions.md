@@ -895,3 +895,11 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     archive endpoint (the web archive answers 406 to a non-browser fetch;
     `accept-encoding: identity` is required — measured). Default branch from
     the project API. Copy updated everywhere GitHub was named alone.
+135. Sweep 14, targeted at what launch visitors will drop: four real Webflow
+    exports (brand + custom fonts right on all four: #b55ca4/bicyclette,
+    #006449/Montserrat, #e0522e/Geist+Albert Sans, #3898ec/Open Sans+Inter),
+    Ant Design Pro's site (differs, honestly: its cssinjs sets AlibabaSans at
+    runtime and the tokenised page falls back to the Ant stack — with Polymer 1
+    and docsify a known-differ family), the Chinese Vue 2 docs (Vue green
+    #42b983, 1:1 ok — CJK stacks fine), hexo-icarus' html-less site branch
+    (honest refusal). 5 ok · 1 differs · 1 no-load, recorded.
