@@ -17,30 +17,35 @@ export function GithubMark({ size = 15 }: { size?: number }) {
   )
 }
 
-/** The drop zone's two signals: a dashed edge that walks, and a file (or a
- *  folder) that glides into a tray every few seconds. Purely decorative,
- *  still under prefers-reduced-motion. */
+/** The drop zone's glyph: a tray with depth and a file (or a folder) that
+ *  settles into it every few seconds. Drawn with weight — filled shapes, a
+ *  soft shadow, 2px strokes — so it reads as an object, not a wire. */
 export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
   return (
-    <svg className="dropglyph" width="64" height="48" viewBox="0 0 64 48" aria-hidden="true" focusable="false">
-      {/* the tray */}
-      <path className="dropglyph__tray" d="M14 30h36v9a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3v-9z" />
-      <path className="dropglyph__tray-lip" d="M10 30h44" />
-      {/* the thing that drops */}
-      <g className="dropglyph__item">
+    <svg className="dropglyph" width="88" height="64" viewBox="0 0 88 64" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="dg-tray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="currentColor" stopOpacity=".10" /><stop offset="1" stopColor="currentColor" stopOpacity=".22" /></linearGradient>
+        <linearGradient id="dg-item" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--app-surface, #fff)" /><stop offset="1" stopColor="var(--app-hover, #f4f4f6)" /></linearGradient>
+        <filter id="dg-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#000" floodOpacity=".18" /></filter>
+      </defs>
+      {/* tray: back wall, then the front lip over the item */}
+      <path className="dropglyph__back" d="M16 40h56v12a5 5 0 0 1-5 5H21a5 5 0 0 1-5-5V40z" />
+      <g className="dropglyph__item" filter="url(#dg-shadow)">
         {kind === 'zip' ? (
           <>
-            <path d="M24 6h11l7 7v15a2 2 0 0 1-2 2H24a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
-            <path d="M35 6v7h7" />
-            <path d="M29 10h2M29 13h2M29 16h2M29 19h2" className="dropglyph__zip" />
+            <path className="dropglyph__paper" d="M30 8h19l11 11v25a3 3 0 0 1-3 3H30a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3z" />
+            <path className="dropglyph__fold" d="M49 8v11h11" />
+            <path className="dropglyph__lines" d="M36 22h14M36 28h14M36 34h9" />
           </>
         ) : (
           <>
-            <path d="M20 10h9l3 3h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2z" />
-            <path d="M18 17h28" />
+            <path className="dropglyph__paper" d="M26 14h14l5 5h18a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H26a3 3 0 0 1-3-3V17a3 3 0 0 1 3-3z" />
+            <path className="dropglyph__fold" d="M23 24h43" />
           </>
         )}
       </g>
+      <path className="dropglyph__front" d="M12 38h64a3 3 0 0 1 3 3v2H9v-2a3 3 0 0 1 3-3z" />
+      <path className="dropglyph__front dropglyph__front--body" d="M16 43h56v9a5 5 0 0 1-5 5H21a5 5 0 0 1-5-5v-9z" />
     </svg>
   )
 }

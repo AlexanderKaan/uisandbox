@@ -213,20 +213,24 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
   52%  { stroke-dashoffset: -120; opacity: 0; }
   100% { stroke-dashoffset: -120; opacity: 0; }
 }
-/* The file/folder that glides into the tray. */
-.dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg-muted); }
-.dropglyph path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.dropglyph__tray { fill: var(--app-hover); }
-.dropglyph__zip { stroke-width: 1.2; }
-.dropglyph__item { animation: dropin 3.2s var(--app-ease) infinite; transform-origin: 32px 18px; }
+/* The glyph: weight instead of wire — filled shapes, 2px strokes, a soft shadow. */
+.dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg); overflow: visible; }
+.dropglyph path { stroke-linecap: round; stroke-linejoin: round; }
+.dropglyph__back { fill: url(#dg-tray); stroke: none; }
+.dropglyph__front { fill: var(--app-surface); stroke: var(--app-fg); stroke-width: 2; }
+.dropglyph__front--body { fill: var(--app-bg); stroke-width: 2; }
+.dropglyph__paper { fill: url(#dg-item); stroke: var(--app-fg); stroke-width: 2; }
+.dropglyph__fold, .dropglyph__lines { fill: none; stroke: var(--app-fg); stroke-width: 2; }
+.dropglyph__lines { opacity: .45; stroke-width: 1.8; }
+.dropglyph__item { animation: dropin 3.4s cubic-bezier(.2, .7, .2, 1) infinite; transform-origin: 44px 24px; }
 @keyframes dropin {
-  0%   { transform: translateY(-8px); opacity: 0; }
-  12%  { transform: translateY(-6px); opacity: 1; }
-  55%  { transform: translateY(0); opacity: 1; }
-  72%  { transform: translateY(6px) scale(.92); opacity: 0; }
-  100% { transform: translateY(6px) scale(.92); opacity: 0; }
+  0%   { transform: translateY(-10px) scale(.96); opacity: 0; }
+  14%  { transform: translateY(-8px) scale(1); opacity: 1; }
+  58%  { transform: translateY(0) scale(1); opacity: 1; }
+  74%  { transform: translateY(8px) scale(.94); opacity: 0; }
+  100% { transform: translateY(8px) scale(.94); opacity: 0; }
 }
-.intake__drop--over .dropglyph__item { animation-duration: 1.2s; }
+.intake__drop--over .dropglyph__item { animation-duration: 1.3s; }
 @media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .intake__glow { display: none; } .dropglyph__item { animation: none; transform: none; opacity: 1; } }
 .intake__choices { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 .intake__fine { font-size: 12px; color: var(--app-fg-faint); margin-top: 16px; }
@@ -380,3 +384,12 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
   .hero__sub { font-size: 15px; }
   .intake { padding: 28px 14px 48px; }
 }
+
+/* === Topbar: two groups — the tool's own (MCP, Star) and, with a project, the work (undo, Read, Export, Close) === */
+.app__group { display: inline-flex; align-items: center; gap: 6px; }
+.app__divider { width: 1px; height: 18px; background: var(--app-border); margin: 0 6px; }
+.star { display: inline-flex; align-items: stretch; height: 28px; border: 1px solid var(--app-border); border-radius: 8px; overflow: hidden; font-size: 12.5px; font-weight: 600; color: var(--app-fg); background: var(--app-surface); text-decoration: none; }
+.star:hover { border-color: var(--app-fg-muted); }
+.star__main { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; }
+.star__count { display: inline-flex; align-items: center; padding: 0 9px; border-left: 1px solid var(--app-border); background: var(--app-hover); font-variant-numeric: tabular-nums; font-weight: 600; }
+@media (max-width: 560px) { .star__count { display: none; } }
