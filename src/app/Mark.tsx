@@ -28,8 +28,9 @@ export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
         <linearGradient id="dg-item" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--app-surface, #fff)" /><stop offset="1" stopColor="var(--app-hover, #f4f4f6)" /></linearGradient>
         <filter id="dg-shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#000" floodOpacity=".18" /></filter>
       </defs>
-      {/* tray: back wall, then the front lip over the item */}
-      <path className="dropglyph__back" d="M16 40h56v12a5 5 0 0 1-5 5H21a5 5 0 0 1-5-5V40z" />
+      {/* an open box: back wall, the item falls in, the front panel covers it */}
+      <path className="dropglyph__back" d="M16 30h56v22a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V30z" />
+      <path className="dropglyph__rim" d="M16 30h56" />
       <g className="dropglyph__item" filter="url(#dg-shadow)">
         {kind === 'zip' ? (
           <>
@@ -44,8 +45,7 @@ export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
           </>
         )}
       </g>
-      <path className="dropglyph__front" d="M12 38h64a3 3 0 0 1 3 3v2H9v-2a3 3 0 0 1 3-3z" />
-      <path className="dropglyph__front dropglyph__front--body" d="M16 43h56v9a5 5 0 0 1-5 5H21a5 5 0 0 1-5-5v-9z" />
+      <path className="dropglyph__front" d="M16 40h56v12a6 6 0 0 1-6 6H22a6 6 0 0 1-6-6V40z" />
     </svg>
   )
 }

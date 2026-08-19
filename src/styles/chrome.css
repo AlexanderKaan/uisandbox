@@ -216,9 +216,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 /* The glyph: weight instead of wire — filled shapes, 2px strokes, a soft shadow. */
 .dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg); overflow: visible; }
 .dropglyph path { stroke-linecap: round; stroke-linejoin: round; }
-.dropglyph__back { fill: url(#dg-tray); stroke: none; }
-.dropglyph__front { fill: var(--app-surface); stroke: var(--app-fg); stroke-width: 2; }
-.dropglyph__front--body { fill: var(--app-bg); stroke-width: 2; }
+.dropglyph__back { fill: url(#dg-tray); stroke: var(--app-fg); stroke-width: 2; stroke-opacity: .35; }
+.dropglyph__rim { fill: none; stroke: var(--app-fg); stroke-width: 2; stroke-opacity: .35; stroke-dasharray: 3 4; }
+.dropglyph__front { fill: var(--app-bg); stroke: var(--app-fg); stroke-width: 2; }
 .dropglyph__paper { fill: url(#dg-item); stroke: var(--app-fg); stroke-width: 2; }
 .dropglyph__fold, .dropglyph__lines { fill: none; stroke: var(--app-fg); stroke-width: 2; }
 .dropglyph__lines { opacity: .45; stroke-width: 1.8; }
@@ -226,9 +226,9 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 @keyframes dropin {
   0%   { transform: translateY(-10px) scale(.96); opacity: 0; }
   14%  { transform: translateY(-8px) scale(1); opacity: 1; }
-  58%  { transform: translateY(0) scale(1); opacity: 1; }
-  74%  { transform: translateY(8px) scale(.94); opacity: 0; }
-  100% { transform: translateY(8px) scale(.94); opacity: 0; }
+  58%  { transform: translateY(2px) scale(1); opacity: 1; }
+  76%  { transform: translateY(14px) scale(.96); opacity: 0; }
+  100% { transform: translateY(14px) scale(.96); opacity: 0; }
 }
 .intake__drop--over .dropglyph__item { animation-duration: 1.3s; }
 @media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .intake__glow { display: none; } .dropglyph__item { animation: none; transform: none; opacity: 1; } }
