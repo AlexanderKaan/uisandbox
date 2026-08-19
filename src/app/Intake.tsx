@@ -4,6 +4,7 @@ import { FileArchive, FolderOpen, GitBranch, Check } from 'lucide-react'
 import { archiveFromFiles, isZip, openZip, type Archive } from '../audit/intake/readZip'
 import { filesFromDrop } from '../audit/intake/readFiles'
 import { STAGES, fmtBytes, type Progress } from './progress'
+import { InstallLine } from './InstallLine'
 
 interface IntakeProps {
   onArchive: (archive: Archive) => void
@@ -124,6 +125,7 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
           </>
         )}
         {(error || localError) && <div className="intake__error">{error || localError}</div>}
+        {!busy && <InstallLine />}
         <ul className="intake__how">
           <li>Vite / React / Vue / Svelte: <code>npm run build</code> → <code>dist/</code>. Next.js: <code>output: 'export'</code> → <code>out/</code>. Astro / Eleventy / plain HTML: the output folder.</li>
           <li>iOS and Android apps: no browser renders them — the knobs still export Swift and Android constants (Export → iOS / Android).</li>
