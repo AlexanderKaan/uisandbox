@@ -1,6 +1,6 @@
 # UISandbox
 
-> Restyle your app without rebuilding it — test your design on the real thing. Drop a built web app (its dist/, build/ or out/ folder as a zip or folder), see it 1:1 in the browser, turn the knobs — brand, colour families, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, dark mode — and export exactly what you see. Free, open source (MIT). Nothing leaves the tab.
+> Play with your real app's design, live — test your design on the real thing. Restyle your app without rebuilding it. Drop a built web app (its dist/, build/ or out/ folder as a zip or folder), see it 1:1 in the browser, turn the knobs — brand, colour families, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, dark mode — and export exactly what you see. Free, open source (MIT). Nothing leaves the tab.
 
 Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandbox · Author: Alexander Kaan (Pageminds)
 

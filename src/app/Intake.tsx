@@ -62,8 +62,8 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
       <section className="hero">
         <div className="intake__mark"><Mark size={44} /></div>
         <div className="hero__kicker">Test your design on the real thing</div>
-        <h1>Restyle your app<br />without rebuilding it.</h1>
-        <p className="hero__sub">Try a new look on your real web app — in seconds. Drop the build; every colour, font, radius and spacing in its CSS becomes a knob. Turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+        <h1>Play with your real<br />app's design, live.</h1>
+        <p className="hero__sub">Drop your built web app — in your browser or from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob; turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
@@ -168,6 +168,7 @@ function Landing() {
     <div className="landing">
       <section className="landing__sec">
         <h2>How it works</h2>
+        <p className="landing__lead">Restyle your app without rebuilding it — try a new look on the real thing, in seconds.</p>
         <ol className="steps">
           <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub repo. Files are read in this tab and served to the frame by a service worker — nothing is uploaded.</li>
           <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles, CDN stylesheets and nested frames included.</li>

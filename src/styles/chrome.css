@@ -349,6 +349,7 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .install--compact { max-width: 440px; margin: 0 auto; }
 .landing { width: min(760px, 100%); display: flex; flex-direction: column; gap: 40px; margin-top: 24px; }
 .landing__sec h2 { font-size: 20px; letter-spacing: -0.02em; margin: 0 0 10px; }
+.landing__lead { margin: -4px 0 12px; font-size: 15px; color: var(--app-fg-muted); }
 .landing__sec p { font-size: 14.5px; line-height: 1.6; color: var(--app-fg-muted); margin: 0 0 10px; }
 .landing__sec p b { color: var(--app-fg); font-weight: 600; }
 .landing__sec a { color: var(--app-fg); }

@@ -843,3 +843,9 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     hand? Try a sample" under the drop zone. The ask for a star appears in
     the stage foot only once something was turned or the 1:1 check passed —
     at the moment the tool has earned it, not before.
+128. One claim everywhere: "Play with your real app's design, live." — site H1,
+    <title>, OG/Twitter titles, JSON-LD, webmanifest, llms.txt, README, the
+    PH tagline. It says what you get (play, your real app, live) where the old
+    line said what you save (no rebuild); the old line lives on as the second
+    line under How it works and in the bodycopy. The sub-line names the two
+    doors — browser, or your agent via MCP — and the OG image was reshot.

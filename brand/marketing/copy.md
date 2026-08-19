@@ -4,7 +4,7 @@ The three lines, in this order of use: **Restyle your app without rebuilding it.
 
 ## X — the pinned post (with the GIF or `site-hero-light-1440.png`)
 
-Restyle your app without rebuilding it.
+Play with your real app's design, live.
 
 Drop the build of your web app into UISandbox → it renders 1:1 (measured, not promised) → every colour, font, radius and spacing in its CSS becomes a knob → turn them, watch the real app follow, export the patch.
 
@@ -40,7 +40,7 @@ MIT. https://uisandbox.org · https://github.com/AlexanderKaan/uisandbox — hap
 ## Product Hunt
 
 **Name:** UISandbox
-**Tagline (≤60):** Restyle your app without rebuilding it
+**Tagline (≤60):** Play with your real app's design, live
 **Description (≤260):** Drop your built web app, see it 1:1 in the browser, turn the knobs — brand, colours, fonts, spacing, radius — and export the change as a patch or tokens. Measured, not promised. Nothing leaves your tab. Free, MIT. Also an MCP server for Claude/Cursor.
 **Topics:** Design Tools · Developer Tools · Open Source · Artificial Intelligence
 **Gallery order:** the GIF · `site-hero-light-1440.png` · `stage-acme-brand-crimson.png` · `verify-card.png` · `og-panel-template.png`
@@ -52,5 +52,5 @@ Same as X but with the "why": every design review ends with "can we see it on th
 
 ## One-liners for directories / bios
 
-- Restyle your app without rebuilding it — your built web app, 1:1, with its own knobs. Free, MIT.
+- Play with your real app's design, live — your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
 - Test your design on the real thing: drop a build, turn the knobs, export the patch.

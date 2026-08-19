@@ -1,11 +1,11 @@
 <p align="center">
-  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox — Restyle your app without rebuilding it" width="880"></a>
+  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox — Play with your real app's design, live" width="880"></a>
 </p>
 
 <h1 align="center">UISandbox</h1>
 
-<p align="center"><b>Restyle your app without rebuilding it.</b><br>
-Try a new look on your real web app — in seconds. Drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
+<p align="center"><b>Play with your real app's design, live.</b><br>
+Restyle your app without rebuilding it — drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
 <sub>Test your design on the real thing.</sub></p>
 
 <p align="center">
