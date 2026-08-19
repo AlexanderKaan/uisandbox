@@ -739,3 +739,8 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     out pink (#1eaedb → #ff737d) and the centre never became the pick. The
     centre is THEIR brand literal and the target is the pick; the test now
     asserts the centre becomes the pick exactly.
+115. **`uisandbox-mcp@0.1.0` is on npm** (2026-08-19). Checked from the
+    registry like a user would (`npm i uisandbox-mcp playwright`, then the
+    smoke): load → set (brand becomes the pick) → patch → verify ✓ against
+    uisandbox.org → screenshot, 8 s. llms.txt and README say `npx -y
+    uisandbox-mcp`.
