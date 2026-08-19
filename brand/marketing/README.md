@@ -22,3 +22,5 @@ Copy per channel: [`copy.md`](copy.md).
 ## The demo clip (gif/)
 
 `demo-agency.gif|mp4` (the landing page — brand yellow → sky → ember, the whole hero follows) and `demo-metro.gif|mp4` (the docs site). ~8 s, 1200 px mp4 / 1000 px gif, looping, no audio. Recorded from the real app by `node scripts/og/demo-gif.mjs` (Playwright video, dev server on :5190), cut with ffmpeg: hero + click (1.4 s), then the stage at 1.2× from the moment it renders to the 1:1 card. PH gallery first slot, X (mp4), README header (gif).
+
+`montage-10-sites.gif|mp4` — ten real builds in a row (Bootstrap docs, VitePress, SB Admin 2, Material Tailwind, visx, Agency, vue-element-admin, anime.js, Metro, NES.css): as loaded → a brand theme → Shuffle, 0.7/0.7/1.0 s per step, title card from the live hero at both ends, ~28 s. Stills by `node scripts/og/montage.mjs`, assembled with ffmpeg's concat demuxer (list.txt with durations) → mp4 1280 px, gif 960 px at 8 fps. For X use the mp4; PH takes the gif.
