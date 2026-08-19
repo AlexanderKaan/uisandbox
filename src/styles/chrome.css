@@ -370,3 +370,13 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .door::before { opacity: .38; } }
 :root[data-theme="dark"] .door::before { opacity: .38; }
 @media (prefers-reduced-motion: reduce) { .door::before { animation: none; } }
+
+/* Small screens: the topbar keeps only the name; the three ways in get short labels. */
+@media (max-width: 560px) {
+  .app__brand small { display: none; }
+  .intake__way { padding: 0 9px; font-size: 12px; }
+  .intake__way .intake__way-long { display: none; }
+  .hero h1 { font-size: clamp(30px, 9vw, 40px); }
+  .hero__sub { font-size: 15px; }
+  .intake { padding: 28px 14px 48px; }
+}

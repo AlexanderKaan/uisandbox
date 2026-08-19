@@ -42,10 +42,10 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
     onUrl?.(`https://github.com/${m[1]}/${m[2]}${m[3] ? `/tree/${m[3]}` : ''}`)
   }
 
-  const ways: Array<{ id: Way; label: string; icon: React.ReactNode }> = [
-    { id: 'zip', label: 'Upload a zip', icon: <FileArchive size={14} strokeWidth={1.75} /> },
-    { id: 'folder', label: 'Upload a codebase', icon: <FolderOpen size={14} strokeWidth={1.75} /> },
-    { id: 'repo', label: 'Connect a repo', icon: <GitBranch size={14} strokeWidth={1.75} /> },
+  const ways: Array<{ id: Way; label: React.ReactNode; icon: React.ReactNode }> = [
+    { id: 'zip', label: <><span className="intake__way-long">Upload a </span>zip</>, icon: <FileArchive size={14} strokeWidth={1.75} /> },
+    { id: 'folder', label: <><span className="intake__way-long">Upload a </span>codebase</>, icon: <FolderOpen size={14} strokeWidth={1.75} /> },
+    { id: 'repo', label: <><span className="intake__way-long">Connect a </span>repo</>, icon: <GitBranch size={14} strokeWidth={1.75} /> },
   ]
 
   return (
