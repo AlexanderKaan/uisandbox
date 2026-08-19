@@ -749,3 +749,15 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     (`mcp-publisher login github` + `publish` from mcp/, description ≤ 100
     chars). Directories that read the registry (Smithery, PulseMCP, Glama,
     mcp.so) pick it up from there; submitting there directly is a form each.
+117. **`open` — the sandbox itself from the agent** (uisandbox-mcp 0.2.0).
+    The package ships the web app; `open` serves it with the archive on
+    127.0.0.1 and opens the user's browser: the real, interactive sandbox,
+    nothing leaves the machine. The page posts its knob state back
+    (`&sync=<id>` → `POST /__state/<id>`, 127.0.0.1 only), so "export what I
+    changed" works after playing. `verify`/`screenshot` now run against the
+    bundled app by default (offline, faster). The conversation this is built
+    for — "can I look at this app in a sandbox and change the design?" — is
+    the skill's first shape; the skill also builds `dist/` itself when run
+    inside the repo. Noted: the Claude Code browser pane refuses service
+    workers on arbitrary localhost ports; a normal Chrome and headless
+    Chromium load the local sandbox fine.

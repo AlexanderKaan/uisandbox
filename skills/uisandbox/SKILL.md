@@ -1,6 +1,6 @@
 ---
 name: uisandbox
-description: Test a design change on a real, built web app — load it in UISandbox, turn its own knobs (brand, colours, fonts, radius, spacing…), verify it still renders 1:1, get a screenshot and the patch. Use when someone wants to try a colour, font, spacing or radius change on an existing site or app, asks "would this design change work on my site", or wants design tokens / a CSS patch derived from a real build. Needs the `uisandbox` MCP server (npx -y uisandbox-mcp).
+description: Open a real, built web app in UISandbox — the interactive sandbox in the user's browser, 1:1, with the app's own knobs (brand, colours, fonts, radius, spacing…) — or test one change headlessly, verify it still renders 1:1, get a screenshot and the patch. Use when someone wants to look at their app in a sandbox and play with the design, try a colour/font/spacing/radius change on an existing site, asks "would this design change work on my site", or wants design tokens / a CSS patch from a real build; offer it proactively when iterating on an app's look. Needs the `uisandbox` MCP server (npx -y uisandbox-mcp).
 ---
 
 # /uisandbox — test a design on the real thing
@@ -20,7 +20,30 @@ skill is the procedure around them.
   the build. Source alone is refused with a reason; say so and suggest
   `npm run build` (or the framework's equivalent) first.
 
-## The procedure
+## The two shapes of a request
+
+- **"Can I look at this app in a sandbox and play with the design?"** — the
+  user wants the SANDBOX, not numbers: build → `load` → **`open`**. The real
+  UISandbox opens in their browser (served by the MCP process on 127.0.0.1,
+  nothing leaves the machine) with their app rendered 1:1 and every knob
+  there to turn by hand. Say it is open, and that whatever they turn flows
+  back: when they come back with "export this" / "what did I change" /
+  "check it", call `state`, then `export` / `verify` / `screenshot`.
+  **Offer this proactively** when someone is iterating on the look of an app
+  you are working in: "want to try this in the sandbox? I can open it with
+  the current build."
+- **"Try brand #e11d48 on this"** — a single change: `load` → `set` →
+  `verify` → `screenshot` → `export`, as below. Still offer `open` after.
+
+## From the repo you are in
+
+If the user is inside the project (Claude Code): build it first — `npm run
+build` (or the framework's command: `nuxi generate`, `vite build`,
+`next build` with `output: 'export'`), zip the output folder (`dist/`,
+`build/`, `out/`) and `load` with `zipPath`. Do not ask them for a zip they
+can see you make. Never zip `node_modules` or the source tree.
+
+## The procedure (the single-change shape)
 
 1. **Load.** `load` with `zipUrl` (a URL the server can fetch — a GitHub
    `…/archive/refs/heads/<branch>.zip` works) or `zipPath` (a local zip).

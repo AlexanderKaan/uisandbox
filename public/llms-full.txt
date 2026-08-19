@@ -26,7 +26,7 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 ## For agents
 
 - Load: `https://uisandbox.org/?load=https://example.com/build.zip` (the URL must allow CORS or be same-origin).
-- MCP server (stdio, same engine): tools `load` (zip URL/path), `screens`, `set` (knobs), `export` (sheet-css, sheet-json, patch, tokens-css, tokens-json, tailwind, shadcn, swift, android-xml, android-kotlin), `verify` (the 1:1 check in headless Chromium), `screenshot`. Install: `npx -y uisandbox-mcp` (npm: https://www.npmjs.com/package/uisandbox-mcp); config and a prompt to paste: https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md
+- MCP server (stdio, same engine): tools `open` (the real sandbox in the user's browser, served locally), `state`, `load` (zip URL/path), `screens`, `set` (knobs), `export` (sheet-css, sheet-json, patch, tokens-css, tokens-json, tailwind, shadcn, swift, android-xml, android-kotlin), `verify` (the 1:1 check in headless Chromium), `screenshot`. Install: `npx -y uisandbox-mcp` (npm: https://www.npmjs.com/package/uisandbox-mcp); config and a prompt to paste: https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md
 
 ## More
 
@@ -92,7 +92,7 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 ## MCP
 
-`pnpm mcp` runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config.
+`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. A Claude Code skill that drives it — `/uisandbox` "test this design on my build" — lives in [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md): copy the folder into `.claude/skills/` (project) or `~/.claude/skills/` (user).
 
 ## Deploy
 

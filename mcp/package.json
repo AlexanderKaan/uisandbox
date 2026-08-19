@@ -1,14 +1,37 @@
 {
   "name": "uisandbox-mcp",
-  "version": "0.1.0",
-  "description": "UISandbox as an MCP server: load a built web app, see its knobs (the colours, fonts, radii your CSS actually contains), turn them, verify it is still 1:1, export CSS/patch/tokens/Swift/Android. Test your design on the real thing.",
+  "version": "0.2.0",
+  "description": "UISandbox as an MCP server: open the real sandbox in your browser with your built web app loaded, turn its own knobs, verify 1:1, export CSS/patch/tokens/Swift/Android. Test your design on the real thing.",
   "type": "module",
-  "bin": { "uisandbox-mcp": "dist/server.mjs" },
-  "files": ["dist/server.mjs", "README.md", "LICENSE"],
-  "engines": { "node": ">=20" },
-  "keywords": ["mcp", "model-context-protocol", "design", "design-tokens", "design-system", "theming", "css", "sandbox", "uisandbox"],
+  "bin": {
+    "uisandbox-mcp": "dist/server.mjs"
+  },
+  "files": [
+    "dist/server.mjs",
+    "dist/app/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "design",
+    "design-tokens",
+    "design-system",
+    "theming",
+    "css",
+    "sandbox",
+    "uisandbox"
+  ],
   "homepage": "https://uisandbox.org",
-  "repository": { "type": "git", "url": "git+https://github.com/AlexanderKaan/uisandbox.git", "directory": "mcp" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AlexanderKaan/uisandbox.git",
+    "directory": "mcp"
+  },
   "bugs": "https://github.com/AlexanderKaan/uisandbox/issues",
   "author": "Alexander Kaan (https://pageminds.com/)",
   "license": "MIT",
@@ -16,7 +39,13 @@
     "@modelcontextprotocol/sdk": "^1.27.0",
     "zod": "^4.0.0"
   },
-  "peerDependencies": { "playwright": ">=1.50" },
-  "peerDependenciesMeta": { "playwright": { "optional": true } },
+  "peerDependencies": {
+    "playwright": ">=1.50"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
+  },
   "mcpName": "io.github.AlexanderKaan/uisandbox"
 }

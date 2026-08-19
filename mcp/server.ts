@@ -11,6 +11,9 @@
  *   screens    { id }                       → the screens
  *   set        { id, knobs }                → apply knobs (brand hex, dials, families, fonts, dark); what moved
  *   export     { id, format }               → sheet-css | sheet-json | patch | tokens-css | tokens-json | tailwind | shadcn | swift | android-xml | android-kotlin
+ *   open       { id, screen? }              → THE SANDBOX ITSELF in the user's browser, served from 127.0.0.1 by this
+ *                                             process (the web app ships in the package); what they turn flows back
+ *   state      { id }                       → the knobs now, incl. what the user turned in the browser
  *   verify     { id, screen? }              → the 1:1 check in headless Chromium (raw vs identity), plus reach
  *   screenshot { id, screen?, width? }      → PNG (base64) of the screen with the current knobs
  *
@@ -23,8 +26,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { readFileSync } from 'node:fs'
-import { basename } from 'node:path'
+import { readFileSync, existsSync, statSync } from 'node:fs'
+import { basename, join, dirname, extname } from 'node:path'
+import { createServer, type Server } from 'node:http'
+import { fileURLToPath } from 'node:url'
+import { spawn } from 'node:child_process'
 import { openZip, type Archive } from '../src/audit/intake/readZip'
 import { buildProject, type SandboxProject } from '../src/sandbox/project'
 import { deriveBaseline, type BaselineReport } from '../src/sandbox/baseline'
@@ -43,9 +49,9 @@ import { genAndroidColorsXml, genAndroidKotlin } from '../src/export/genAndroid'
 import type { Config } from '../src/tokens/types'
 import { refusalFor } from '../src/sandbox/platform'
 
-const APP = (process.env.UISANDBOX_URL ?? 'https://uisandbox.org').replace(/\/$/, '')
+const APP_ENV = process.env.UISANDBOX_URL?.replace(/\/$/, '')
 
-interface Loaded { id: string; name: string; bytes: Uint8Array<ArrayBuffer>; project: SandboxProject; report: BaselineReport; cfg: Config; archive: Archive }
+interface Loaded { id: string; name: string; bytes: Uint8Array<ArrayBuffer>; project: SandboxProject; report: BaselineReport; cfg: Config; archive: Archive; touchedInBrowser?: number }
 const projects = new Map<string, Loaded>()
 let seq = 0
 
@@ -147,6 +153,64 @@ server.registerTool('export', {
   return { content: [{ type: 'text', text: out }] }
 })
 
+/* ── The sandbox itself, locally: the web app the package ships, served with
+ *    the archive on 127.0.0.1, opened in the user's browser. Nothing leaves the
+ *    machine; the page posts its knob state back so `export`/`verify` can
+ *    follow what the user turned by hand. ─────────────────────────────────── */
+const here = dirname(fileURLToPath(import.meta.url))
+const APP_DIR = [join(here, 'app'), join(here, '..', '..', 'dist'), join(here, '..', 'dist')].find((d) => existsSync(join(d, 'index.html')))
+const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.zip': 'application/zip' }
+let local: { server: Server; port: number } | null = null
+async function localServer(): Promise<{ port: number }> {
+  if (local) return local
+  if (!APP_DIR) throw new Error('The UISandbox app is not bundled with this server (no dist/) — run `pnpm build` in the repo, or use UISANDBOX_URL.')
+  const server = createServer(async (req, res) => {
+    const url = new URL(req.url ?? '/', 'http://127.0.0.1')
+    // The page reports its knob state: POST /__state/<id> {cfg}
+    const st = url.pathname.match(/^\/__state\/([a-z0-9]+)$/)
+    if (st && req.method === 'POST') {
+      let body = ''; req.on('data', (c) => { body += c })
+      req.on('end', () => { try { const p = projects.get(st[1]!); const j = JSON.parse(body) as { cfg?: Config }; if (p && j.cfg) { p.cfg = j.cfg; p.touchedInBrowser = Date.now() } } catch { /* ignore */ } res.statusCode = 204; res.end() })
+      return
+    }
+    const ar = url.pathname.match(/^\/__archive\/([a-z0-9]+)\.zip$/)
+    if (ar) { const p = projects.get(ar[1]!); if (!p) { res.statusCode = 404; res.end('no such project'); return } res.setHeader('content-type', 'application/zip'); res.setHeader('cache-control', 'no-store'); res.end(Buffer.from(p.bytes)); return }
+    let file = join(APP_DIR!, decodeURIComponent(url.pathname))
+    if (!file.startsWith(APP_DIR!)) { res.statusCode = 403; res.end(); return }
+    if (!existsSync(file) || statSync(file).isDirectory()) file = join(APP_DIR!, 'index.html') // the SPA and the sandbox paths
+    res.setHeader('content-type', MIME[extname(file)] ?? 'application/octet-stream')
+    if (basename(file) === 'sw.js') res.setHeader('cache-control', 'no-cache')
+    res.end(readFileSync(file))
+  })
+  await new Promise<void>((r) => server.listen(0, '127.0.0.1', r))
+  const port = (server.address() as { port: number }).port
+  local = { server, port }
+  return local
+}
+function openInBrowser(url: string): void {
+  const cmd = process.platform === 'darwin' ? ['open', url] : process.platform === 'win32' ? ['cmd', '/c', 'start', '', url] : ['xdg-open', url]
+  if (process.env.UISANDBOX_NO_OPEN) return
+  try { spawn(cmd[0]!, cmd.slice(1), { stdio: 'ignore', detached: true }).unref() } catch { /* the URL is returned anyway */ }
+}
+
+server.registerTool('open', {
+  title: 'Open the sandbox',
+  description: 'Open UISandbox in the user\'s browser with this project loaded — the real, interactive sandbox: the whole app rendered 1:1, every knob there to turn by hand. Use this whenever the user wants to SEE or PLAY with the design themselves ("can I look at this in a sandbox", "let me try some changes"), not only read numbers. Served from 127.0.0.1 by this process; nothing leaves the machine. What the user turns in the browser flows back here: a later `export`, `verify` or `screenshot` uses it.',
+  inputSchema: { id: z.string(), screen: z.string().optional().describe('Screen path to open first') },
+}, async ({ id, screen }) => {
+  const p = need(id)
+  const { port } = await localServer()
+  const hash = JSON.stringify(p.cfg) === JSON.stringify(p.report.baseline.cfg) ? '' : `#${encode(p.cfg)}`
+  const url = `http://127.0.0.1:${port}/?load=${encodeURIComponent(`/__archive/${id}.zip`)}&sync=${id}${screen ? `&screen=${encodeURIComponent(screen)}` : ''}${hash}`
+  openInBrowser(url)
+  return { content: [{ type: 'text', text: JSON.stringify({ opened: url, note: 'The sandbox is open in the browser. The user can turn the knobs there; what they turn comes back to this server — call `export`, `verify` or `screenshot` afterwards to work with it. Use `state` to read the current knobs.' }, null, 2) }] }
+})
+
+server.registerTool('state', {
+  title: 'Current knobs', description: 'The knobs as they stand now — including what the user turned by hand in an opened sandbox (and when).',
+  inputSchema: { id: z.string() },
+}, async ({ id }) => { const p = need(id); return { content: [{ type: 'text', text: JSON.stringify({ ...summarise(p), touchedInBrowser: p.touchedInBrowser ? new Date(p.touchedInBrowser).toISOString() : null }, null, 2) }] } })
+
 /* ── Render tools: the real app in headless Chromium ─────────────────────── */
 async function drive(p: Loaded, screenPath: string | undefined, width: number, fn: (page: import('playwright').Page) => Promise<unknown>) {
   const { chromium } = await import('playwright')
@@ -156,6 +220,8 @@ async function drive(p: Loaded, screenPath: string | undefined, width: number, f
     const FIX = 'https://archive.uisandbox.invalid/a.zip'
     await context.route(FIX, (route) => route.fulfill({ status: 200, headers: { 'content-type': 'application/zip', 'access-control-allow-origin': '*' }, body: Buffer.from(p.bytes) }))
     const page = await context.newPage()
+    // The app: UISANDBOX_URL if set, else the bundled app on 127.0.0.1 (offline, fast), else uisandbox.org.
+    const APP = APP_ENV ?? (APP_DIR ? `http://127.0.0.1:${(await localServer()).port}` : 'https://uisandbox.org')
     // The knobs travel in the URL hash — the app's own state encoding.
     const hash = JSON.stringify(p.cfg) === JSON.stringify(p.report.baseline.cfg) ? '' : `#${encode(p.cfg)}`
     await page.goto(`${APP}/?load=${encodeURIComponent(FIX)}${hash}`, { waitUntil: 'domcontentloaded' })

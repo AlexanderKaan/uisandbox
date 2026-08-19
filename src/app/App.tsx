@@ -147,6 +147,15 @@ export function App() {
     }
   }, [])
   useEffect(() => { applyVars() }, [vars, fontCss, cfg.sb.dark, applyVars])
+  // Opened by the local MCP server (`&sync=<id>`): the knobs flow back to it,
+  // so an agent can export/verify what the user turned by hand. Same origin,
+  // 127.0.0.1, debounced; nothing else ever receives the state.
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('sync')
+    if (!id || !loaded || !/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return
+    const t = setTimeout(() => { void fetch(`/__state/${encodeURIComponent(id)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cfg }) }).catch(() => {}) }, 400)
+    return () => clearTimeout(t)
+  }, [cfg, loaded])
 
   // After each load: apply the sheet, then watch what their JS styles at runtime.
   /* Let the SCREEN and the GROWN sheet correct the baseline — but only while
@@ -286,7 +295,9 @@ export function App() {
       own(project, () => varsRef.current)
       // A fresh project is a fresh start: no history, no hash from the last one.
       reset(report.baseline.cfg)
-      setLoaded({ project, report, screen: project.screens[0]!, archive })
+      const wanted = new URLSearchParams(location.search).get('screen')
+      const first = (wanted && project.screens.find((s) => s.path === wanted || s.label === wanted)) || project.screens[0]!
+      setLoaded({ project, report, screen: first, archive })
       setShowNotes(true)
       track('loaded', { screens: project.screens.length, values: project.table.entries.length })
     } catch (err) {

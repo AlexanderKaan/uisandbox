@@ -17,6 +17,12 @@ const patch = text(await client.callTool({ name: 'export', arguments: { id: load
 console.log('export patch', patch.split('\n').length, 'lines; first:', patch.split('\n').slice(0, 2).join(' | '))
 const v = JSON.parse(text(await client.callTool({ name: 'verify', arguments: { id: loaded.id } })))
 console.log('verify', v.ok, v.result.slice(0, 90), '|', v.reach)
+// open: the local sandbox server — fetch the URL it returns (without opening a browser window here), post a state back, read it
+const opened = JSON.parse(text(await client.callTool({ name: 'open', arguments: { id: loaded.id } })))
+const page = await fetch(opened.opened).then((r) => r.text())
+const origin = new URL(opened.opened).origin
+await fetch(`${origin}/__state/${loaded.id}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cfg: { ...JSON.parse(text(await client.callTool({ name: 'state', arguments: { id: loaded.id } }))).knobs && {}, cPrimary: '#0ea5e9' } }) }).catch(() => {})
+console.log('open ', opened.opened.replace(/\?.*$/, '?…'), page.includes('<title>UISandbox') ? 'serves the app' : 'NO APP', '| archive', (await fetch(`${origin}/__archive/${loaded.id}.zip`)).status)
 const shot = (await client.callTool({ name: 'screenshot', arguments: { id: loaded.id, width: 1000 } })) as { content: Array<{ type: string; data?: string }> }
 console.log('screenshot', shot.content[0]?.type, Math.round((shot.content[0]?.data?.length ?? 0) * 3 / 4 / 1024), 'KB', `${Date.now() - t0}ms total`)
 await client.close()

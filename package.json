@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json",
     "holdouts": "node scripts/holdouts.mjs",
     "mcp": "tsx mcp/server.ts",
-    "mcp:build": "vite build --config mcp/vite.config.ts",
+    "mcp:build": "pnpm build && vite build --config mcp/vite.config.ts && rm -rf mcp/dist/app && cp -R dist mcp/dist/app && rm -f mcp/dist/app/_headers",
     "mcp:pack": "pnpm mcp:build && cd mcp && npm pack"
   },
   "dependencies": {

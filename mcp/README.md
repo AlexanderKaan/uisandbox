@@ -19,13 +19,17 @@ npx tsx mcp/smoke.ts fixtures/x.zip        # load → set → export → verify 
 | tool | input | returns |
 |---|---|---|
 | `load` | `zipUrl` or `zipPath` | project id, screens, values, the baseline (brand, fonts, families, palette, canvas, dark mode) — or a refusal with the reason |
+| `open` | `id`, `screen?` | **the sandbox itself** in the user's browser — the web app ships in the package and is served from 127.0.0.1 by this process with the archive; what the user turns flows back (`state`) |
+| `state` | `id` | the knobs now, including what was turned by hand in an opened sandbox |
 | `screens` | `id` | the screens |
 | `set` | `id`, `knobs` — `cPrimary`, `fontDisplay`, `fontBody`, dials (`radius`, `space`, `type`, `lineHeight`, `tracking`, `weight`, `borderWidth`, `borderTone`, `shadow`, `motion`, `hue`, `sat`, `contrast`, `gradAngle`), `cBackground`, family colours, `dark`, `reset` | what moved (count, sample) |
 | `export` | `id`, `format` — `sheet-css` · `sheet-json` · `patch` · `tokens-css` · `tokens-json` · `tailwind` · `shadcn` · `swift` · `android-xml` · `android-kotlin` | text |
 | `verify` | `id`, `screen?`, `width?` | the 1:1 check in headless Chromium (untouched vs. tokenised, computed styles per element) + reach |
 | `screenshot` | `id`, `screen?`, `width?` | PNG of the screen with the current knobs |
 
-`load`/`set`/`export` are pure Node. `verify`/`screenshot` drive the real app (`UISANDBOX_URL`, default `https://uisandbox.org`) with the archive served from a route inside the headless browser — the number an agent gets is the number a visitor gets.
+`load`/`set`/`export`/`state` are pure Node. `open` serves the bundled app on 127.0.0.1 and opens the browser — nothing leaves the machine. `verify`/`screenshot` drive the app in headless Chromium (the bundled one on 127.0.0.1; `UISANDBOX_URL` to point elsewhere) with the archive served from a route inside the browser — the number an agent gets is the number a visitor gets.
+
+The conversation this is built for: *"Can I look at this app in a sandbox and change the design a bit?"* → the agent builds, `load`s, `open`s; you play in the real sandbox; *"export what I did"* → `state` → `export`.
 
 ## Claude Desktop / Claude Code / Cursor
 
@@ -44,5 +48,7 @@ Claude Code: `claude mcp add uisandbox -- npx -y uisandbox-mcp`
 `pnpm mcp:pack` → `cd mcp && npm publish` (the `files` field ships `dist/server.mjs`, README, LICENSE only). `mcp/server.json` is the manifest for the official MCP registry (`mcp-publisher publish` from `mcp/`); the other directories (Smithery, PulseMCP, Glama, mcp.so) take the npm name.
 
 ## A prompt to paste
+
+> Open this app in UISandbox so I can play with the design — build it first. (…later…) Export the patch for what I changed.
 
 > Test my design: load https://github.com/me/site/archive/refs/heads/gh-pages.zip in UISandbox, set the brand to #e11d48 and radius ×1.5, verify it is still 1:1, show me a screenshot, and give me the patch.
