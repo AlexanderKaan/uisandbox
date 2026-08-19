@@ -180,10 +180,30 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .intake__card h1 { font-size: 22px; letter-spacing: -0.02em; margin: 10px 0 6px; }
 .intake__card p { color: var(--app-fg-muted); margin: 0 auto 18px; max-width: 46ch; }
 .intake__drop {
-  border: 1.5px dashed var(--app-border); border-radius: 12px; padding: 28px 20px;
-  transition: border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease);
+  position: relative; border: 1.5px solid transparent; border-radius: 12px; padding: 22px 20px 26px;
+  transition: background var(--app-dur) var(--app-ease);
 }
-.intake__drop--over { border-color: var(--app-fg); background: var(--app-hover); }
+.intake__drop--over { background: var(--app-hover); }
+/* The dashed edge that walks — an SVG stroke so the dash can move. */
+.intake__ants { position: absolute; inset: -1.5px; width: calc(100% + 3px); height: calc(100% + 3px); pointer-events: none; overflow: visible; }
+.intake__ants rect { fill: none; stroke: var(--app-border); stroke-width: 1.5; stroke-dasharray: 6 6; animation: ants 1.4s linear infinite; transition: stroke var(--app-dur) var(--app-ease); }
+.intake__drop--over .intake__ants rect { stroke: var(--app-fg); animation-duration: .6s; }
+@keyframes ants { to { stroke-dashoffset: -12; } }
+/* The file/folder that glides into the tray. */
+.dropglyph { display: block; margin: 0 auto 10px; color: var(--app-fg-muted); }
+.dropglyph path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.dropglyph__tray { fill: var(--app-hover); }
+.dropglyph__zip { stroke-width: 1.2; }
+.dropglyph__item { animation: dropin 3.2s var(--app-ease) infinite; transform-origin: 32px 18px; }
+@keyframes dropin {
+  0%   { transform: translateY(-8px); opacity: 0; }
+  12%  { transform: translateY(-6px); opacity: 1; }
+  55%  { transform: translateY(0); opacity: 1; }
+  72%  { transform: translateY(6px) scale(.92); opacity: 0; }
+  100% { transform: translateY(6px) scale(.92); opacity: 0; }
+}
+.intake__drop--over .dropglyph__item { animation-duration: 1.2s; }
+@media (prefers-reduced-motion: reduce) { .intake__ants rect { animation: none; } .dropglyph__item { animation: none; transform: none; opacity: 1; } }
 .intake__choices { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 .intake__fine { font-size: 12px; color: var(--app-fg-faint); margin-top: 16px; }
 .intake__error { color: var(--app-danger); margin-top: 12px; font-size: 12.5px; }

@@ -1,4 +1,4 @@
-import { Mark } from './Mark'
+import { Mark, DropGlyph } from './Mark'
 import { useRef, useState } from 'react'
 import { FileArchive, FolderOpen, GitBranch, Check } from 'lucide-react'
 import { archiveFromFiles, isZip, openZip, type Archive } from '../audit/intake/readZip'
@@ -95,6 +95,8 @@ export function Intake({ onArchive, onUrl, busy, error }: IntakeProps) {
                   void takeFiles(files.length ? files : dropped)
                 }}
               >
+                <svg className="intake__ants" aria-hidden="true"><rect x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="12" ry="12" /></svg>
+                <DropGlyph kind={way === 'zip' ? 'zip' : 'folder'} />
                 {way === 'zip' ? (
                   <>
                     <div>Drop the <b>.zip</b> of your build here — its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, or a whole repo that carries the build inside</div>

@@ -16,3 +16,31 @@ export function GithubMark({ size = 15 }: { size?: number }) {
     </svg>
   )
 }
+
+/** The drop zone's two signals: a dashed edge that walks, and a file (or a
+ *  folder) that glides into a tray every few seconds. Purely decorative,
+ *  still under prefers-reduced-motion. */
+export function DropGlyph({ kind }: { kind: 'zip' | 'folder' }) {
+  return (
+    <svg className="dropglyph" width="64" height="48" viewBox="0 0 64 48" aria-hidden="true" focusable="false">
+      {/* the tray */}
+      <path className="dropglyph__tray" d="M14 30h36v9a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3v-9z" />
+      <path className="dropglyph__tray-lip" d="M10 30h44" />
+      {/* the thing that drops */}
+      <g className="dropglyph__item">
+        {kind === 'zip' ? (
+          <>
+            <path d="M24 6h11l7 7v15a2 2 0 0 1-2 2H24a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z" />
+            <path d="M35 6v7h7" />
+            <path d="M29 10h2M29 13h2M29 16h2M29 19h2" className="dropglyph__zip" />
+          </>
+        ) : (
+          <>
+            <path d="M20 10h9l3 3h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2z" />
+            <path d="M18 17h28" />
+          </>
+        )}
+      </g>
+    </svg>
+  )
+}
