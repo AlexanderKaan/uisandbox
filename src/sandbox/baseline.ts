@@ -201,7 +201,7 @@ export async function deriveBaseline(archive: Archive, table: SubstitutionTable)
   } else if (typeof v.brandHex !== 'string') {
     const brand = brandFromTable(table)
     if (brand) { cfg = { ...cfg, cPrimary: brand as Config['cPrimary'] }; notes.push(`Brand taken from the most-painted colour in the built CSS: ${brand}.`) }
-    else notes.push('No brand colour could be told from the code — the Brand knob starts at our default.')
+    else notes.push('No brand colour could be told from the code; the Brand knob starts at our default.')
   } else notes.push(`Brand from the code: ${v.brandHex}.`)
 
   if (v.radius == null) {

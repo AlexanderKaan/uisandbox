@@ -148,7 +148,7 @@ export function compareDocuments(raw: Document, sandbox: Document, props: readon
   })
   const unpaired = { raw: a.length - paired, sandbox: b.length - paired }
   if (paired < Math.min(a.length, b.length) * 0.5) {
-    return { ok: false, refusal: `Only ${paired} of ${Math.min(a.length, b.length)} elements could be paired — the two loads render too differently to compare.`, elements: paired, unpaired, mismatches }
+    return { ok: false, refusal: `Only ${paired} of ${Math.min(a.length, b.length)} elements could be paired: the two loads render too differently to compare.`, elements: paired, unpaired, mismatches }
   }
   return { ok: mismatches.length === 0, elements: paired, unpaired, mismatches }
 }

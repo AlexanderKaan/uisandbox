@@ -439,7 +439,7 @@ export function App() {
                     </li>
                   )}
                 </ul>
-                <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowNotes(false)}>Close</button></div>
+                <div style={{ marginTop: 14 }}><button type="button" className="btn btn--secondary btn--sm" onClick={() => setShowNotes(false)}>Close</button></div>
               </div>
               ) : null}
             />

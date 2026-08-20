@@ -268,10 +268,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .verify { font-size: 12px; }
 .verify__list { margin: 8px 0 0; padding: 0; list-style: none; max-height: 240px; overflow: auto; font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
 .verify__list li { padding: 3px 0; border-top: 1px solid var(--app-border); }
-.notes { margin: 0; padding: 0 0 0 16px; font-size: 12px; color: var(--app-fg-muted); }
-.notes li { margin: 2px 0; }
+.notes { margin: 0; padding: 0 0 0 16px; font-size: 12.5px; line-height: 1.55; color: var(--app-fg-muted); }
+.notes li { margin: 5px 0; }
+.notes li::marker { color: var(--app-fg-faint); }
 .popcard { position: absolute; right: 16px; top: 62px; z-index: 50; width: min(480px, 90vw); padding: 24px 26px; }
-.popcard h3 { margin: 0 0 14px; font-size: 13px; }
+.popcard h3 { margin: 0 0 14px; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; color: var(--app-fg); }
 .popcard ul { margin: 0; padding-left: 18px; display: grid; gap: 7px; }
 .popcard li { line-height: 1.5; }
 .popcard .btn { margin-top: 10px; }
