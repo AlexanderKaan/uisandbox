@@ -122,49 +122,85 @@ The engine is already one function per step (`buildProject` ·
   exported patch without the browser; the server is on at least three
   registries.
 
-## Promotie — being seen (after A–D)
+## Promotie — the two-stage launch (after A–D)
 
-What is built is only half of being found; the other half is showing up
-where people already are, once, well. In order of return:
+What is built is only half of being found. The plan is a SOFT launch for
+substance and stars, then the broad one — because the two audiences judge
+differently: HN readers forgive an empty repo and reward measured honesty;
+PH visitors (and the listicles that mine PH) read social proof first — the
+star count, the release, the activity. A repo that says 4 stars undercuts a
+front-page launch; Show HN is the honest way to not be at 4. Never post both
+the same day: answering comments all day IS half the result, and there is
+one of us.
 
-- **The one GIF.** 6–8 seconds, no audio, 1200 px wide, looping: drop a zip →
-  the stage renders 1:1 → one knob turns (Brand to a bold colour, or Radius)
-  and the page follows → the "✓ 1:1 verified" chip. Made from the real app
-  (Playwright screen recording or a screen capture of the stage), trimmed in
-  ffmpeg to a GIF + an MP4 (X prefers MP4; GitHub README takes GIF). This one
-  asset serves X, Product Hunt, Show HN and the README header.
-- **X — the pinned post.** The line *Test your design on the real thing.*,
-  the GIF, one sentence of what it is (your built app, 1:1, your own knobs,
-  export the patch), the link. Pin it. Follow-ups: one knob per post (Brand,
-  Background, Dark mode, the reach meter) — each a 6-second clip.
-- **Show HN.** Title "Show HN: UISandbox – test a design change on your real
-  build, in the browser, 1:1". First comment by the author: what it does, how
-  "1:1" is measured (the check), what it refuses, that nothing leaves the tab,
-  the MCP server, and the honest limits (raster logos, iOS/Android no render).
-  HN rewards the honesty paragraph more than the feature list.
-- **Product Hunt.** Tagline ≤ 60 chars: "Test your design on the real thing".
-  Gallery: the GIF first, then three stills (intake, stage with knobs, the
-  1:1 card). First comment = the Show HN text, shorter. Launch on a Tuesday–
-  Thursday, morning PT.
-- **The MCP line on the homepage** (done): an "MCP" button in the top bar
-  copies `npx -y uisandbox-mcp`, the Claude Code line and the JSON config.
-- **`/uisandbox` skill** (done): `skills/uisandbox/SKILL.md` — the procedure
-  load → set → verify → screenshot → export around the MCP tools, for Claude
-  Code users; later a plugin marketplace entry so it installs by name.
-- **MCP directories** (the official registry is done): Smithery (worth it —
-  one-click installs, real traffic), Glama (claim the auto-made card), the
-  PulseMCP form if at hand; the rest (mcp.so, awesome-lists) only with time to
-  spare — they index the registry anyway.
-- **GitHub**: social preview = `public/og.png`; topics `design-tokens`,
-  `design-system`, `theming`, `css`, `sandbox`, `mcp`, `mcp-server`; the GIF
-  at the top of the README.
-- **Where designers ask** (later, not spam): one answer each, with the GIF,
-  in the threads that already exist — r/web_design, r/Frontend, the Tailwind /
-  shadcn / Astro Discords' showcase channels, Designer News. The question to
-  answer is "how do I try a colour on my live site without rebuilding".
-- Done when: the GIF exists, the X post is pinned, Show HN and PH are posted
-  in one week, Smithery and Glama list the server, and analytics (once on)
-  show where people came from.
+**Stage 0 — the understream (done or account-work, before anything posts):**
+
+- **Assets** (done): the montage (ten builds, brand → shuffle) and the
+  Agency demo clip, gif + mp4, in `brand/marketing/gif/`; stills and copy in
+  `brand/marketing/`; OG from the live hero. Remaining: the montage GIF at
+  the top of the README (wearing the first five seconds of a stranger's
+  attention).
+- **MCP directories** (registry done; forms are account-work): Smithery
+  (one-click installs, real traffic), Glama (claim the auto-made card),
+  PulseMCP. Each card links the repo — a steady drip of MCP-curious
+  developers, star by star.
+- **Awesome lists**: a one-line PR to `punkpeye/awesome-mcp-servers` (and
+  `wong2/awesome-mcp-servers`) with the one-liner from
+  `brand/marketing/copy.md`. Quiet, permanent, compounding.
+- **Search Console + Bing** (account-work): domain property `uisandbox.org`
+  via a DNS TXT in Cloudflare, submit `sitemap.xml`, Request indexing on the
+  homepage; Bing Webmaster imports from GSC in one click (feeds Bing,
+  DuckDuckGo and the AI browsers). "Couldn't fetch" right after submitting
+  is a queue, not an error — verified reachable (200, valid XML, Googlebot
+  UA passes).
+
+**Stage 1 — Show HN, the soft launch (the star source):**
+
+- Audience: developers. They star, fork and DROP THEIR OWN BUILDS — this is
+  where hold-out reports and real-world bugs come from, and each becomes a
+  fixture.
+- Title "Show HN: UISandbox – restyle a built web app in the browser, 1:1,
+  and export the patch". First comment from `brand/marketing/copy.md`: what
+  it does, how "1:1" is measured, what it refuses and why, nothing leaves
+  the tab, the MCP server, the honest limits. HN rewards the honesty
+  paragraph more than the feature list; answer with measurements, not
+  defence.
+- No staging possible: title + first comment are everything; a Show HN that
+  does not land may be reposted once after a few days.
+- Support, same week, NOT same day: the pinned X post (the montage MP4, the
+  written thread), and ONE niche channel where we genuinely answer
+  (Tailwind/shadcn Discord showcase, r/SideProject) — one place, no spray.
+- Between the stages: fix what HN's builds surface (each odd build is the
+  next fixture), let the star count settle.
+
+**Stage 2 — Product Hunt, the broad launch (a few days later):**
+
+- Audience: makers, designers, marketers. They upvote, try the site and
+  share; they barely star — which is why the stars must already be there.
+- Everything is staged and ready in draft: tagline "Play with your real
+  app's design, live", the 492-char description, gallery (hero still, the
+  montage GIF, stage, the 1:1 card, the Agency clip), shoutouts (Cloudflare,
+  Figma, Vite), maker comment with the "Try a sample" line and the limits
+  paragraph. Launch Tuesday–Thursday, 00:01 PT, answer all day.
+- What PH adds that HN does not: reach outside the dev bubble, the
+  permalink/badge, and the listicles ("best design tools of …") that mine
+  PH for months afterwards.
+
+**Always-on, after both:**
+
+- X follow-ups: one knob per post (Brand, Background, Dark mode, the reach
+  meter), each a 6-second clip cut from the montage pipeline
+  (`scripts/og/montage.mjs`, `scripts/og/demo-gif.mjs`).
+- **Where designers ask** (not spam): one answer each, with the GIF, in
+  threads that already exist — r/web_design, r/Frontend, Designer News. The
+  question to answer is "how do I try a colour on my live site without
+  rebuilding".
+- GitHub stays looking lived-in: releases per MCP version are automatic
+  (`.github/workflows/release.yml`); the hold-out counter in the README is
+  the living proof line — keep it current.
+- Done when: Show HN posted and answered, PH launched with the stars
+  already on the counter, Smithery + Glama list the server, GSC indexes the
+  claim, and analytics (once on) say where people came from.
 
 ## Sprint E — After launch (parked, in order of pull)
 
