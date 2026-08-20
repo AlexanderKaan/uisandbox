@@ -1,6 +1,6 @@
 import { Mark, DropGlyph } from './Mark'
-import { useRef, useState } from 'react'
-import { FileArchive, FolderOpen, GitBranch, Check } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { FileArchive, FolderOpen, GitBranch, Check, Info, ShieldCheck, X } from 'lucide-react'
 import { archiveFromFiles, isZip, openZip, type Archive } from '../audit/intake/readZip'
 import { filesFromDrop } from '../audit/intake/readFiles'
 import { STAGES, fmtBytes, type Progress } from './progress'
@@ -32,6 +32,7 @@ const SAMPLES = [
  */
 export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps) {
   const [way, setWay] = useState<Way>('zip')
+  const [showPrivacy, setShowPrivacy] = useState(false)
   const [over, setOver] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
   const [repo, setRepo] = useState('')
@@ -71,9 +72,10 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
           <li><Check size={13} strokeWidth={2.5} /> Open source <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">(MIT)</a></li>
-          <li><Check size={13} strokeWidth={2.5} /> Nothing leaves your tab</li>
+          <li><Check size={13} strokeWidth={2.5} /> Nothing leaves your tab <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
         </ul>
       </section>
+      {showPrivacy && <PrivacyCard onClose={() => setShowPrivacy(false)} />}
       <div className="door">
       <div className="card intake__card">
 
@@ -147,6 +149,11 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
                 <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it. Public repos only, nothing stored. Everything else stays in this tab.</div>
               </div>
             )}
+            {way !== 'repo' && (
+              <button type="button" className="intake__privacy" onClick={() => setShowPrivacy(true)}>
+                <ShieldCheck size={13} strokeWidth={2} /> Read in this tab, never uploaded. No server, no account, no analytics. <u>How to verify</u>
+              </button>
+            )}
             {onSample && (
               <div className="intake__samples">
                 <span>No build at hand? Try a sample:</span>
@@ -161,6 +168,32 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
       </div>
       </div>
       {!busy && <><Landing /><Footer /></>}
+    </div>
+  )
+}
+
+/** The claim, verifiable: what leaves the tab (nothing), and three checks a
+ *  sceptic can run in a minute. Every line here is measured, not promised. */
+function PrivacyCard({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="privacy" role="dialog" aria-modal="true" aria-label="How your files stay private" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="card privacy__card">
+        <button type="button" className="btn btn--ghost btn--icon privacy__close" onClick={onClose} aria-label="Close"><X size={15} /></button>
+        <h3><ShieldCheck size={16} strokeWidth={2} /> Your files stay in this tab</h3>
+        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read here, in the page, and served to the sandbox frame by a service worker on this origin. Exports are generated here too.</p>
+        <p><b>Don't take our word for it:</b></p>
+        <ul>
+          <li><b>Watch the network tab</b> while you drop, turn knobs and export: no request carries your bytes anywhere.</li>
+          <li><b>Go offline.</b> Load the page, switch off your network, then drop the zip: everything still works, because nothing needed the network.</li>
+          <li><b>Read the code.</b> It is open source (MIT): <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/src/sandbox/host.ts" target="_blank" rel="noopener">the file that serves your files</a> and <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">the full security note</a>, including what a hostile archive can and cannot do here.</li>
+        </ul>
+        <p className="privacy__fine">The one exception, said plainly: <em>Connect a repo</em> sends that public GitHub/GitLab URL through uisandbox.org, because neither host lets a browser fetch an archive directly. Nothing is stored. Drop a zip or a folder and not even that leaves the tab.</p>
+      </div>
     </div>
   )
 }
@@ -198,8 +231,8 @@ function Landing() {
         </figure>
       </section>
       <section className="landing__sec">
-        <h2>Nothing leaves your tab</h2>
-        <p>There is no server behind the sandbox. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <h2 id="privacy">Nothing leaves your tab</h2>
+        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. Don't take our word for it: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip — everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>

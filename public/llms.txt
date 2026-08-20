@@ -16,7 +16,7 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 
 - It does not render iOS/Android apps (no browser can); it exports Swift/Android constants from the knobs instead.
 - It does not render source repositories — a build is needed (npm run build → dist/). Source is audited for the knob stand only.
-- It does not upload anything: files are read in the page and served to a sandbox frame by a service worker on the same origin.
+- It does not upload anything: files are read in the page and served to a sandbox frame by a service worker on the same origin. No account, no cookies, no analytics. Verifiable: the page keeps working with the network off, and the network tab stays quiet while you drop, turn knobs and export.
 
 ## How honesty is enforced
 

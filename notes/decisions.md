@@ -918,3 +918,18 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     intake's scroll flow (full-bleed against the scroller's padding, flush at
     the bottom); with a project open it stays app chrome on desktop and is
     hidden on small screens, where the panel and stage need the room.
+138. Soft-launch feedback: dropping a codebase FEELS like handing it over.
+    The answer is not a louder claim but a verifiable one. (a) The service
+    worker now registers on page load, not on the first drop — so "load the
+    page, switch the network off, drop the zip: everything works" is true and
+    measured (drop, knobs, export offline; zero external requests). (b) A
+    quiet line under the drop zone at the moment of doubt ("Read in this tab,
+    never uploaded. No server, no account, no analytics") and an ⓘ next to
+    "Nothing leaves your tab" open one card with the three checks a sceptic
+    can run in a minute: network tab, offline, the source file — plus the one
+    exception (the repo route) said plainly. (c) Analytics is stripped
+    entirely (analytics.ts, consent bar, every track() call, .env.example):
+    "no analytics" is worth more to this product than any counter; traffic
+    questions go to Cloudflare's server-side zone analytics. "Fully secure"
+    as a label was considered and rejected: vague, unfalsifiable, and the
+    exact register HN distrusts.

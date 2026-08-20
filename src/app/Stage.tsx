@@ -1,4 +1,3 @@
-import { track } from '../analytics'
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { ExternalLink, RefreshCw, ShieldCheck, Star } from 'lucide-react'
 import { ScreenPicker } from './ScreenPicker'
@@ -77,7 +76,6 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         res = { ...again, mismatches: persistent, ok: persistent.length === 0 }
       }
       setVerify(res)
-      track('verified', { ok: res.ok, refused: !!res.refusal })
     } catch (err) {
       setVerify({ ok: false, refusal: `Could not load both frames: ${(err as Error).message}`, elements: 0, unpaired: { raw: 0, sandbox: 0 }, mismatches: [] })
     } finally {

@@ -12,7 +12,6 @@ import { McpButton } from './McpButton'
 import { StarButton } from './StarButton'
 import { Footer } from './Footer'
 import type { Progress } from './progress'
-import { track, needsConsent, setConsent } from '../analytics'
 import { DEFAULT_CONFIG } from '../tokens/defaults'
 import { varName } from '../sandbox/table'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
@@ -52,7 +51,6 @@ export function App() {
   const [panelOpen, setPanelOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 700)
   const [showExport, setShowExport] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
-  const [askConsent, setAskConsent] = useState(() => needsConsent())
   const frameRef = useRef<HTMLIFrameElement | null>(null)
   const cfgRef = useRef(cfg)
   cfgRef.current = cfg
@@ -281,7 +279,6 @@ export function App() {
 
   const onArchive = async (archive: Archive, root?: string) => {
     setError(null)
-    track('drop')
     if (!busy) fromUrlRef.current = false
     try {
       setBusy({ stage: 'read', done: 0, total: archive.entries.length, bytes: 0, what: archive.rootName })
@@ -304,10 +301,8 @@ export function App() {
       const first = (wanted && project.screens.find((s) => s.path === wanted || s.label === wanted)) || project.screens[0]!
       setLoaded({ project, report, screen: first, archive })
       setShowNotes(true)
-      track('loaded', { screens: project.screens.length, values: project.table.entries.length })
     } catch (err) {
       setError((err as Error).message)
-      track('refused')
     } finally {
       setBusy(null)
     }
@@ -353,6 +348,15 @@ export function App() {
     const gh = url.match(/^(?:https?:\/\/)?(?:www\.)?(github|gitlab)\.com\/[\w.-]+\/[\w.-]+/i) && !/\.zip($|\?)/i.test(url) && !/\/archive\//i.test(url)
     void loadFromUrl(gh ? `/__repo/?u=${encodeURIComponent(url.startsWith('http') ? url : `https://${url}`)}` : url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Register the worker as soon as the page is idle, not on the first drop:
+  // it makes the drop instant, and it makes "go offline, it still works" true
+  // (offline, sw.js can no longer be fetched). Failure is fine here — the
+  // drop path explains it properly.
+  useEffect(() => {
+    const t = setTimeout(() => { ensureWorker().catch(() => {}) }, 800)
+    return () => clearTimeout(t)
   }, [])
 
   // Keyboard: ⌘Z / ⇧⌘Z for the knobs.
@@ -442,13 +446,6 @@ export function App() {
           </>
         )}
         {!loaded && <Intake onArchive={onArchive} onUrl={(u) => void loadFromUrl(`/__repo/?u=${encodeURIComponent(u)}`)} onSample={(p) => void loadFromUrl(p)} busy={busy} error={error} />}
-        {askConsent && (
-          <div className="consent" role="dialog" aria-label="Analytics">
-            <span>We count visits with Google Analytics. No names, nothing about your files. OK?</span>
-            <button type="button" className="btn btn--primary btn--sm" onClick={() => { setConsent(true); setAskConsent(false) }}>OK</button>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setConsent(false); setAskConsent(false) }}>No thanks</button>
-          </div>
-        )}
       </div>
       {loaded && <Footer />}
       {showExport && loaded && (

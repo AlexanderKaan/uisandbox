@@ -54,7 +54,7 @@ of a PUBLIC zip passing through; nothing is stored, no token is ever involved
   archive it was itself dropped from, and annoy. It cannot reach anything the
   tool does not have. Keep it that way: **deploy UISandbox on a dedicated
   origin** (its own (sub)domain, no cookies, no other app on it, no analytics
-  that carries identity), and never add server-side state to it.
+  at all — the deployed site ships none), and never add server-side state to it.
 - **Cross-origin fetches from their scripts** happen with the user's browser
   and the tool's origin, credentials omitted — the same as any page the user
   opens. `/__ext/` (the CDN stylesheet proxy) is the browser fetching with

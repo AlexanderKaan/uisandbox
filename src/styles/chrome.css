@@ -282,9 +282,6 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .intake__fine a { color: var(--app-fg-muted); text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--app-fg-muted) 40%, transparent); text-underline-offset: 2px; }
 .intake__fine a:hover { color: var(--app-fg); }
 
-/* The one bar the app ever shows: analytics consent (GA only; the cookieless
-   Cloudflare beacon needs none). */
-.consent { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 90; display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: var(--app-surface); border: 1px solid var(--app-border); box-shadow: var(--app-shadow-md); font-size: 13px; color: var(--app-fg-muted); max-width: min(680px, 94vw); }
 
 /* === Intake: three ways in, and the stages while it works === */
 .intake__ways { display: inline-flex; gap: 2px; padding: 3px; margin: 4px auto 14px; background: var(--app-surface-2, var(--app-hover)); border: 1px solid var(--app-border); border-radius: 10px; }
@@ -353,6 +350,23 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .hero__proof svg { color: var(--app-fg-muted); }
 .hero__proof a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 35%, transparent); text-underline-offset: 2px; }
 .hero__proof a:hover { color: var(--app-fg); }
+.hero__info { display: inline-flex; align-items: center; padding: 2px; margin-left: 2px; border: 0; background: transparent; color: var(--app-fg-faint); cursor: pointer; }
+.hero__info:hover { color: var(--app-fg); }
+/* The quiet line under the drop zone: the privacy claim at the moment of doubt. */
+.intake__privacy { display: inline-flex; align-items: center; gap: 6px; margin: 12px auto 0; padding: 0; border: 0; background: transparent; font: inherit; font-size: 12px; color: var(--app-fg-faint); cursor: pointer; }
+.intake__privacy:hover { color: var(--app-fg); }
+.intake__privacy u { text-underline-offset: 2px; }
+/* The privacy card: a small modal, closable by Esc or the backdrop. */
+.privacy { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 16px; background: color-mix(in srgb, var(--app-fg) 26%, transparent); }
+.privacy__card { position: relative; width: min(560px, 100%); max-height: min(80dvh, 640px); overflow-y: auto; padding: 20px 22px; text-align: left; }
+.privacy__card h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; }
+.privacy__card p, .privacy__card li { font-size: 13.5px; line-height: 1.55; color: var(--app-fg-muted); }
+.privacy__card p { margin: 0 0 10px; }
+.privacy__card ul { margin: 0 0 10px; padding-left: 18px; display: grid; gap: 6px; }
+.privacy__card b { color: var(--app-fg); }
+.privacy__card a { color: var(--app-fg); }
+.privacy__fine { font-size: 12.5px; color: var(--app-fg-faint); }
+.privacy__close { position: absolute; top: 10px; right: 10px; }
 .hero__sub { font-size: 16px; line-height: 1.5; color: var(--app-fg-muted); max-width: 58ch; margin: 0 auto 18px; }
 .install--compact { max-width: 440px; margin: 0 auto; }
 .landing { width: min(760px, 100%); display: flex; flex-direction: column; gap: 40px; margin-top: 24px; }

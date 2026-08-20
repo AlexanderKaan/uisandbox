@@ -1,4 +1,3 @@
-import { track } from '../analytics'
 import { useMemo, useState } from 'react'
 import { Check, Copy, Download, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
@@ -59,7 +58,6 @@ export function ExportDialog({ cfg, table, vars, projectName, files, fontCss, on
   const groups = [...new Set(items.map((i) => i.group))]
 
   const download = (name: string, blob: Blob) => {
-    track('export', { format: name.replace(/^.*\./, '') })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
     a.download = name

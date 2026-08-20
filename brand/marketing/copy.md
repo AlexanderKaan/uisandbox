@@ -46,6 +46,18 @@ MIT. https://uisandbox.org · https://github.com/AlexanderKaan/uisandbox — hap
 **Gallery order:** the GIF · `site-hero-light-1440.png` · `stage-acme-brand-crimson.png` · `verify-card.png` · `og-panel-template.png`
 **First comment:** the Show HN comment, shorter: what it is (3 lines), the honesty paragraph, the MCP line, the limits, the ask ("tell me what build it refused").
 
+## The security objection (the ready answer, HN/PH comments)
+
+> Fair worry — don't take my word for it. There is no server behind it, no
+> account, no cookies, no analytics (we stripped even the counter). Three ways
+> to verify in a minute: (1) watch the network tab while you drop, turn knobs
+> and export — no request carries your bytes; (2) load the page, switch your
+> network off, then drop the zip — everything still works; (3) it's MIT, the
+> file that serves your files is src/sandbox/host.ts and the threat model is
+> notes/security.md. The one exception, said plainly: "Connect a repo" sends
+> that public GitHub/GitLab URL through uisandbox.org (no CORS on archives);
+> nothing is stored. Drop a zip or folder and not even that leaves the tab.
+
 ## LinkedIn / longer post
 
 Same as X but with the "why": every design review ends with "can we see it on the real thing?" — that is the whole tool. One paragraph on the honesty (the check), one on the agent flow, the link.
