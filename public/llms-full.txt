@@ -64,7 +64,7 @@ Restyle your app without rebuilding it — drop the build, turn the knobs, watch
 </p>
 
 ```bash
-npx uisandbox-mcp open ./dist     # the sandbox opens in your browser with your build — no agent needed
+npx uisandbox-mcp open            # run inside your project: it finds the build and opens the sandbox — no agent needed
 ```
 
 Or drop a zip on **[uisandbox.org](https://uisandbox.org)**. Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.

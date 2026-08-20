@@ -34,7 +34,7 @@ The conversation this is built for: *"Can I look at this app in a sandbox and ch
 ## Without an agent
 
 ```bash
-npx uisandbox-mcp open ./dist          # a folder or a zip: the sandbox opens in your browser, served from 127.0.0.1
+npx uisandbox-mcp open                 # inside your project: finds the build, opens the sandbox (a folder or zip as argument works too)
 ```
 
 ## Slash commands

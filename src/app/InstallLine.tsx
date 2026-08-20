@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 
 const LINES: Array<{ id: string; label: string; cmd: string; hint: string }> = [
-  { id: 'cli', label: 'Terminal', cmd: 'npx uisandbox-mcp open ./dist', hint: 'Opens the sandbox in your browser with your build folder (or a zip). Or just `npx uisandbox-mcp open` inside your project: it finds the build — dist/, build/, out/, whatever yours is called.' },
+  { id: 'cli', label: 'Terminal', cmd: 'npx uisandbox-mcp open', hint: 'Run it inside your project: it finds the build (dist/, build/, out/, whatever yours is called) and opens the sandbox in your browser. A folder or zip as argument works too.' },
   { id: 'claude', label: 'Claude Code', cmd: 'claude mcp add uisandbox -- npx -y uisandbox-mcp', hint: 'Then: "open this app in UISandbox". It builds, loads, opens.' },
   { id: 'plugin', label: '/uisandbox skill', cmd: '/plugin marketplace add AlexanderKaan/uisandbox\n/plugin install uisandbox@uisandbox', hint: 'Two commands in Claude Code: the /uisandbox skill and the MCP server in one plugin.' },
   { id: 'mcp', label: 'Any MCP client', cmd: 'npx -y uisandbox-mcp', hint: 'Cursor, Claude Desktop, Codex: add as a stdio server.' },

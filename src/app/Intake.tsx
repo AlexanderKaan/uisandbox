@@ -236,7 +236,7 @@ function Landing() {
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>
-        <p>The same engine runs as an MCP server, and as a <b>Claude Code skill</b>, <code>/uisandbox</code>. Say <em>"open this app in UISandbox"</em> and it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. The plugin installs the skill and the server in one step; any MCP client (Cursor, Claude Desktop, Codex) gets the server and its own <code>/uisandbox:open</code> prompt. Or <code>npx uisandbox-mcp open ./dist</code> without any agent.</p>
+        <p>The same engine runs as an MCP server, and as a <b>Claude Code skill</b>, <code>/uisandbox</code>. Say <em>"open this app in UISandbox"</em> and it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. The plugin installs the skill and the server in one step; any MCP client (Cursor, Claude Desktop, Codex) gets the server and its own <code>/uisandbox:open</code> prompt. Or <code>npx uisandbox-mcp open</code> inside your project, without any agent.</p>
         <InstallLine />
       </section>
       <section className="landing__sec landing__sec--quiet">
