@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Braces, Check, Copy, Diff, Download, FileCode2, FileJson2, Package, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
+import { Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
 import type { SubstitutionTable } from '../sandbox/table'
 import { genSheetCss, genSheetJson, genPatch, genPatchedFiles } from '../export/genSheet'
@@ -81,11 +81,17 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
   }, [cfg, base])
   const movedCount = useMemo(() => { const id = table.identityVars(); return Object.keys(vars).filter((k) => vars[k] !== id[k]).length }, [table, vars])
 
+  // Four destinations; the formats are tabs INSIDE a destination, never a wall.
+  const DESTS = [
+    { title: 'Into your source', sub: 'your files patched in place, or a find → replace list', icon: <FileCode2 size={15} strokeWidth={1.75} />, ids: ['files', 'sheet-patch'], reco: true },
+    { title: 'Into the browser', sub: 'CSS variables to drop in, whole or changed-only', icon: <Braces size={15} strokeWidth={1.75} />, ids: ['sheet-changed', 'sheet-css', 'sheet-json'] },
+    { title: 'Into your design system', sub: 'tokens for CSS, Tailwind or shadcn', icon: <SwatchBook size={15} strokeWidth={1.75} />, ids: ['tokens-css', 'tokens-json', 'tokens-tw', 'tokens-shadcn'] },
+    { title: 'Into a native app', sub: 'Swift constants and Android resources', icon: <Smartphone size={15} strokeWidth={1.75} />, ids: ['ios-swift', 'ios-assets', 'android-xml', 'android-kt'] },
+  ]
   const [active, setActive] = useState('overview')
   const [copied, setCopied] = useState(false)
   const item = items.find((i) => i.id === active)
   const text = useMemo(() => item ? item.make() : '', [item])
-  const groups = [...new Set(items.map((i) => i.group))]
 
   const download = (name: string, blob: Blob) => {
     const a = document.createElement('a')
@@ -103,96 +109,74 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
 
   return (
     <div className="dialog__backdrop" onClick={onClose}>
-      <div className="card dialog" role="dialog" aria-label="Export" onClick={(e) => e.stopPropagation()}>
+      <div className="card dialog dialog--narrow" role="dialog" aria-label="Export" onClick={(e) => e.stopPropagation()}>
         <div className="dialog__head">
-          <h2>Export: exactly what is in the sandbox</h2>
+          {item ? (
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setActive('overview'); setCopied(false) }}><ChevronLeft size={14} /> Export</button>
+          ) : (
+            <h2>Export: exactly what is in the sandbox</h2>
+          )}
           <span className="stage__spacer" style={{ flex: 1 }} />
           <button type="button" className="btn btn--secondary btn--sm" onClick={downloadAll}><Download size={13} strokeWidth={2} /> Everything (.zip)</button>
           <button type="button" className="btn btn--ghost btn--icon" onClick={onClose} aria-label="Close"><X size={15} /></button>
         </div>
-        <div className="dialog__body">
-          <nav className="dialog__nav">
-            <button type="button" className={`exp__item ${active === 'overview' ? 'exp__item--on' : ''}`} onClick={() => { setActive('overview'); setCopied(false) }}>
-              <span className="exp__ico"><Package size={15} strokeWidth={1.75} /></span>
-              <span className="exp__text"><span className="exp__label">In this export</span><span className="exp__sub">{movedCount} value{movedCount === 1 ? '' : 's'} moved · {turned.length} knob{turned.length === 1 ? '' : 's'} turned</span></span>
-            </button>
-            {groups.map((g) => (
-              <div key={g}>
-                <div className="menu__label">{g}</div>
-                {items.filter((i) => i.group === g).map((i) => (
-                  <button key={i.id} type="button" className={`exp__item ${i.id === active ? 'exp__item--on' : ''}`} onClick={() => { setActive(i.id); setCopied(false) }}>
-                    <span className="exp__ico">{i.icon}</span>
-                    <span className="exp__text"><span className="exp__label">{i.label}</span>{i.sub && <span className="exp__sub">{i.sub}</span>}</span>
+        {item ? (
+          <div className="dialog__pane">
+            <div className="exp__head">
+              <span className="exp__ico exp__ico--lg">{DESTS.find((d) => d.ids.includes(item.id))?.icon}</span>
+              <div><b>{DESTS.find((d) => d.ids.includes(item.id))?.title}</b><span className="exp__headsub">{DESTS.find((d) => d.ids.includes(item.id))?.sub}</span></div>
+              <span className="stage__spacer" style={{ flex: 1 }} />
+              <div className="exp__tabs" role="tablist">
+                {(DESTS.find((d) => d.ids.includes(item.id))?.ids ?? []).map((id) => { const it = items.find((x) => x.id === id)!; return (
+                  <button key={id} type="button" role="tab" aria-selected={id === active} className={`exp__tab ${id === active ? 'exp__tab--on' : ''}`} onClick={() => { setActive(id); setCopied(false) }}>{it.label}</button>
+                ) })}
+              </div>
+            </div>
+            <pre>{text}</pre>
+            <div className="dialog__tools">
+              <span>{item.file} · {text.length.toLocaleString()} chars</span>
+              <span className="stage__spacer" />
+              <button type="button" className="btn btn--ghost btn--sm" onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>
+                {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={2} />} {copied ? 'Copied' : 'Copy'}
+              </button>
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => download(item.file, new Blob([text], { type: 'text/plain' }))}><Download size={13} strokeWidth={2} /> Download</button>
+            </div>
+          </div>
+        ) : (
+          <div className="exp__overview">
+            <div className="exp__stats">
+              <div className="exp__stat"><b>{movedCount}</b><span>of {table.entries.length} values moved</span></div>
+              <div className="exp__stat"><b>{patched?.length ?? 0}</b><span>file{(patched?.length ?? 0) === 1 ? '' : 's'} changed</span></div>
+              <div className="exp__stat"><b>{turned.length}</b><span>knob{turned.length === 1 ? '' : 's'} turned</span></div>
+            </div>
+            <div className="exp__dest">
+              <div className="menu__label">Where do you want it?</div>
+              <div className="exp__destgrid">
+                {DESTS.map((d) => (
+                  <button key={d.title} type="button" className="exp__card" onClick={() => { setActive(d.ids[0]!); setCopied(false) }}>
+                    <span className="exp__ico">{d.icon}</span>
+                    <span className="exp__text"><span className="exp__label">{d.title}{d.reco && movedCount > 0 && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">{d.sub}</span></span>
                   </button>
                 ))}
               </div>
-            ))}
-          </nav>
-          <div className="dialog__pane">
-            {item ? (
-              <>
-                <div className="exp__head">
-                  <span className="exp__ico exp__ico--lg">{item.icon}</span>
-                  <div><b>{item.label}</b>{item.sub && <span className="exp__headsub">{item.sub}</span>}</div>
-                </div>
-                <pre>{text}</pre>
-                <div className="dialog__tools">
-                  <span>{item.file} · {text.length.toLocaleString()} chars</span>
-                  <span className="stage__spacer" />
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={async () => { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500) }}>
-                    {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={2} />} {copied ? 'Copied' : 'Copy'}
-                  </button>
-                  <button type="button" className="btn btn--secondary btn--sm" onClick={() => download(item.file, new Blob([text], { type: 'text/plain' }))}><Download size={13} strokeWidth={2} /> Download</button>
-                </div>
-              </>
-            ) : (
-              <div className="exp__overview">
-                <div className="exp__head"><span className="exp__ico exp__ico--lg"><Package size={16} strokeWidth={1.75} /></span><div><b>In this export</b><span className="exp__headsub">everything below derives from the sandbox as it stands</span></div></div>
-                <div className="exp__stats">
-                  <div className="exp__stat"><b>{movedCount}</b><span>of {table.entries.length} values moved</span></div>
-                  <div className="exp__stat"><b>{patched?.length ?? 0}</b><span>file{(patched?.length ?? 0) === 1 ? '' : 's'} changed</span></div>
-                  <div className="exp__stat"><b>{turned.length}</b><span>knob{turned.length === 1 ? '' : 's'} turned</span></div>
-                </div>
-                <div className="exp__dest">
-                  <div className="menu__label">Where do you want it?</div>
-                  <div className="exp__destgrid">
-                    <button type="button" className="exp__card" onClick={() => setActive('files')}>
-                      <span className="exp__ico"><FileCode2 size={15} strokeWidth={1.75} /></span>
-                      <span className="exp__text"><span className="exp__label">Into your source{movedCount > 0 && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">your files patched in place, or a find → replace list</span></span>
-                    </button>
-                    <button type="button" className="exp__card" onClick={() => setActive('sheet-changed')}>
-                      <span className="exp__ico"><Braces size={15} strokeWidth={1.75} /></span>
-                      <span className="exp__text"><span className="exp__label">Into the browser</span><span className="exp__sub2">CSS variables to drop in, whole or changed-only</span></span>
-                    </button>
-                    <button type="button" className="exp__card" onClick={() => setActive('tokens-css')}>
-                      <span className="exp__ico"><SwatchBook size={15} strokeWidth={1.75} /></span>
-                      <span className="exp__text"><span className="exp__label">Into your design system</span><span className="exp__sub2">tokens for CSS, Tailwind or shadcn</span></span>
-                    </button>
-                    <button type="button" className="exp__card" onClick={() => setActive('ios-swift')}>
-                      <span className="exp__ico"><Smartphone size={15} strokeWidth={1.75} /></span>
-                      <span className="exp__text"><span className="exp__label">Into a native app</span><span className="exp__sub2">Swift constants and Android resources</span></span>
-                    </button>
+            </div>
+            {turned.length ? (
+              <div className="exp__turned">
+                <div className="menu__label">Settings, from your code → the sandbox</div>
+                {turned.map((t, i) => (
+                  <div key={i} className="exp__row">
+                    <span className="exp__rowlabel">{t.label}</span>
+                    <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 10, height: 10 }} />}{t.from}</span>
+                    <span className="exp__arrow">→</span>
+                    <span className="exp__to">{t.swatch && <span className="fmrow__dot" style={{ background: t.to, width: 10, height: 10 }} />}{t.to}</span>
                   </div>
-                </div>
-                {turned.length ? (
-                  <div className="exp__turned">
-                    <div className="menu__label">Settings, from your code → the sandbox</div>
-                    {turned.map((t, i) => (
-                      <div key={i} className="exp__row">
-                        <span className="exp__rowlabel">{t.label}</span>
-                        <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 10, height: 10 }} />}{t.from}</span>
-                        <span className="exp__arrow">→</span>
-                        <span className="exp__to">{t.swatch && <span className="fmrow__dot" style={{ background: t.to, width: 10, height: 10 }} />}{t.to}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="exp__none">Nothing turned yet: every export below is your code's own stand (the identity). Turn a knob and this list says exactly what changed.</p>
-                )}
+                ))}
               </div>
+            ) : (
+              <p className="exp__none">Nothing turned yet: every export is your code's own stand (the identity). Turn a knob and this list says exactly what changed.</p>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
