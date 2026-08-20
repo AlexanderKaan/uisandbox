@@ -39,19 +39,19 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
   const [patched, setPatched] = useState<Array<{ path: string; text: string }> | null>(null)
   useEffect(() => { let on = true; void genPatchedFiles(files, table, vars, fontCss).then((p) => { if (on) setPatched(p) }); return () => { on = false } }, [files, table, vars, fontCss])
   const items = useMemo<Item[]>(() => [
-    { id: 'files', group: 'Your files, patched', label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet', sub: 'your CSS/HTML, new values in place', icon: <FileCode2 size={15} strokeWidth={1.75} />, file: 'patched-files.txt', make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first — then your CSS/HTML appear here with the new values written in place. */' },
-    { id: 'sheet-css', group: 'Your values', label: 'CSS variables', sub: 'the whole sheet, drop-in', icon: <Braces size={15} strokeWidth={1.75} />, file: 'sandbox-values.css', make: () => genSheetCss(table, vars) },
-    { id: 'sheet-changed', group: 'Your values', label: 'CSS, changed only', sub: 'just what you turned', icon: <Diff size={15} strokeWidth={1.75} />, file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
-    { id: 'sheet-patch', group: 'Your values', label: 'Patch list', sub: 'find → replace, for your source', icon: <Replace size={15} strokeWidth={1.75} />, file: 'sandbox-patch.txt', make: () => genPatch(table, vars) },
-    { id: 'sheet-json', group: 'Your values', label: 'JSON', sub: 'every value, machine-readable', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'sandbox-values.json', make: () => genSheetJson(table, vars) },
-    { id: 'tokens-css', group: 'The tokens', label: 'tokens.css', sub: 'the --k-* system as CSS', icon: <SwatchBook size={15} strokeWidth={1.75} />, file: 'tokens.css', make: () => genCss(cfg) },
-    { id: 'tokens-json', group: 'The tokens', label: 'tokens.json', sub: 'the same, as JSON', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'tokens.json', make: () => genJson(cfg) },
-    { id: 'tokens-tw', group: 'The tokens', label: 'Tailwind', sub: 'theme block for your config', icon: <Wind size={15} strokeWidth={1.75} />, file: 'tailwind.tokens.js', make: () => genTailwind(cfg) },
-    { id: 'tokens-shadcn', group: 'The tokens', label: 'shadcn', sub: '--background, --primary, …', icon: <Boxes size={15} strokeWidth={1.75} />, file: 'shadcn.css', make: () => genShadcn(cfg) },
-    { id: 'ios-swift', group: 'iOS', label: 'DesignTokens.swift', sub: 'constants for SwiftUI/UIKit', icon: <Apple size={15} strokeWidth={1.75} />, file: 'DesignTokens.swift', make: () => genSwift(cfg) },
-    { id: 'ios-assets', group: 'iOS', label: 'Asset catalog', sub: 'colour sets, light + dark', icon: <FolderTree size={15} strokeWidth={1.75} />, file: 'DesignTokens.xcassets.txt', make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n') },
-    { id: 'android-xml', group: 'Android', label: 'colors.xml (+ night)', sub: 'resources, light + night', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'colors.xml', make: () => genAndroidColorsXml(cfg) + '\n' + genAndroidColorsXml(cfg, 'dark') },
-    { id: 'android-kt', group: 'Android', label: 'DesignTokens.kt', sub: 'Compose constants', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'DesignTokens.kt', make: () => genAndroidKotlin(cfg) },
+    { id: 'files', group: 'For your source', label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet', sub: 'your CSS/HTML, new values in place', icon: <FileCode2 size={15} strokeWidth={1.75} />, file: 'patched-files.txt', make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first — then your CSS/HTML appear here with the new values written in place. */' },
+    { id: 'sheet-patch', group: 'For your source', label: 'Patch list', sub: 'find → replace, for your source', icon: <Replace size={15} strokeWidth={1.75} />, file: 'sandbox-patch.txt', make: () => genPatch(table, vars) },
+    { id: 'sheet-css', group: 'For the browser', label: 'CSS variables', sub: 'the whole sheet, drop-in', icon: <Braces size={15} strokeWidth={1.75} />, file: 'sandbox-values.css', make: () => genSheetCss(table, vars) },
+    { id: 'sheet-changed', group: 'For the browser', label: 'CSS, changed only', sub: 'just what you turned', icon: <Diff size={15} strokeWidth={1.75} />, file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
+    { id: 'sheet-json', group: 'For the browser', label: 'JSON', sub: 'every value, machine-readable', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'sandbox-values.json', make: () => genSheetJson(table, vars) },
+    { id: 'tokens-css', group: 'For your design system', label: 'tokens.css', sub: 'the --k-* system as CSS', icon: <SwatchBook size={15} strokeWidth={1.75} />, file: 'tokens.css', make: () => genCss(cfg) },
+    { id: 'tokens-json', group: 'For your design system', label: 'tokens.json', sub: 'the same, as JSON', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'tokens.json', make: () => genJson(cfg) },
+    { id: 'tokens-tw', group: 'For your design system', label: 'Tailwind', sub: 'theme block for your config', icon: <Wind size={15} strokeWidth={1.75} />, file: 'tailwind.tokens.js', make: () => genTailwind(cfg) },
+    { id: 'tokens-shadcn', group: 'For your design system', label: 'shadcn', sub: '--background, --primary, …', icon: <Boxes size={15} strokeWidth={1.75} />, file: 'shadcn.css', make: () => genShadcn(cfg) },
+    { id: 'ios-swift', group: 'For native apps', label: 'DesignTokens.swift', sub: 'constants for SwiftUI/UIKit', icon: <Apple size={15} strokeWidth={1.75} />, file: 'DesignTokens.swift', make: () => genSwift(cfg) },
+    { id: 'ios-assets', group: 'For native apps', label: 'Asset catalog', sub: 'colour sets, light + dark', icon: <FolderTree size={15} strokeWidth={1.75} />, file: 'DesignTokens.xcassets.txt', make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n') },
+    { id: 'android-xml', group: 'For native apps', label: 'colors.xml (+ night)', sub: 'resources, light + night', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'colors.xml', make: () => genAndroidColorsXml(cfg) + '\n' + genAndroidColorsXml(cfg, 'dark') },
+    { id: 'android-kt', group: 'For native apps', label: 'DesignTokens.kt', sub: 'Compose constants', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'DesignTokens.kt', make: () => genAndroidKotlin(cfg) },
   ], [cfg, table, vars, patched])
   // The overview: which knobs stand off their code, from → to.
   const KNOB_LABELS: Array<[keyof Config, string]> = [
@@ -152,6 +152,27 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
                   <div className="exp__stat"><b>{movedCount}</b><span>of {table.entries.length} values moved</span></div>
                   <div className="exp__stat"><b>{patched?.length ?? 0}</b><span>file{(patched?.length ?? 0) === 1 ? '' : 's'} changed</span></div>
                   <div className="exp__stat"><b>{turned.length}</b><span>knob{turned.length === 1 ? '' : 's'} turned</span></div>
+                </div>
+                <div className="exp__dest">
+                  <div className="menu__label">Where do you want it?</div>
+                  <div className="exp__destgrid">
+                    <button type="button" className="exp__card" onClick={() => setActive('files')}>
+                      <span className="exp__ico"><FileCode2 size={15} strokeWidth={1.75} /></span>
+                      <span className="exp__text"><span className="exp__label">Into your source{movedCount > 0 && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">your files patched in place, or a find → replace list</span></span>
+                    </button>
+                    <button type="button" className="exp__card" onClick={() => setActive('sheet-changed')}>
+                      <span className="exp__ico"><Braces size={15} strokeWidth={1.75} /></span>
+                      <span className="exp__text"><span className="exp__label">Into the browser</span><span className="exp__sub2">CSS variables to drop in, whole or changed-only</span></span>
+                    </button>
+                    <button type="button" className="exp__card" onClick={() => setActive('tokens-css')}>
+                      <span className="exp__ico"><SwatchBook size={15} strokeWidth={1.75} /></span>
+                      <span className="exp__text"><span className="exp__label">Into your design system</span><span className="exp__sub2">tokens for CSS, Tailwind or shadcn</span></span>
+                    </button>
+                    <button type="button" className="exp__card" onClick={() => setActive('ios-swift')}>
+                      <span className="exp__ico"><Smartphone size={15} strokeWidth={1.75} /></span>
+                      <span className="exp__text"><span className="exp__label">Into a native app</span><span className="exp__sub2">Swift constants and Android resources</span></span>
+                    </button>
+                  </div>
                 </div>
                 {turned.length ? (
                   <div className="exp__turned">

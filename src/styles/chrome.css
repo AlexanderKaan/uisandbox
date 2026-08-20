@@ -273,7 +273,13 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__stat { flex: 1; border: 1px solid var(--app-border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
 .exp__stat b { font-size: 18px; letter-spacing: -0.01em; }
 .exp__stat span { font-size: 11.5px; color: var(--app-fg-faint); }
-.exp__turned { padding: 0 16px 16px; }
+.exp__dest { padding: 0 16px 6px; }
+.exp__destgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.exp__card { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border: 1px solid var(--app-border); border-radius: 10px; background: var(--app-surface); text-align: left; cursor: pointer; transition: border-color var(--app-dur) var(--app-ease), background var(--app-dur) var(--app-ease); }
+.exp__card:hover { border-color: var(--app-fg-muted); }
+.exp__sub2 { font-size: 11.5px; color: var(--app-fg-faint); line-height: 1.4; }
+.exp__reco { font-style: normal; font-size: 10px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--app-bg); background: var(--app-fg); border-radius: 999px; padding: 2px 7px; margin-left: 7px; vertical-align: 1px; }
+.exp__turned { padding: 10px 16px 16px; }
 .exp__row { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; }
 .exp__row:first-of-type { border-top: 0; }
 .exp__rowlabel { flex: none; width: 130px; font-weight: 550; }
