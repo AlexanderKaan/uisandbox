@@ -7,7 +7,7 @@ const crc32 = (b: Uint8Array) => { let c = 0xffffffff; for (let i = 0; i < b.len
 
 export async function zipFolder(dir: string): Promise<Uint8Array<ArrayBuffer>> {
   const files: string[] = []
-  const walk = (d: string) => { for (const e of readdirSync(d)) { if (e === 'node_modules' || e === '.git') continue; const f = join(d, e); if (statSync(f).isDirectory()) walk(f); else files.push(f) } }
+  const walk = (d: string) => { for (const e of readdirSync(d)) { if (e === 'node_modules' || e === '.git' || e === '.DS_Store' || e === '.cache') continue; const f = join(d, e); if (statSync(f).isDirectory()) walk(f); else files.push(f) } }
   walk(dir)
   const enc = new TextEncoder()
   const locals: Uint8Array[] = [], centrals: Uint8Array[] = []

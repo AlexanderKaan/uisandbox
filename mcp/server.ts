@@ -86,7 +86,7 @@ When to use it — and offer it without being asked:
 
 Rules: never claim more than \`verify\` and the reach meter report — quote the numbers; if a load is refused (iOS/Android/source-only), relay the reason and suggest building first; \`verify\`/\`screenshot\` need Chromium (npx playwright install chromium once) — \`open\`, \`load\`, \`set\`, \`export\` do not.`
 
-const server = new McpServer({ name: 'uisandbox', version: '0.3.1' }, { instructions: INSTRUCTIONS })
+const server = new McpServer({ name: 'uisandbox', version: '0.3.2' }, { instructions: INSTRUCTIONS })
 
 server.registerTool('load', {
   title: 'Load a built web app',
@@ -211,7 +211,7 @@ server.registerTool('open', {
   const { port } = await localServer()
   const hash = JSON.stringify(p.cfg) === JSON.stringify(p.report.baseline.cfg) ? '' : `#${encode(p.cfg)}`
   const url = `http://127.0.0.1:${port}/?load=${encodeURIComponent(`/__archive/${id}.zip`)}&sync=${id}${screen ? `&screen=${encodeURIComponent(screen)}` : ''}${hash}`
-  openInBrowser(url)
+  if (!argv.includes('--no-browser')) openInBrowser(url)
   return { content: [{ type: 'text', text: JSON.stringify({ opened: url, note: 'The sandbox is open in the browser. The user can turn the knobs there; what they turn comes back to this server — call `export`, `verify` or `screenshot` afterwards to work with it. Use `state` to read the current knobs.' }, null, 2) }] }
 })
 
@@ -294,8 +294,11 @@ server.registerPrompt('try', {
 
 /* ── CLI: `uisandbox-mcp open <zip|folder>` for a human without an agent ───── */
 const argv = process.argv.slice(2)
-if (argv[0] === 'open' && argv[1]) {
-  const target = argv[1]
+if (argv[0] === 'open') {
+  // `open` with no argument means the folder you are in: any repo works — the
+  // build folder (dist/, build/, out/, public/, _site/…) is found inside it,
+  // whatever the framework calls it. `--no-browser` prints the URL only.
+  const target = argv.slice(1).find((a) => !a.startsWith('--')) ?? '.'
   let bytes: Uint8Array<ArrayBuffer>, name: string
   if (statSync(target).isDirectory()) {
     // Zip the folder in memory (store, no compression — it only travels to the browser on this machine).
@@ -310,8 +313,8 @@ if (argv[0] === 'open' && argv[1]) {
   projects.set(id, { id, name: archive.rootName, bytes, project, report, cfg: report.baseline.cfg, archive })
   const { port } = await localServer()
   const url = `http://127.0.0.1:${port}/?load=${encodeURIComponent(`/__archive/${id}.zip`)}&sync=${id}`
-  openInBrowser(url)
-  console.log(`UISandbox is open: ${url}\n${project.screens.length} screens · ${project.table.entries.length} values · brand ${report.baseline.cfg.cPrimary}\nCtrl-C to stop.`)
+  if (!argv.includes('--no-browser')) openInBrowser(url)
+  console.log(`UISandbox is open: ${url}\n${project.root ? `build found at ${project.root}/ · ` : ''}${project.screens.length} screens · ${project.table.entries.length} values · brand ${report.baseline.cfg.cPrimary}\nCtrl-C to stop.`)
   await new Promise(() => {})
 }
 
