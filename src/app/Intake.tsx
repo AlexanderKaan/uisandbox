@@ -5,6 +5,7 @@ import { archiveFromFiles, isZip, openZip, type Archive } from '../audit/intake/
 import { filesFromDrop } from '../audit/intake/readFiles'
 import { STAGES, fmtBytes, type Progress } from './progress'
 import { InstallLine } from './InstallLine'
+import { Footer } from './Footer'
 
 interface IntakeProps {
   onArchive: (archive: Archive) => void
@@ -159,7 +160,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
         {(error || localError) && <div className="intake__error">{error || localError}</div>}
       </div>
       </div>
-      {!busy && <Landing />}
+      {!busy && <><Landing /><Footer /></>}
     </div>
   )
 }

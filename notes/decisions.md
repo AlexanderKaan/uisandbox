@@ -913,3 +913,8 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     it. With a project open the knobs panel no longer squeezes the stage
     into a sliver: it opens closed on ≤700px and overlays full-width when
     toggled. Desktop measured unchanged (relative, 288px).
+137. The footer was app chrome outside the intake's scroller, so on a phone it
+    sat fixed under every scroll position. It now lives at the end of the
+    intake's scroll flow (full-bleed against the scroller's padding, flush at
+    the bottom); with a project open it stays app chrome on desktop and is
+    hidden on small screens, where the panel and stage need the room.
