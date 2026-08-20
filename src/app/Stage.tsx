@@ -38,6 +38,21 @@ const WIDTHS: Array<{ id: string; label: string; w: number | null }> = [
 /** What a sandboxed document may do — everything a page needs, minus top navigation. */
 export const SANDBOX_FLAGS = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock'
 
+/** A prefilled GitHub issue: every wrong render should be one click from a
+ *  report that carries the numbers instead of a screenshot. */
+function reportUrl(project: SandboxProject, detail: string): string {
+  const title = `Build report: ${project.name}`
+  const body = [
+    '**What I dropped:** (attach the zip, or paste the public repo/URL)',
+    '',
+    `**What UISandbox said:** ${detail}`,
+    '',
+    `**Numbers:** ${project.screens.length} screens · ${project.table.entries.length} values · platform ${project.platform.label}`,
+    `**Browser:** ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}`,
+  ].join('\n')
+  return `https://github.com/AlexanderKaan/uisandbox/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=build-report`
+}
+
 export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, warningTitle, coverage, notes }: StageProps) {
   const [showCov, setShowCov] = useState(false)
   const [width, setWidth] = useState<string>('fit')
@@ -134,7 +149,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
           </div>
         )}
         {warning && !leftSandbox && (
-          <div className="card popcard popcard--low verify" role="status"><h3>{warningTitle ?? 'Is this the built app?'}</h3><div>{warning}</div></div>
+          <div className="card popcard popcard--low verify" role="status"><h3>{warningTitle ?? 'Is this the built app?'}</h3><div>{warning}</div><div style={{ marginTop: 8 }}><a className="btn btn--ghost btn--sm" href={reportUrl(project, warning)} target="_blank" rel="noopener">This is wrong? Report it</a></div></div>
         )}
         {leftSandbox && (
           <div className="card popcard popcard--low verify" role="status">
@@ -163,9 +178,12 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
                 </ul>
               </div>
             )}
-            <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+            <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
               <button type="button" className="btn btn--secondary btn--sm" onClick={runVerify}>Run again</button>
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowVerify(false)}>Close</button>
+              {verify && !('busy' in verify) && !verify.ok && !verify.refusal && (
+                <a className="btn btn--ghost btn--sm" href={reportUrl(project, `1:1 differs — ${verify.mismatches.slice(0, 3).map((m) => `${m.prop}: ${m.raw} → ${m.sandbox}`).join('; ')}`)} target="_blank" rel="noopener">Report this build</a>
+              )}
             </div>
           </div>
         )}

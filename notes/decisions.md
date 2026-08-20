@@ -933,3 +933,15 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     questions go to Cloudflare's server-side zone analytics. "Fully secure"
     as a label was considered and rejected: vague, unfalsifiable, and the
     exact register HN distrusts.
+139. Unknown builds will keep coming; the job is that every miss looks
+    CONTROLLED and is one click from a report. (a) Found by probing before
+    the testers do: a build shipping its own CSP <meta> forbade our inline
+    vars style — every tokenised value collapsed to initial (black text,
+    transparent backgrounds, the classic broken screenshot). Inside the
+    sandbox their CSP protects nothing (the environment is ours), so
+    injectVars strips it; the real deployment keeps its own. Fixture
+    edge-csp, 1:1 ✓. (b) "Report this build" on the differs card and the
+    shell/Flutter warning card: a prefilled GitHub issue carrying the
+    numbers (screens, values, platform, browser, the first mismatches)
+    instead of a screenshot; issue template + private security contact link
+    in .github. Every confirmed report becomes a fixture.

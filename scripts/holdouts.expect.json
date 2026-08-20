@@ -7,6 +7,7 @@
   "bootstrap-53.zip": "ok",
   "compose-samples-main.zip": "no-load",
   "edge-bare.zip": "ok",
+  "edge-csp.zip": "ok",
   "edge-empty.zip": "no-load",
   "edge-images.zip": "no-load",
   "edge-mono.zip": "ok",

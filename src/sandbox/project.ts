@@ -265,6 +265,11 @@ export function hookScriptTag(sid: string): string {
 
 /** Put the variables (and the CSSOM hook) into a served HTML document, before anything else in <head>. */
 export function injectVars(html: string, vars: Record<string, string>, sid: string): string {
+  // A build that ships its own CSP <meta> would forbid OUR inline vars style
+  // and hook script — every tokenised value collapses to initial (black text,
+  // transparent backgrounds). Inside this sandbox their CSP protects nothing
+  // (the environment is ours), so it goes; the page's real deployment keeps it.
+  html = html.replace(/<meta[^>]+http-equiv=["']?content-security-policy(-report-only)?["']?[^>]*>/gi, '')
   const tag = guardScriptTag() + varsStyleTag(vars) + hookScriptTag(sid)
   if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag)
   if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, (m) => m + `<head>${tag}</head>`)

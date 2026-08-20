@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security report (private)
+    url: https://github.com/AlexanderKaan/uisandbox/security/advisories/new
+    about: A way for a dropped archive to reach beyond notes/security.md — report privately.
