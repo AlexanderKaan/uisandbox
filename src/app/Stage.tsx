@@ -145,11 +145,11 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             <h3>What the knobs reach on this screen</h3>
             <div>Of {coverage.elements} visible elements: <b>{coverage.colours.hit}/{coverage.colours.total}</b> painted colours (text, backgrounds, borders), <b>{coverage.fonts.hit}/{coverage.fonts.total}</b> text families, <b>{coverage.sizes.hit}/{coverage.sizes.total}</b> text sizes and <b>{coverage.radii.hit}/{coverage.radii.total}</b> corner radii come from your CSS literals and follow the knobs.</div>
             <div style={{ marginTop: 6 }}>Outside any knob: {coverage.outside.images} image{coverage.outside.images === 1 ? '' : 's'}, {coverage.outside.canvas} canvas, {coverage.outside.video} video, {coverage.outside.backgroundImages} background image{coverage.outside.backgroundImages === 1 ? '' : 's'}: pixels no CSS value can move.</div>
-            <div style={{ marginTop: 10 }}><button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowCov(false)}>Close</button></div>
+            <div style={{ marginTop: 14 }}><button type="button" className="btn btn--secondary btn--sm" onClick={() => setShowCov(false)}>Close</button></div>
           </div>
         )}
         {warning && !leftSandbox && (
-          <div className="card popcard popcard--low verify" role="status"><h3>{warningTitle ?? 'Is this the built app?'}</h3><div>{warning}</div><div style={{ marginTop: 8 }}><a className="btn btn--ghost btn--sm" href={reportUrl(project, warning)} target="_blank" rel="noopener">This is wrong? Report it</a></div></div>
+          <div className="card popcard popcard--low verify" role="status"><h3>{warningTitle ?? 'Is this the built app?'}</h3><div>{warning}</div><div style={{ marginTop: 12 }}><a className="btn btn--secondary btn--sm" href={reportUrl(project, warning)} target="_blank" rel="noopener">This is wrong? Report it</a></div></div>
         )}
         {leftSandbox && (
           <div className="card popcard popcard--low verify" role="status">
@@ -180,7 +180,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
             )}
             <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
               <button type="button" className="btn btn--secondary btn--sm" onClick={runVerify}>Run again</button>
-              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setShowVerify(false)}>Close</button>
+              <button type="button" className="btn btn--secondary btn--sm" onClick={() => setShowVerify(false)}>Close</button>
               {verify && !('busy' in verify) && !verify.ok && !verify.refusal && (
                 <a className="btn btn--ghost btn--sm" href={reportUrl(project, `1:1 differs — ${verify.mismatches.slice(0, 3).map((m) => `${m.prop}: ${m.raw} → ${m.sandbox}`).join('; ')}`)} target="_blank" rel="noopener">Report this build</a>
               )}
