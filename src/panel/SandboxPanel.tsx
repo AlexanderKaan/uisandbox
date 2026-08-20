@@ -96,7 +96,9 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
   rows.push({
     key: 'brand', sec: 'Colour', label: 'Brand', changed: brandChanged,
     value: themeOf(cfg.cPrimary)?.label ?? nameColor(tokens.primaryHex),
-    dot: <span className="fmrow__dot" style={{ background: (families?.centreId?.brand !== undefined ? varNow?.(families.centreId.brand) : undefined) ?? cfg.cPrimary }} />,
+    // The Brand dot is the knob's own value: any family member's live var can
+    // be a same-hue outlier (a syntax navy) and read darker than the pick.
+    dot: <span className="fmrow__dot" style={{ background: cfg.cPrimary }} />,
     body: () => (
       <>
         <div className="fmpop__grid">

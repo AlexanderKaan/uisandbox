@@ -197,10 +197,21 @@ export function familiesOf(table: SubstitutionTable, brandHex: string, opts: { p
   const centreId: Partial<Record<Family, number>> = {}
   for (const [fam, v] of best) { centre[fam] = v.c; centreId[fam] = v.id }
   // The brand's centre is the pick itself, but its dot should read like the
-  // page: the most-used brand entry, mapped.
+  // page: the most-used brand entry NEAR the centre. Same-hue outliers exist —
+  // VitePress carries a syntax-highlight navy (#032f62) in the brand's hue
+  // window with the highest count of the family; a dot reading it shows a
+  // near-black "brand" while the page paints the real one. Prefer members
+  // within ΔL 0.14 of the centre; fall back to the closest member.
   let brandBest: { id: number; n: number } | null = null
-  for (const e of table.ofKind('color')) if (of.get(e.id) === 'brand' && (!brandBest || e.count > brandBest.n)) brandBest = { id: e.id, n: e.count }
+  let brandNear: { id: number; d: number } | null = null
+  for (const e of table.ofKind('color')) {
+    if (of.get(e.id) !== 'brand') continue
+    const c = parseCssColor(e.value)!
+    if (brand && Math.abs(c.L - brand.L) <= 0.14) { if (!brandBest || e.count > brandBest.n) brandBest = { id: e.id, n: e.count } }
+    if (brand) { const d = Math.abs(c.L - brand.L) + Math.abs(c.C - brand.C) * 0.5; if (!brandNear || d < brandNear.d) brandNear = { id: e.id, d } }
+  }
   if (brandBest) centreId.brand = brandBest.id
+  else if (brandNear) centreId.brand = brandNear.id
   delete centre.palette; delete centreId.palette
   // The palette's clusters — 30° bins, most-used member each — for the dots.
   const pbins = new Map<number, { c: Okla; n: number; id: number }>()

@@ -945,3 +945,12 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     numbers (screens, values, platform, browser, the first mismatches)
     instead of a screenshot; issue template + private security contact link
     in .github. Every confirmed report becomes a fixture.
+140. "The brand dot reads darker than the brand": the Brand row's dot read the
+    live var of the family's most-used member — and a same-hue outlier can
+    own that count (VitePress: the syntax-highlight navy #032f62 sits in the
+    brand's hue window; mapped to Coral it reads maroon while the button
+    paints the pick). The Brand dot now shows the knob's own value
+    (cfg.cPrimary) — it moves with the knob by definition and always matches
+    its label; the live-var dots stay where they are right (status, palette,
+    background: their literals). familiesOf also prefers a near-centre member
+    for centreId.brand (ΔL ≤ 0.14, else nearest) for anything else reading it.
