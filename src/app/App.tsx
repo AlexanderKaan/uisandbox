@@ -48,7 +48,8 @@ export function App() {
   const fromUrlRef = useRef(false)
   const setBusy = (p: Progress | null) => setBusyRaw(p ? { ...p, fromUrl: fromUrlRef.current } : null)
   const [error, setError] = useState<string | null>(null)
-  const [panelOpen, setPanelOpen] = useState(true)
+  // On a phone the stage needs the full width first; the knobs open on demand.
+  const [panelOpen, setPanelOpen] = useState(() => typeof window === 'undefined' || window.innerWidth > 700)
   const [showExport, setShowExport] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
   const [askConsent, setAskConsent] = useState(() => needsConsent())

@@ -7,6 +7,9 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body, #root { height: 100%; margin: 0; }
+/* Visual overflow (the corona's blur, animated glows) must never become
+ * horizontally scrollable width — iOS pans the page for it ("wobble"). */
+html, body { overflow-x: hidden; overflow-x: clip; }
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
@@ -394,7 +397,10 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 :root[data-theme="dark"] .door::before { opacity: .38; }
 @media (prefers-reduced-motion: reduce) { .door::before { animation: none; } }
 
-/* Small screens: the topbar keeps only the name; the three ways in get short labels. */
+/* Small screens: the topbar keeps only the name; the three ways in get short
+   labels; the MCP flyout becomes a viewport sheet (anchored right it would
+   leave the screen); the footer keeps to two short lines; the corona stays
+   inside the card's column. */
 @media (max-width: 560px) {
   .app__brand small { display: none; }
   .intake__way { padding: 0 9px; font-size: 12px; }
@@ -402,6 +408,19 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
   .hero h1 { font-size: clamp(30px, 9vw, 40px); }
   .hero__sub { font-size: 15px; }
   .intake { padding: 28px 14px 48px; }
+  .mcp__pop { position: fixed; left: 3vw; right: 3vw; top: 54px; width: auto; max-height: calc(100dvh - 70px); overflow-y: auto; }
+  .foot { padding: 7px 10px; font-size: 10.5px; gap: 2px 8px; line-height: 1.5; }
+  .foot__note, .foot__links a:last-child { display: none; }
+  .door::before { inset: -24px -10px; filter: blur(28px); }
+  /* Cards that anchor to a corner of the stage span the viewport instead. */
+  .popcard, .verify { left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; }
+}
+
+/* Phones with a project open: the knobs panel overlays the stage full-width
+   instead of squeezing it into a sliver (it opens on demand there). */
+@media (max-width: 700px) {
+  .app__body { position: relative; }
+  .app__body .panel { position: absolute; inset: 0; width: 100%; z-index: 55; background: var(--app-bg); }
 }
 
 /* === Topbar: two groups — the tool's own (MCP, Star) and, with a project, the work (undo, Read, Export, Close) === */

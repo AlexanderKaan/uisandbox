@@ -903,3 +903,13 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     and docsify a known-differ family), the Chinese Vue 2 docs (Vue green
     #42b983, 1:1 ok — CJK stacks fine), hexo-icarus' html-less site branch
     (honest refusal). 5 ok · 1 differs · 1 no-load, recorded.
+136. Phones: horizontal panning ("wobble") came from visual overflow — the
+    corona's blur past the viewport; `overflow-x: clip` on html/body (hidden
+    as the fallback) ends it, and the corona keeps to the card's column on
+    small screens. The MCP flyout, anchored right, left the screen — on
+    ≤560px it is a fixed sheet spanning the viewport. The footer drops its
+    quiet line and the llms link and tightens to two short lines. Stage
+    cards (notes, verify, reach) span the viewport instead of hanging off
+    it. With a project open the knobs panel no longer squeezes the stage
+    into a sliver: it opens closed on ≤700px and overlays full-width when
+    toggled. Desktop measured unchanged (relative, 288px).
