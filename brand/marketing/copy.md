@@ -66,3 +66,99 @@ Same as X but with the "why": every design review ends with "can we see it on th
 
 - Play with your real app's design, live — your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
 - Test your design on the real thing: drop a build, turn the knobs, export the patch.
+
+## Sceptical comments, answered (HN/PH-ready, fellow-dev voice)
+
+The register that works: agree with the true part first, give the measurement,
+name the limit before they do, invite the build. Never "actually…", never a
+feature list as a rebuttal.
+
+**"It's a hosted site — 'your files never leave your browser' is a promise I
+can't verify tomorrow. You could ship different JS next week."**
+> Completely fair — a hosted page can't prove its own future. That's why the
+> local path exists: `npx uisandbox-mcp open` runs the same app from npm on
+> 127.0.0.1, or clone and `pnpm dev`. For the hosted one: it's static, the
+> code is MIT on GitHub, and you can load the page, go offline and drop the
+> zip — today's deployment provably phones nothing. For tomorrow's, pin the
+> npm version. If you have a stricter setup in mind I'd genuinely like to
+> hear it.
+
+**"So it's… CSS variables. I can do this in DevTools."**
+> The mechanism is exactly that, on purpose — no magic. What DevTools doesn't
+> give you: every literal across (say) 118 KB of built CSS tokenised at once,
+> byte-preserving; runtime styles hooked too (styled-components, Emotion,
+> Ant's cssinjs insert rules at runtime); a diff that proves the tokenised
+> page renders identical to the untouched one; and the change handed back as
+> a patch/tokens instead of dying with the inspector. It's DevTools' idea,
+> industrialised.
+
+**"'1:1' — sure. My app will look broken."**
+> Maybe! That's why the check is a button, not a promise: it loads your
+> untouched build next to the tokenised one and diffs computed styles of
+> every element, and it tells you the first differences verbatim. 91 of 109
+> real builds pass with zero differences; the ones that don't say so on
+> screen. If yours differs, I want the zip — every miss so far became a
+> fixture and a fix.
+
+**"My styling is all CSS-in-JS at runtime, this can't work."**
+> It hooks the CSSOM before your bundle runs — insertRule/replaceSync get
+> the same rewrite as static CSS. Measured on styled-components, Emotion,
+> Lit and Ant's cssinjs (those are fixtures in the repo). What it can't do
+> is inline `style=` written per-frame by JS animation — the observer
+> catches normal runtime styles, not a 60fps loop.
+
+**"You're executing arbitrary zip JS same-origin with your page. That's an
+XSS playground."**
+> Yes — same-origin is forced by the design (a service worker only serves
+> its own origin), so the threat model starts there: the origin holds
+> nothing. No server, no account, no cookies, no analytics, no storage worth
+> reading. The frames drop allow-top-navigation, a guard makes worker
+> takeover a no-op, zip-slip names are normalised, and there's a hostile
+> fixture in CI that tries all of it. Full write-up: notes/security.md. If
+> you find a way past it, that's a private advisory I'll act on fast.
+
+**"The patch is against built output — my source is SCSS/tokens, so the
+export is useless."**
+> Half true. The patch is find→replace on literals, which survives into
+> source wherever your literals do (plain CSS, Tailwind config values,
+> CSS-vars themes). Where your build computes values (SCSS math, color
+> functions), the patch tells you the from→to pairs and you apply them at
+> the source of truth — and the tokens/Swift/Android exports give you the
+> end state in formats that don't care how you got there. It's not a
+> codemod; it doesn't pretend to be.
+
+**"Figma exists."**
+> Different moment. Figma is before the code exists; this is after — when
+> the review ends with "can we see it on the real thing?". It doesn't
+> replace the mockup; it replaces the rebuild you'd do just to try a colour.
+
+**"It got my brand colour wrong."**
+> The stand is a heuristic stack — declared variable beats cascade-order
+> beats most-painted — and it's measured against 109 builds, but heuristics
+> lose sometimes. Two clicks fix it in the panel; sending me the build fixes
+> it for everyone after you.
+
+**"Was this vibe-coded with AI?"**
+> Built with Claude Code, yes — and held to account like any code: 344
+> tests, a regression gate of 109 real builds that runs on every change,
+> and a numbered decisions log in the repo (128+ entries, including every
+> trap). Judge the gate, not the typist.
+
+**"The repo connector sends my URL to your server — so something DOES leave."**
+> Correct, and the UI says so next to the field: GitHub/GitLab won't serve
+> archives to a browser, so that one route proxies the PUBLIC repo zip;
+> nothing is stored. Drop a zip or folder instead and nothing leaves at all
+> — that path works offline, which is the proof.
+
+**"Your page loads Google Fonts, so 'nothing leaves' is already false."**
+> The claim is about your files — they never leave. The tool's own UI pulls
+> its two typefaces from Google Fonts, and font previews you pick do too;
+> with the network off those fall back to system faces and everything else
+> keeps working. If fonts-off matters to you, the local `npx` app serves
+> everything from 127.0.0.1.
+
+**"What about my app behind auth / hitting APIs?"**
+> Static builds only, honestly: a page that needs its server renders as a
+> shell here, and the tool says "this looks like a shell, not the app"
+> rather than letting it pass. SSR/auth flows are out of scope — the knobs
+> are about design, and design lives in the build's CSS.
