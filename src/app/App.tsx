@@ -92,6 +92,7 @@ export function App() {
     }
     return parts.join('\n')
   }, [cfg.fontDisplay, cfg.fontBody, loaded])
+  const coverageRef = useRef<Coverage | null>(null)
   const fontCssRef = useRef(fontCss)
   fontCssRef.current = fontCss
   // Debug/agent hook: the live state, readable from the console — DEV only:
@@ -99,7 +100,7 @@ export function App() {
   useEffect(() => {
     if (!import.meta.env.DEV) return
     ;(window as unknown as { __us?: unknown }).__us = loaded
-      ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
+      ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, coverage: coverageRef.current, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
       : null
   }, [loaded, cfg, vars, dispatch, fontCss])
   // The tab title says which project is open (a hostile page may rewrite it —
@@ -223,6 +224,7 @@ export function App() {
   useEffect(() => onMissing((project) => { if (loadedRef.current?.project.id === project.id) setMissingFiles(missingFor(project)) }), [])
   useEffect(() => { setMissingFiles(loaded ? missingFor(loaded.project) : []) }, [loaded])
   const [coverage, setCoverage] = useState<Coverage | null>(null)
+  coverageRef.current = coverage
   const coverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const remeasure = useCallback(() => {
     if (coverTimer.current) clearTimeout(coverTimer.current)
@@ -412,6 +414,7 @@ export function App() {
                 onRandomize={() => dispatch({ type: 'REPLACE', cfg: shuffle(cfg, loaded.report.baseline) })}
                 onReset={() => dispatch({ type: 'REPLACE', cfg: loaded.report.baseline.cfg })}
                 history={{ undo, redo, canUndo, canRedo }}
+                radiiOnScreen={coverage ? coverage.radii.total : undefined}
               />
             )}
             <Stage

@@ -32,6 +32,9 @@ interface Props {
   onReset: () => void
   /** Knob history — undo/redo live with the knobs, not in the top bar. */
   history?: { undo: () => void; redo: () => void; canUndo: boolean; canRedo: boolean }
+  /** Painted radii on the current screen (the reach meter's count): 0 means the
+   *  Radius dial has nothing visible to move — the dial says so. */
+  radiiOnScreen?: number
 }
 
 const THEMES: Array<{ id: ColorTheme; label: string; hex: string }> = (Object.keys(COLOR_THEMES) as ColorTheme[]).map((id) => ({ id, label: id[0]!.toUpperCase() + id.slice(1), hex: COLOR_THEMES[id].cPrimary }))
@@ -52,7 +55,7 @@ const FAMILY_ROWS: Array<{ fam: Family; key: keyof Dials; label: string }> = [
  *
  * At rest a row shows a quiet dot — "as in your code"; once turned, "changed".
  */
-export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, varNow, dispatch, onCollapse, onRandomize, onReset, history }: Props) {
+export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = [], hasGradients = false, varNow, dispatch, onCollapse, onRandomize, onReset, history, radiiOnScreen }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(null)
   const popRef = useRef<HTMLDivElement>(null)
@@ -211,6 +214,9 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
       key: spec.key, sec, label: spec.label, changed: v !== bv, value: fmtDial(spec, v),
       body: () => (
         <div className="sbp__dial">
+          {spec.key === 'radius' && radiiOnScreen !== undefined && radiiOnScreen <= 3 && (
+            <p className="sbp__hint" style={{ marginTop: 0, maxWidth: 'none' }}>{radiiOnScreen === 0 ? 'Nothing on this screen paints a rounded corner' : `Only ${radiiOnScreen} element${radiiOnScreen === 1 ? '' : 's'} on this screen paint${radiiOnScreen === 1 ? 's' : ''} a rounded corner`}, so this dial has little visible to move. It scales the radii your CSS has; square corners stay square.</p>
+          )}
           <div className="sbp__dial-row">
             <input type="range" min={spec.min} max={spec.max} step={spec.step} value={v} onChange={(e) => setDial(spec.key, parseFloat(e.target.value))} aria-label={spec.label} list={`snaps-${spec.key}`} />
             <datalist id={`snaps-${spec.key}`}>{spec.snaps.map((s) => <option key={s.at} value={s.at} label={s.label} />)}</datalist>
