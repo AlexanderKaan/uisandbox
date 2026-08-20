@@ -954,3 +954,16 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     its label; the live-var dots stay where they are right (status, palette,
     background: their literals). familiesOf also prefers a near-centre member
     for centreId.brand (ΔL ≤ 0.14, else nearest) for anything else reading it.
+141. Two honesty fixes from Alexander's test zips. (a) Spectrum Web Components:
+    the brand read #ff4400 ("Vivid Coral") — a Storybook-bundle orange, while
+    the page's brand paint is the Adobe mark, an inline SVG fill="#FA0F00"
+    the CSS census cannot see. The paint-refine now counts the fills of svgs
+    where logos live (header/nav/a/[class*=logo]/aria-label, at drawn size);
+    across 89 fixtures only spectrum moved — to the logo red. And the same
+    hue at full depth is not "Coral": the Coral name now yields to Vermilion
+    below L 58 (#ff7f50 stays Coral, #ff4400 reads Vermilion). (b) slick, a
+    greyscale build: the Brand row wore our default Cobalt as if it were
+    theirs; with no brand family member it now says "None in your CSS" with a
+    hollow dot, and the picker explains that Hue/Saturation/Contrast still
+    reach what the page does have. The notes card already said it; the knob
+    itself now does too.

@@ -93,14 +93,18 @@ export function SandboxPanel({ cfg, tokens, base, families, scheme, codeFonts = 
   const rows: Row[] = []
 
   // ── Colour ──
+  // A greyscale build has no brand family at all: the row says so instead of
+  // wearing our default Cobalt as if it were theirs (slick: 3 colours, all grey).
+  const noBrandInCss = !!families && families.centreId?.brand === undefined && !brandChanged
   rows.push({
     key: 'brand', sec: 'Colour', label: 'Brand', changed: brandChanged,
-    value: themeOf(cfg.cPrimary)?.label ?? nameColor(tokens.primaryHex),
+    value: noBrandInCss ? 'None in your CSS' : themeOf(cfg.cPrimary)?.label ?? nameColor(tokens.primaryHex),
     // The Brand dot is the knob's own value: any family member's live var can
     // be a same-hue outlier (a syntax navy) and read darker than the pick.
-    dot: <span className="fmrow__dot" style={{ background: cfg.cPrimary }} />,
+    dot: <span className={`fmrow__dot ${noBrandInCss ? 'fmrow__dot--none' : ''}`} style={noBrandInCss ? undefined : { background: cfg.cPrimary }} />,
     body: () => (
       <>
+        {noBrandInCss && <p className="sbp__hint" style={{ marginTop: 0 }}>Your CSS has no colour near a brand role — there is nothing for this knob to move. Hue, Saturation and Contrast still reach every colour the page does have.</p>}
         <div className="fmpop__grid">
           {THEMES.map((t) => (
             <button key={t.id} type="button" className={`menu__item fmopt ${themeOf(cfg.cPrimary)?.id === t.id ? 'menu__item--on' : ''}`} onClick={() => { dispatch({ type: 'APPLY_COLOR_THEME', id: t.id }); close() }}>

@@ -293,6 +293,20 @@ export function refineFromDocument(doc: Document, cfg: Config, opts: { brand?: b
       const weight = r.width * r.height * (/^(BUTTON|A)$/.test(el.tagName) || el.getAttribute('role') === 'button' ? 3 : 1)
       fills.set(hex, (fills.get(hex) ?? 0) + weight)
     }
+    // A logo painted as inline SVG (fill="#FA0F00" on adobe.com's mark) is
+    // brand paint the background scan cannot see: count the fills of svgs
+    // where logos live — the header, the nav, a link — at their drawn size.
+    for (const svg of Array.from(doc.querySelectorAll('header svg, nav svg, a svg, [class*="logo" i] svg, svg[aria-label]')).slice(0, 40)) {
+      const r = svg.getBoundingClientRect()
+      if (r.width < 12 || r.height < 12 || r.width * r.height > vw * vh * 0.25) continue
+      for (const shape of Array.from(svg.querySelectorAll('path, rect, circle, polygon, ellipse')).slice(0, 12)) {
+        const c = parseCssColor(win.getComputedStyle(shape).fill)
+        if (!c || c.a < 0.9 || c.C < 0.08 || c.L < 0.2 || c.L > 0.85) continue
+        const hex = formatCssColor({ ...c, a: 1 })
+        fills.set(hex, (fills.get(hex) ?? 0) + r.width * r.height * 2)
+        break
+      }
+    }
     const top = [...fills.entries()].sort((a, b) => b[1] - a[1])[0]
     let declaredAbsent = true
     if (opts.brand === 'if-absent') {

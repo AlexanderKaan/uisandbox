@@ -478,7 +478,10 @@ export function nameColor(hex: Hex): string {
     if (l < 94) return 'Mist'
     return 'Near White'
   }
-  const fam = (HUE_FAMILIES.find((f) => h <= f.max) ?? HUE_FAMILIES[0]!).name
+  let fam = (HUE_FAMILIES.find((f) => h <= f.max) ?? HUE_FAMILIES[0]!).name
+  // Coral is a LIGHT red-orange (#ff7f50); the same hue at full depth is what
+  // people call vermilion (#ff4400) — "Coral" for it reads wrong on sight.
+  if (fam === 'Coral' && l < 58) fam = 'Vermilion'
   let light = ''
   if (l < 22) light = 'Deep'
   else if (l < 38) light = 'Dark'
