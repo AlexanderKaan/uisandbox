@@ -334,8 +334,8 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .intake__input { flex: 1; max-width: 420px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--app-border); background: var(--app-bg); color: var(--app-fg); font-size: 13px; }
 .intake__input:focus { outline: none; border-color: var(--app-fg-muted); }
 .intake__note { margin-top: 12px; font-size: 12px; color: var(--app-fg-faint); max-width: 52ch; margin-left: auto; margin-right: auto; }
-.intake__stages { list-style: none; width: min(400px, 100%); margin: 24px auto; padding: 20px 24px; text-align: left; border: 1px solid var(--app-border); border-radius: 12px; }
-.intake__stage { display: grid; grid-template-columns: 18px 1fr; column-gap: 12px; align-items: baseline; padding: 6px 0; font-size: 13.5px; color: var(--app-fg-faint); }
+.intake__stages { list-style: none; width: min(360px, 100%); margin: 28px auto; padding: 0; text-align: left; }
+.intake__stage { display: grid; grid-template-columns: 18px 1fr; column-gap: 14px; align-items: baseline; padding: 9px 0; font-size: 13.5px; color: var(--app-fg-faint); }
 .intake__stage-dot { width: 14px; height: 14px; border-radius: 99px; border: 1.5px solid var(--app-border); display: inline-grid; place-items: center; align-self: center; }
 .intake__stage--done { color: var(--app-fg-muted); }
 .intake__stage--done .intake__stage-dot { background: var(--app-fg); border-color: var(--app-fg); color: var(--app-bg); }

@@ -44,8 +44,9 @@ card invents its own.
 - `.privacy` — fixed overlay card, padding 26/28, closable by Esc/backdrop/X.
 - `.mcp__pop` — the flyout: same title scale, padding 20/22 (denser: it hangs
   from the top bar).
-- The stages box (`.intake__stages`): `min(400px, 100%)` centred, never
-  full-bleed in its card.
+- The stages checklist (`.intake__stages`): `min(360px, 100%)` centred, NO
+  border of its own — the card is the surface; a box inside a box is the
+  tell of a component that missed the system.
 
 ## Buttons
 
