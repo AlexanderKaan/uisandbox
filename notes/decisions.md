@@ -967,3 +967,28 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     hollow dot, and the picker explains that Hue/Saturation/Contrast still
     reach what the page does have. The notes card already said it; the knob
     itself now does too.
+
+## Sweep 16 — fifty unknown gh-pages builds (2026-08-20)
+
+142. 52 new fixtures in one pull (docs sites, jQuery-era libraries, classless
+    CSS frameworks, chart/editor/carousel demos): 45 rendered 1:1 at first
+    try. The rest, triaged: three NEW rewriter classes found and fixed, all
+    of the same species as the vendor-gradient one — a declaration the
+    browser drops on purpose that a var() would resurrect, win the cascade
+    with, and fail at computed-value time:
+    (a) minified `!important` glued to the value (`sans-serif!important`) was
+        swallowed INTO the var's value — the declaration lost its priority
+        and the var went invalid (VisualSearch's font stack fell back to
+        another rule). `!important` now stays on the declaration, never in
+        the value.
+    (b) the 2012 unprefixed gradient (`linear-gradient(top, …)`, no `to`) is
+        invalid in every modern engine; left dead (angularjs.org, typeahead).
+    (c) the IE value hacks (`14px \9`, `red \0`) — left dead (ScrollMagic's
+        Bootstrap 2).
+    Plus one verify-noise class: svg.js generates paint-server ids fresh per
+    load (`url("#SvgjsLinearGradient1296")` vs `…1291` — AdminLTE's charts);
+    references by generated id are compared with the digits normalised.
+    Honest rest: mustache.github.com is a redirect shell (refused), Modernizr's
+    gh-pages is source (refused at the door), chroma.js's docs generate random
+    palettes per load (differs, said so). Full gate now 164 fixtures:
+    146 ok · 4 known differs · 14 honest refusals · 0 silent failures.

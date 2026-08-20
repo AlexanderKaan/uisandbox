@@ -110,6 +110,26 @@ describe('rewriteCss', () => {
     expect(out).toContain('background:#1F3744 -moz-linear-gradient(top,#0B151A,#1F3744)')
     expect(out).toContain('-o-linear-gradient(top,#0B151A,#1F3744)')
   })
+  it('keeps !important on the declaration, out of the var value (minified: sans-serif!important — measured on VisualSearch)', () => {
+    const t = new SubstitutionTable()
+    const out = rewriteCss('.a{font-family:"Lucida Grande",Helvetica,sans-serif!important;color:#4f39f6 !important}', t, 'x.css')
+    expect(out).toBe('.a{font-family:var(--us-v1)!important;color:var(--us-v2) !important}')
+    expect(t.entries[0]!.value).toBe('"Lucida Grande", Helvetica, sans-serif')
+    expect(t.entries[1]!.value).toBe('#4f39f6')
+  })
+  it('leaves the 2012 unprefixed gradient (linear-gradient(top,…)) as dead as the browser drops it (angularjs.org, typeahead)', () => {
+    const t = new SubstitutionTable()
+    const css = '.b{background-image:-webkit-linear-gradient(top,#333,#222);background-image:linear-gradient(top,#333,#222)}'
+    const out = rewriteCss(css, t, 'x.css')
+    expect(out).toContain('-webkit-linear-gradient(top,var(--us-v1),var(--us-v2))')
+    expect(out).toContain('background-image:linear-gradient(top,#333,#222)')
+  })
+  it('leaves IE value hacks (14px \\9) as dead as the browser drops them (ScrollMagic, Bootstrap 2)', () => {
+    const t = new SubstitutionTable()
+    const css = '.a{padding-left:14px \\9;color:#4f39f6}'
+    const out = rewriteCss(css, t, 'x.css')
+    expect(out).toBe('.a{padding-left:14px \\9;color:var(--us-v1)}')
+  })
   it('CONTROL: a sheet with nothing to tokenise comes back byte-identical', () => {
     const t = sheet()
     const css = `@import url(x.css);\n/* c */\n.a{display:flex;width:50%;transform:translateX(10px)}\n@media (min-width:640px){.b{grid-template-columns:repeat(2,1fr)}}\n@keyframes k{from{opacity:0}to{opacity:1}}\n@font-face{font-family:"X";src:url(x.woff2)}`

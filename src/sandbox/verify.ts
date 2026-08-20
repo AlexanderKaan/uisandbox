@@ -110,6 +110,11 @@ function keyOf(el: Element, top: Document): string {
  * Carbon ads: 1192 vs 1181 elements) leaves the rest comparable and shows up as
  * "unpaired" instead of refusing the whole page.
  */
+/** A paint-server reference by GENERATED id (svg.js: url("#SvgjsLinearGradient1296"),
+ *  a fresh counter every load) names the same gradient in both documents; the
+ *  digits are the load's, not the design's. */
+const normRef = (v: string) => v.replace(/url\(("|')?#([A-Za-z_-]+)\d+\1?\)/g, 'url(#$2N)')
+
 export function compareDocuments(raw: Document, sandbox: Document, props: readonly string[] = VERIFY_PROPS): VerifyResult {
   // Every document the sandbox serves carries the guard; a document without
   // it came from somewhere else (the host's own index after the worker was
@@ -138,7 +143,7 @@ export function compareDocuments(raw: Document, sandbox: Document, props: readon
     const sa = (ea.ownerDocument.defaultView ?? wa).getComputedStyle(ea), sb = (eb.ownerDocument.defaultView ?? wb).getComputedStyle(eb)
     for (const p of props) {
       const va = sa.getPropertyValue(p), vb = sb.getPropertyValue(p)
-      if (va !== vb) mismatches.push({ index: i, tag: ea.tagName.toLowerCase(), prop: p, raw: va, sandbox: vb })
+      if (va !== vb && normRef(va) !== normRef(vb)) mismatches.push({ index: i, tag: ea.tagName.toLowerCase(), prop: p, raw: va, sandbox: vb })
     }
   })
   const unpaired = { raw: a.length - paired, sandbox: b.length - paired }

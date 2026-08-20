@@ -345,10 +345,28 @@ function findSvgUrls(value: string): Splice[] {
 
 /** Which literals in one declaration's value are design values, and of what kind. */
 export function splicesFor(prop: string, value: string): Splice[] {
+  // `!important` is part of the DECLARATION, not the value: minified CSS writes
+  // `sans-serif!important` with no space, and a whole-value splice that swallows
+  // it both strips the priority (the cascade flips) and poisons the var's value
+  // (measured on VisualSearch: the font stack fell back to another rule's).
+  const imp = value.match(/\s*!\s*important\s*$/i)
+  if (imp) {
+    const head = value.slice(0, imp.index)
+    return splicesFor(prop, head).filter((x) => x.end <= head.length)
+  }
   const m = masked(value)
   const bare = m.trim().toLowerCase()
   const svgs = /data:image\/svg\+xml/i.test(value) ? findSvgUrls(value) : []
   if (KEYWORD_ONLY.test(bare)) return []
+  // The 2012 gradient syntax without \`to\` (\`linear-gradient(top, …)\`,
+  // unprefixed) is invalid in every modern engine — the declaration is dropped
+  // at parse time and an earlier -webkit- one wins. A var() inside would make
+  // it parse, win, and fail to none (angularjs.org, typeahead). Leave it dead.
+  if (/(^|[\s,:(])(repeating-)?linear-gradient\(\s*(top|bottom|left|right)(\s+(top|bottom|left|right))?\s*,/i.test(m)) return []
+  // The IE value hacks (\`14px \9\`, \`red \0\`) are invalid on purpose in every
+  // modern engine; a var() inside would resurrect the declaration and fail it
+  // to unset at computed-value time (ScrollMagic's Bootstrap 2: padding 14px \9).
+  if (/\\[09]\s*$/.test(value.trim())) return []
   // A declaration holding a function Chromium does not know is dropped whole at
   // parse time (see DEAD_FN); a var() anywhere in it would make it parse. Skip it.
   if (/(^|[\s,(])-(moz|o|ms)-[a-z-]*\(/i.test(value)) return []
