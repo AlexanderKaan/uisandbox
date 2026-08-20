@@ -270,8 +270,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .verify__list li { padding: 3px 0; border-top: 1px solid var(--app-border); }
 .notes { margin: 0; padding: 0 0 0 16px; font-size: 12px; color: var(--app-fg-muted); }
 .notes li { margin: 2px 0; }
-.popcard { position: absolute; right: 16px; top: 62px; z-index: 50; width: min(440px, 90vw); padding: 14px 16px; }
-.popcard h3 { margin: 0 0 8px; font-size: 13px; }
+.popcard { position: absolute; right: 16px; top: 62px; z-index: 50; width: min(460px, 90vw); padding: 20px 22px; }
+.popcard h3 { margin: 0 0 12px; font-size: 13px; }
+.popcard ul { margin: 0; padding-left: 18px; display: grid; gap: 7px; }
+.popcard li { line-height: 1.5; }
+.popcard .btn { margin-top: 6px; }
 .stage__frame .popcard { top: 12px; right: 12px; }
 .stage__frame .popcard--low { border-color: color-mix(in srgb, var(--app-warn) 45%, var(--app-border)); }
 /* The low cards (reach, a warning) stack instead of overlapping. */
@@ -312,13 +315,15 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .mcp__btn svg:first-child { color: var(--app-fg-muted); }
 .mcp__chev { color: var(--app-fg-faint); transition: transform var(--app-dur) var(--app-ease); }
 .mcp__btn--on .mcp__chev { transform: rotate(180deg); }
-.mcp__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(440px, 92vw); padding: 14px 16px 16px; text-align: left; }
-.mcp__head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.mcp__pop { position: absolute; right: 0; top: calc(100% + 8px); z-index: 80; width: min(470px, 92vw); padding: 20px 22px 22px; text-align: left; }
+.mcp__head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
 .mcp__head b { font-size: 13px; }
 .mcp__head span { font-size: 12px; color: var(--app-fg-muted); }
 .mcp__pop .install { margin: 0; max-width: none; }
-.mcp__pop .install__pill { border-radius: 10px; padding: 7px 6px 7px 12px; font-size: 12.5px; }
+.mcp__pop .install__pill { border-radius: 10px; padding: 8px 8px 8px 14px; font-size: 12.5px; }
 .mcp__pop .install__copy { width: 28px; height: 28px; }
+.mcp__pop .install__tabs { margin-bottom: 10px; }
+.mcp__pop .install__hint { margin-top: 9px; }
 
 /* === The install line on the intake: `$ npx …`, copy, four shapes === */
 .install { margin: 18px auto 0; max-width: 560px; }
