@@ -16,7 +16,7 @@ export function Footer() {
         <a href="/llms.txt">llms.txt</a>
       </nav>
       <span className="foot__sep" aria-hidden>·</span>
-      <span className="foot__note">Nothing leaves your tab.</span>
+      <span className="foot__note">Your files never leave your browser.</span>
     </footer>
   )
 }

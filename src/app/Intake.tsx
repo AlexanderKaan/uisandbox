@@ -72,7 +72,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
           <li><Check size={13} strokeWidth={2.5} /> Open source <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">(MIT)</a></li>
-          <li><Check size={13} strokeWidth={2.5} /> Nothing leaves your tab <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
+          <li><Check size={13} strokeWidth={2.5} /> Your files never leave your browser <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
         </ul>
       </section>
       {showPrivacy && <PrivacyCard onClose={() => setShowPrivacy(false)} />}
@@ -146,12 +146,12 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
                   <input className="intake__input" type="url" placeholder="https://github.com/user/repo" value={repo} onChange={(e) => setRepo(e.target.value)} aria-label="GitHub or GitLab repository URL" spellCheck={false} />
                   <button type="submit" className="btn btn--primary"><GitBranch size={15} strokeWidth={1.75} /> Load</button>
                 </form>
-                <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it. Public repos only, nothing stored. Everything else stays in this tab.</div>
+                <div className="intake__note">GitHub and GitLab do not allow the browser to fetch a repo zip directly, so the URL goes through uisandbox.org to fetch it. Public repos only, nothing stored. Everything else stays in your browser.</div>
               </div>
             )}
             {way !== 'repo' && (
               <button type="button" className="intake__privacy" onClick={() => setShowPrivacy(true)}>
-                <ShieldCheck size={13} strokeWidth={2} /> Read in this tab, never uploaded. No server, no account, no analytics. <u>How to verify</u>
+                <ShieldCheck size={13} strokeWidth={2} /> Read in your browser, never uploaded. No server, no account, no analytics. <u>How to verify</u>
               </button>
             )}
             {onSample && (
@@ -184,7 +184,7 @@ function PrivacyCard({ onClose }: { onClose: () => void }) {
     <div className="privacy" role="dialog" aria-modal="true" aria-label="How your files stay private" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
       <div className="card privacy__card">
         <button type="button" className="btn btn--ghost btn--icon privacy__close" onClick={onClose} aria-label="Close"><X size={15} /></button>
-        <h3><ShieldCheck size={16} strokeWidth={2} /> Your files stay in this tab</h3>
+        <h3><ShieldCheck size={16} strokeWidth={2} /> Your files never leave your browser</h3>
         <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read here, in the page, and served to the sandbox frame by a service worker on this origin. Exports are generated here too.</p>
         <p><b>Don't take our word for it:</b></p>
         <ul>
@@ -192,7 +192,7 @@ function PrivacyCard({ onClose }: { onClose: () => void }) {
           <li><b>Go offline.</b> Load the page, switch off your network, then drop the zip: everything still works, because nothing needed the network.</li>
           <li><b>Read the code.</b> It is open source (MIT): <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/src/sandbox/host.ts" target="_blank" rel="noopener">the file that serves your files</a> and <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">the full security note</a>, including what a hostile archive can and cannot do here.</li>
         </ul>
-        <p className="privacy__fine">The one exception, said plainly: <em>Connect a repo</em> sends that public GitHub/GitLab URL through uisandbox.org, because neither host lets a browser fetch an archive directly. Nothing is stored. Drop a zip or a folder and not even that leaves the tab.</p>
+        <p className="privacy__fine">The one exception, said plainly: <em>Connect a repo</em> sends that public GitHub/GitLab URL through uisandbox.org, because neither host lets a browser fetch an archive directly. Nothing is stored. Drop a zip or a folder and not even that leaves your browser.</p>
       </div>
     </div>
   )
@@ -206,7 +206,7 @@ function Landing() {
         <h2>How it works</h2>
         <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, in seconds.</p>
         <ol className="steps">
-          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in this tab and served to the frame by a service worker; nothing is uploaded.</li>
+          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in your browser and served to the frame by a service worker; nothing is uploaded.</li>
           <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included.</li>
           <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode. Every dial has <em>×1 = as in your code</em> at its centre.</li>
           <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
@@ -231,7 +231,7 @@ function Landing() {
         </figure>
       </section>
       <section className="landing__sec">
-        <h2 id="privacy">Nothing leaves your tab</h2>
+        <h2 id="privacy">Your files never leave your browser</h2>
         <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. Don't take our word for it: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip — everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">

@@ -18,7 +18,7 @@ Restyle your app without rebuilding it — drop the build, turn the knobs, watch
 <p align="center">
   <img alt="MIT" src="https://img.shields.io/badge/license-MIT-black">
   <img alt="npm" src="https://img.shields.io/npm/v/uisandbox-mcp?label=uisandbox-mcp&color=black">
-  <img alt="nothing leaves your tab" src="https://img.shields.io/badge/nothing%20leaves-your%20tab-black">
+  <img alt="your files never leave your browser" src="https://img.shields.io/badge/files%20never%20leave-your%20browser-black">
   <img alt="1:1 measured" src="https://img.shields.io/badge/1%3A1-measured%2C%20not%20promised-black">
 </p>
 
@@ -32,7 +32,7 @@ Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand
 
 ## What it does
 
-1. **Bring the build** — three ways in: a zip of `dist/`, `build/`, `out/` (or a whole repo with the build inside); a folder (a build renders, a source folder is read for the knob stand); a public GitHub or GitLab repo URL (fetched as a zip through a same-origin route — the one thing that leaves the tab, see [`notes/security.md`](notes/security.md)). While it works, the door shows the stages with their numbers. Otherwise nothing leaves the tab: files are read in the page and served to the frame by a service worker on this origin.
+1. **Bring the build** — three ways in: a zip of `dist/`, `build/`, `out/` (or a whole repo with the build inside); a folder (a build renders, a source folder is read for the knob stand); a public GitHub or GitLab repo URL (fetched as a zip through a same-origin route — the one thing that leaves the tab, see [`notes/security.md`](notes/security.md)). While it works, the door shows the stages with their numbers. Otherwise your files never leave your browser: files are read in the page and served to the frame by a service worker on this origin.
 2. **See it 1:1.** Every colour, radius, font, size, spacing, line-height, letter-spacing, weight, border-width, duration, gradient angle and shadow literal in your CSS becomes a variable holding the very same value, so the page renders exactly as it was — runtime styles too (`style=""` set by JS, `<style>` your framework appends, `insertRule`/`replaceSync` from styled-components, Emotion, Lit, Ant's cssinjs; CDN stylesheets through a same-origin proxy; nested same-origin frames such as Storybook's).
 3. **Turn the knobs.** Brand, and the colour families your CSS actually contains (secondary, accent, the status set, a palette row for what is neither); page background; grey tint and border tone; display and body font (yours listed first, then alternatives by character); dials for text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion and gradient angle — every dial with **×1 = as in your code** at its centre; global hue, saturation and contrast that reach every colour, chart palettes and CSS-drawn icons included; your dark mode, switched on your own hooks.
 4. **Export.** Your values as CSS / JSON / a patch list, your files patched in place, `--k-*` tokens for web (CSS, Tailwind, shadcn), Swift constants + an asset catalog for iOS, `colors.xml` + Kotlin for Android.

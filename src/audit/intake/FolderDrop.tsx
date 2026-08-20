@@ -90,7 +90,7 @@ export function FolderDrop({
       {error && <p className="audz__error">{error}</p>}
       <p className="audz__promise">
         <ShieldCheck size={13} strokeWidth={2} />
-        Runs in this tab. Nothing is uploaded — open your network panel and watch it stay quiet.
+        Runs in your browser. Nothing is uploaded — open your network panel and watch it stay quiet.
       </p>
 
       <input
