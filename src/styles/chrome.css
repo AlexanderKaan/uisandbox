@@ -281,6 +281,10 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__card:hover { border-color: var(--app-fg-muted); }
 .exp__sub2 { font-size: 11.5px; color: var(--app-fg-faint); line-height: 1.4; }
 .exp__reco { font-style: normal; font-size: 10px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--app-bg); background: var(--app-fg); border-radius: 999px; padding: 2px 7px; margin-left: 7px; vertical-align: 1px; }
+.exp__with { display: flex; flex-direction: column; gap: 10px; padding: 16px 26px 4px; }
+.exp__withrow { display: flex; flex-wrap: wrap; gap: 8px; }
+.exp__chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border: 1px solid var(--app-border); border-radius: 999px; font-size: 12px; font-weight: 550; color: var(--app-fg-muted); background: var(--app-surface); }
+.exp__chip svg { color: var(--app-fg-faint); }
 .exp__turned { padding: 16px 26px 24px; }
 .exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; }
 .exp__row:first-of-type { border-top: 0; }

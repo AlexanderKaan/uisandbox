@@ -26,6 +26,16 @@ interface ExportDialogProps {
   onClose: () => void
 }
 
+
+/** Tiny monochrome marks for the "plays well with" strip — currentColor, one
+ *  visual weight, no brand colours shouting inside our quiet dialog. */
+const M = {
+  css: <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M4 3h16l-1.5 16.5L12 21l-6.5-1.5L4 3zm13 4H7.2l.2 2.2h9.4l-.6 6.8-4.2 1.2-4.2-1.2-.3-3h2.1l.15 1.5 2.25.6 2.25-.6.25-2.5H7l-.6-6.9h11l-.4 1.9z"/></svg>,
+  tailwind: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 6c-2.67 0-4.33 1.33-5 4 1-1.33 2.17-1.83 3.5-1.5.76.19 1.31.74 1.91 1.35.99 1 2.13 2.15 4.59 2.15 2.67 0 4.33-1.33 5-4-1 1.33-2.17 1.83-3.5 1.5-.76-.19-1.31-.74-1.91-1.35C15.6 7.15 14.46 6 12 6zM7 12c-2.67 0-4.33 1.33-5 4 1-1.33 2.17-1.83 3.5-1.5.76.19 1.31.74 1.91 1.35 1 1 2.13 2.15 4.59 2.15 2.67 0 4.33-1.33 5-4-1 1.33-2.17 1.83-3.5 1.5-.76-.19-1.31-.74-1.91-1.35C10.6 13.15 9.46 12 7 12z"/></svg>,
+  shadcn: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M20 4 4 20M15 4 4 15"/></svg>,
+  claude: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/></svg>,
+}
+
 interface Item { id: string; group: string; label: string; sub?: string; icon?: React.ReactNode; file: string; make: () => string }
 
 /**
@@ -159,6 +169,20 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="exp__with" aria-label="Plays well with">
+              <span className="menu__label" style={{ padding: 0 }}>Plays well with</span>
+              <span className="exp__withrow">
+                <span className="exp__chip">{M.css} CSS</span>
+                <span className="exp__chip">{M.tailwind} Tailwind</span>
+                <span className="exp__chip">{M.shadcn} shadcn/ui</span>
+                <span className="exp__chip"><Apple size={14} strokeWidth={1.9} /> SwiftUI</span>
+                <span className="exp__chip"><Smartphone size={13} strokeWidth={1.9} /> Android</span>
+                <span className="exp__chip">{M.claude} Claude Code</span>
+                <span className="exp__chip">Cursor</span>
+                <span className="exp__chip">Lovable</span>
+                <span className="exp__chip">Codex</span>
+              </span>
             </div>
             {turned.length ? (
               <div className="exp__turned">
