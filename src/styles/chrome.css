@@ -255,7 +255,32 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .dialog__head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--app-border); }
 .dialog__head h2 { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
 .dialog__body { flex: 1; min-height: 0; display: flex; }
-.dialog__nav { width: 200px; flex: none; border-right: 1px solid var(--app-border); padding: 8px; overflow: auto; }
+.dialog__nav { width: 236px; flex: none; border-right: 1px solid var(--app-border); padding: 10px; overflow: auto; }
+/* Export nav: icon + label + a quiet one-line sub, the UIcockpit way. */
+.exp__item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: 8px; background: transparent; text-align: left; cursor: pointer; }
+.exp__item:hover { background: var(--app-hover); }
+.exp__item--on { background: var(--app-hover); box-shadow: inset 0 0 0 1px var(--app-border); }
+.exp__ico { flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--app-border); background: var(--app-surface); color: var(--app-fg-muted); }
+.exp__ico--lg { width: 30px; height: 30px; border-radius: 8px; }
+.exp__text { display: flex; flex-direction: column; min-width: 0; }
+.exp__label { font-size: 12.5px; font-weight: 550; color: var(--app-fg); line-height: 1.25; }
+.exp__sub { font-size: 11px; color: var(--app-fg-faint); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp__head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; border-bottom: 1px solid var(--app-border); }
+.exp__head b { font-size: 13.5px; display: block; }
+.exp__headsub { font-size: 11.5px; color: var(--app-fg-faint); }
+.exp__overview { flex: 1; overflow: auto; }
+.exp__stats { display: flex; gap: 10px; padding: 16px; }
+.exp__stat { flex: 1; border: 1px solid var(--app-border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.exp__stat b { font-size: 18px; letter-spacing: -0.01em; }
+.exp__stat span { font-size: 11.5px; color: var(--app-fg-faint); }
+.exp__turned { padding: 0 16px 16px; }
+.exp__row { display: flex; align-items: center; gap: 8px; padding: 7px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; }
+.exp__row:first-of-type { border-top: 0; }
+.exp__rowlabel { flex: none; width: 130px; font-weight: 550; }
+.exp__from, .exp__to { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.exp__from { color: var(--app-fg-faint); }
+.exp__arrow { color: var(--app-fg-faint); }
+.exp__none { padding: 4px 16px 16px; font-size: 12.5px; color: var(--app-fg-muted); max-width: 52ch; }
 .dialog__nav .menu__item { font-size: 12.5px; }
 .dialog__pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .dialog__pane pre {

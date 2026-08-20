@@ -452,7 +452,7 @@ export function App() {
       </div>
       {loaded && <Footer />}
       {showExport && loaded && (
-        <ExportDialog cfg={cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
+        <ExportDialog cfg={cfg} base={loaded.report.baseline.cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
       )}
     </div>
   )
