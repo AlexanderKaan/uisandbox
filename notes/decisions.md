@@ -1184,3 +1184,26 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     `mcp/zipdir.ts` imports `readdirSync, readFileSync, statSync`. No write
     function is imported anywhere in the package. That is a claim a sceptic
     can check in four import statements, which is the kind we prefer.
+
+151. The headline stopped claiming and started explaining. "Play with your real
+    app's design, live." had a word working against us: `live` means "instantly,
+    no rebuild" to us and "connected to my repo, updating in real time" to a
+    reader who is already nervous (see #150). Six rounds of alternatives, and
+    what landed was not a better metaphor but a plainer structure:
+
+      Play with your app's design in a safe sandbox.
+      Drop your build, turn the knobs, export the code.
+
+    The kicker ("Test your design on the real thing") is gone: above the
+    headline it was a label nobody reads. The three beats took its place BELOW
+    the headline, where they answer the only question a first visitor has. The
+    paragraph then no longer has to restate the loop and spends its words on
+    what the beats cannot say: where it runs, how faithful it is, that nothing
+    is kept, and what comes out.
+
+    Rolled through every place the line lives, because they drift apart the
+    moment they are edited separately: the h1, the tab title, the meta
+    description, the JSON-LD slogan and description, the web manifest, the OG
+    image template, the release-note template, the README, both llms.txt files,
+    the marketing copy, and the three published descriptions (npm, the MCP
+    registry, the plugin) — those last three take effect on their next publish.

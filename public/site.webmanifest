@@ -1,7 +1,7 @@
 {
   "name": "UISandbox",
   "short_name": "UISandbox",
-  "description": "Play with your real app's design, live: your built web app, 1:1, then the knobs.",
+  "description": "Play with your app's design in a safe sandbox: your built web app, 1:1, then the knobs.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121216",

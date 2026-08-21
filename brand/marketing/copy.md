@@ -1,10 +1,12 @@
 # Copy — the lines, per channel
 
-The three lines, in this order of use: **Restyle your app without rebuilding it.** (headline) · *Try a new look on your real web app — in seconds.* (body) · *Test your design on the real thing.* (kicker/slogan). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
+The three lines, in this order of use: **Play with your app's design in a safe sandbox.** (headline) · *Drop your build, turn the knobs, export the code.* (the three beats, straight under it) · *Restyle your app without rebuilding it.* (second line, for places that need one). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
 
 ## X — the pinned post (with the GIF or `site-hero-light-1440.png`)
 
-Play with your real app's design, live.
+Play with your app's design in a safe sandbox.
+
+Drop your build, turn the knobs, export the code.
 
 Drop the build of your web app into UISandbox → it renders 1:1 (measured, not promised) → every colour, font, radius and spacing in its CSS becomes a knob → turn them, watch the real app follow, export the patch.
 
@@ -40,7 +42,7 @@ MIT. https://uisandbox.org · https://github.com/AlexanderKaan/uisandbox — hap
 ## Product Hunt
 
 **Name:** UISandbox
-**Tagline (≤60):** Play with your real app's design, live
+**Tagline (≤60):** Play with your app's design in a safe sandbox
 **Description (≤260):** Drop your built web app, see it 1:1 in the browser, turn the knobs — brand, colours, fonts, spacing, radius — and export the change as a patch or tokens. Measured, not promised. Your files never leave your browser. Free, MIT. Also an MCP server for Claude/Cursor.
 **Topics:** Design Tools · Developer Tools · Open Source · Artificial Intelligence
 **Gallery order:** the GIF · `site-hero-light-1440.png` · `stage-acme-brand-crimson.png` · `verify-card.png` · `og-panel-template.png`
@@ -64,8 +66,8 @@ Same as X but with the "why": every design review ends with "can we see it on th
 
 ## One-liners for directories / bios
 
-- Play with your real app's design, live — your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
-- Test your design on the real thing: drop a build, turn the knobs, export the patch.
+- Play with your app's design in a safe sandbox. Your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
+- Drop your build, turn the knobs, export the code. Nothing is uploaded, and closing the tab undoes all of it.
 
 ## Sceptical comments, answered (HN/PH-ready, fellow-dev voice)
 

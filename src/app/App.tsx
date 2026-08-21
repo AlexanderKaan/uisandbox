@@ -108,7 +108,7 @@ export function App() {
   // The tab title says which project is open (a hostile page may rewrite it —
   // security.md — so it is set from here on every load, not trusted).
   useEffect(() => {
-    document.title = loaded ? `UISandbox · ${loaded.project.name}` : "UISandbox · Play with your real app's design, live"
+    document.title = loaded ? `UISandbox · ${loaded.project.name}` : "UISandbox · Play with your app's design in a safe sandbox"
   }, [loaded])
   const changedCount = useMemo(() => {
     if (!loaded) return 0

@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.AlexanderKaan/uisandbox",
-  "description": "Test your design on the real thing: load a built web app, turn its knobs, verify 1:1, export.",
+  "description": "Play with your app's design in a safe sandbox: load a built web app, turn its knobs, verify 1:1, export.",
   "title": "UISandbox",
   "repository": {
     "url": "https://github.com/AlexanderKaan/uisandbox",

@@ -26,4 +26,4 @@ jobs:
         run: |
           git tag "v$V" && git push origin "v$V"
           gh release create "v$V" --title "v$V" --generate-notes \
-            --notes "**UISandbox $V** — [uisandbox.org](https://uisandbox.org) · npm \`uisandbox-mcp@$V\` (\`npx -y uisandbox-mcp\`) · on the [MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox). Restyle your app without rebuilding it — play with your real app's design, live."
+            --notes "**UISandbox $V** — [uisandbox.org](https://uisandbox.org) · npm \`uisandbox-mcp@$V\` (\`npx -y uisandbox-mcp\`) · on the [MCP registry](https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox). Restyle your app without rebuilding it: play with your app's design in a safe sandbox."

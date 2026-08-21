@@ -1,6 +1,6 @@
 # UISandbox
 
-> Play with your real app's design, live — test your design on the real thing. Restyle your app without rebuilding it. Drop a built web app (its dist/, build/ or out/ folder as a zip or folder), see it 1:1 in the browser, turn the knobs — brand, colour families, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, dark mode — and export exactly what you see. Free, open source (MIT). Your files never leave your browser.
+> Play with your app's design in a safe sandbox. Drop your build, turn the knobs, export the code. Restyle your app without rebuilding it. Drop a built web app (its dist/, build/ or out/ folder as a zip or folder), see it 1:1 in the browser, turn the knobs — brand, colour families, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, dark mode — and export exactly what you see. Free, open source (MIT). Your files never leave your browser.
 
 Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandbox · Author: Alexander Kaan (Pageminds)
 
@@ -40,14 +40,14 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 ## The full README
 
 <p align="center">
-  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox — Play with your real app's design, live" width="880"></a>
+  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox: play with your app's design in a safe sandbox" width="880"></a>
 </p>
 
 <h1 align="center">UISandbox</h1>
 
-<p align="center"><b>Play with your real app's design, live.</b><br>
-Restyle your app without rebuilding it — drop the build, turn the knobs, watch it follow 1:1, export the patch.<br>
-<sub>Test your design on the real thing.</sub></p>
+<p align="center"><b>Play with your app's design in a safe sandbox.</b><br>
+Drop your build, turn the knobs, export the code.<br>
+<sub>Restyle your app without rebuilding it: your build runs 1:1 in the tab, nothing is uploaded, and closing the tab undoes all of it.</sub></p>
 
 <p align="center">
   <a href="https://uisandbox.org">uisandbox.org</a> ·

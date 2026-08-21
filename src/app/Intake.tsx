@@ -65,9 +65,12 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
     <div className="intake">
       <section className="hero">
         <div className="intake__mark"><Mark size={44} /></div>
-        <div className="hero__kicker">Test your design on the real thing</div>
-        <h1>Play with your real<br />app's design, live.</h1>
-        <p className="hero__sub">Drop your built web app, in your browser or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob; turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+        <h1>Play with your app's design<br />in a safe sandbox.</h1>
+        {/* The three beats carry the mechanism, so the paragraph does not have
+            to repeat the loop and can spend its words on what the beats cannot
+            say: where it runs, how faithful it is, and what comes out. */}
+        <p className="hero__beats">Drop your build, turn the knobs, export the code.</p>
+        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is uploaded and nothing is saved: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
