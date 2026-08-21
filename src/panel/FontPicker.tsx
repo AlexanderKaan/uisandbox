@@ -279,7 +279,7 @@ export function FontPicker({ value, groups, onChange, sample, sampleSize = 'disp
                       </button>
                       {error && <div id="font-upload-error" className="fp__error">{error}</div>}
                       <div className="fp__upload-disclaimer">
-                        Stays in this browser session, never uploaded.
+                        Stays in this browser session, never sent to a server.
                       </div>
                     </div>
                   )}

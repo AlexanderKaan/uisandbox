@@ -6,7 +6,7 @@
 
 <p align="center"><b>Play with your app's design in a safe sandbox.</b><br>
 Drop your build, turn the knobs, export the code.<br>
-<sub>Restyle your app without rebuilding it: your build runs 1:1 in the tab, nothing is uploaded, and closing the tab undoes all of it.</sub></p>
+<sub>Restyle your app without rebuilding it: your build runs 1:1 in the tab, nothing is sent to a server, and closing the tab undoes all of it.</sub></p>
 
 <p align="center">
   <a href="https://uisandbox.org">uisandbox.org</a> ·

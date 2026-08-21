@@ -1207,3 +1207,24 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     image template, the release-note template, the README, both llms.txt files,
     the marketing copy, and the three published descriptions (npm, the MCP
     registry, the plugin) — those last three take effect on their next publish.
+
+152. "Never uploaded" was not true enough. Something IS uploaded: the file goes
+    into this tab, through the browser's own file input, which is what everyone
+    calls an upload. What does not happen is a server or a database receiving
+    it. The old line denied the ACT and had to be about the DESTINATION.
+
+    It also read as a contradiction on its own screen: the tabs say "Upload a
+    zip" and six lines below sat "never uploaded". Each was defensible alone;
+    together they were the kind of seam a sceptic finds and pulls. The tab keeps
+    the word, because on a button next to a file picker "upload" is the gesture
+    and the clearest label there is; the line under the box now names where it
+    goes instead of arguing about what it is called:
+
+      Loaded into this tab, never sent to a server.
+      No database, no account, no analytics.
+
+    Same correction everywhere it appeared: the hero paragraph, the boundary
+    strip, the folder drop, the font picker, the landing steps, the JSON-LD,
+    the README, llms-full.txt, the marketing copy and the skill. "Your files
+    never leave your browser" stays untouched throughout: that one was always
+    about the destination and it is exactly true.

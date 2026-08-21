@@ -75,7 +75,7 @@ can see you make. Never zip `node_modules` or the source tree.
 
 - Never promise more than `verify` and the reach meter report. "1:1" is a
   measured claim; quote the numbers.
-- Nothing is uploaded by the tool; `load` by URL fetches the zip into the
+- Nothing is sent to a server by the tool; `load` by URL fetches the zip into the
   server process only. Say that when asked where the files go.
 - Keep the user's own vocabulary for colours ("our teal"), but always show
   the hex that moved.

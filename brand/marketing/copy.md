@@ -67,7 +67,7 @@ Same as X but with the "why": every design review ends with "can we see it on th
 ## One-liners for directories / bios
 
 - Play with your app's design in a safe sandbox. Your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
-- Drop your build, turn the knobs, export the code. Nothing is uploaded, and closing the tab undoes all of it.
+- Drop your build, turn the knobs, export the code. Nothing is sent to a server, and closing the tab undoes all of it.
 
 ## Sceptical comments, answered (HN/PH-ready, fellow-dev voice)
 

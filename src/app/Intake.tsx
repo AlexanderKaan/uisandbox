@@ -70,7 +70,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
             to repeat the loop and can spend its words on what the beats cannot
             say: where it runs, how faithful it is, and what comes out. */}
         <p className="hero__beats">Drop your build, turn the knobs, export the code.</p>
-        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is uploaded and nothing is saved: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
+        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server and nothing is stored: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
@@ -156,7 +156,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
             )}
             {way !== 'repo' && (
               <button type="button" className="intake__privacy" onClick={() => setShowPrivacy(true)}>
-                <ShieldCheck size={13} strokeWidth={2} /> Read in your browser, never uploaded. No server, no account, no analytics. <u>How to verify</u>
+                <ShieldCheck size={13} strokeWidth={2} /> Loaded into this tab, never sent to a server. No database, no account, no analytics. <u>How to verify</u>
               </button>
             )}
             {onSample && (
@@ -227,11 +227,11 @@ function Landing() {
           </div>
           <div className="cross__side">
             <b>This browser tab</b>
-            <span>Where the copy is read, rendered and turned. Close the tab and it is gone: nothing is stored, nothing is uploaded.</span>
+            <span>Where the copy is read, rendered and turned. Close the tab and it is gone: nothing is stored, nothing is sent to a server.</span>
           </div>
         </div>
         <ol className="steps">
-          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in your browser and served to the frame by a service worker; nothing is uploaded.</li>
+          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in your browser and served to the frame by a service worker; nothing is sent to a server.</li>
           <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included.</li>
           <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode. Every dial has <em>×1 = as in your code</em> at its centre.</li>
           <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
@@ -257,7 +257,7 @@ function Landing() {
       </section>
       <section className="landing__sec">
         <h2 id="privacy">Your files never leave your browser</h2>
-        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. Don't take our word for it: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip — everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. Don't take our word for it: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip: everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>
