@@ -1,7 +1,7 @@
 {
   "name": "uisandbox",
   "version": "0.3.2",
-  "description": "Play with your app's design in a safe sandbox: open a built web app in UISandbox, 1:1 and with its own knobs, from the chat; try a change, verify, export the patch. Bundles the /uisandbox skill and the uisandbox MCP server.",
+  "description": "Play with your app's design, right in the browser: open a built web app in UISandbox, 1:1 and with its own knobs, from the chat; try a change, verify, export the patch. Bundles the /uisandbox skill and the uisandbox MCP server.",
   "author": { "name": "Alexander Kaan", "url": "https://pageminds.com/" },
   "homepage": "https://uisandbox.org",
   "repository": "https://github.com/AlexanderKaan/uisandbox",

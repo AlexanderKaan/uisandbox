@@ -394,7 +394,8 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
    beats. Above it, it was a label nobody reads; below it, it is the answer to
    "what do I actually do here". */
 .hero__beats { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--app-fg); margin: 0 0 14px; }
-.hero h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.02; letter-spacing: -0.03em; margin: 22px 0 14px; font-weight: 700; }
+.hero h1 { font-size: clamp(30px, 5.4vw, 52px); line-height: 1.05; letter-spacing: -0.03em; margin: 22px 0 14px; font-weight: 700; }
+.hero h1 span { display: block; text-wrap: balance; }
 /* The drop copy: balanced lines, optically centred under the glyph. */
 .intake__copy { text-wrap: balance; max-width: 44ch; margin: 0 auto; }
 /* The one sentence that answers the fear at the moment it appears. Somebody

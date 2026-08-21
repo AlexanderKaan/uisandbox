@@ -1228,3 +1228,22 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     the README, llms-full.txt, the marketing copy and the skill. "Your files
     never leave your browser" stays untouched throughout: that one was always
     about the destination and it is exactly true.
+
+    Then one more turn, and the last one: "in a safe sandbox" became "Right in
+    the browser." `safe` was the only word in the line we could not measure, and
+    this project does not ship those. `in the browser` is a fact the reader is
+    standing in, it carries the safety by implication (a tab cannot write to a
+    repo), and it picks up something the sandbox line never said: no install,
+    no setup. What it gives up is the word `sandbox` in the headline, which was
+    the explicit ask two rounds earlier — acceptable now, and not before,
+    because the boundary is spelled out in three other places on the same
+    screen (the drop-zone line, the privacy row, the `.cross` strip) and the
+    product's own name is directly above it.
+
+      Play with your app's design. Right in the browser.
+      Drop your build, turn the knobs, export the code.
+
+    Two lines, no adjectives: only verbs and places. The h1 sets each sentence
+    as its own block rather than forcing a `<br />`, so the break lands on the
+    full stop instead of wherever the width runs out.
+

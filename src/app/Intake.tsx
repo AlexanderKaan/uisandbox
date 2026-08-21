@@ -65,7 +65,9 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
     <div className="intake">
       <section className="hero">
         <div className="intake__mark"><Mark size={44} /></div>
-        <h1>Play with your app's design<br />in a safe sandbox.</h1>
+        {/* Each sentence its own line: the break belongs at the full stop, and a
+            <br /> would put it wherever the width happens to run out. */}
+        <h1><span>Play with your app's design.</span><span>Right in the browser.</span></h1>
         {/* The three beats carry the mechanism, so the paragraph does not have
             to repeat the loop and can spend its words on what the beats cannot
             say: where it runs, how faithful it is, and what comes out. */}

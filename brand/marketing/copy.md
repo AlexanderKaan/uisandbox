@@ -1,10 +1,10 @@
 # Copy — the lines, per channel
 
-The three lines, in this order of use: **Play with your app's design in a safe sandbox.** (headline) · *Drop your build, turn the knobs, export the code.* (the three beats, straight under it) · *Restyle your app without rebuilding it.* (second line, for places that need one). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
+The three lines, in this order of use: **Play with your app's design. Right in the browser.** (headline) · *Drop your build, turn the knobs, export the code.* (the three beats, straight under it) · *Restyle your app without rebuilding it.* (second line, for places that need one). Never claim more than the meter shows: "1:1" is measured, images/canvas are outside, iOS/Android do not render.
 
 ## X — the pinned post (with the GIF or `site-hero-light-1440.png`)
 
-Play with your app's design in a safe sandbox.
+Play with your app's design. Right in the browser.
 
 Drop your build, turn the knobs, export the code.
 
@@ -42,7 +42,7 @@ MIT. https://uisandbox.org · https://github.com/AlexanderKaan/uisandbox — hap
 ## Product Hunt
 
 **Name:** UISandbox
-**Tagline (≤60):** Play with your app's design in a safe sandbox
+**Tagline (≤60):** Play with your app's design. Right in the browser
 **Description (≤260):** Drop your built web app, see it 1:1 in the browser, turn the knobs — brand, colours, fonts, spacing, radius — and export the change as a patch or tokens. Measured, not promised. Your files never leave your browser. Free, MIT. Also an MCP server for Claude/Cursor.
 **Topics:** Design Tools · Developer Tools · Open Source · Artificial Intelligence
 **Gallery order:** the GIF · `site-hero-light-1440.png` · `stage-acme-brand-crimson.png` · `verify-card.png` · `og-panel-template.png`
@@ -66,7 +66,7 @@ Same as X but with the "why": every design review ends with "can we see it on th
 
 ## One-liners for directories / bios
 
-- Play with your app's design in a safe sandbox. Your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
+- Play with your app's design. Right in the browser. Your built web app, 1:1, with its own knobs, in your browser or via MCP. Free, MIT.
 - Drop your build, turn the knobs, export the code. Nothing is sent to a server, and closing the tab undoes all of it.
 
 ## Sceptical comments, answered (HN/PH-ready, fellow-dev voice)

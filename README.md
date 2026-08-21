@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox: play with your app's design in a safe sandbox" width="880"></a>
+  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox: play with your app's design, right in the browser" width="880"></a>
 </p>
 
 <h1 align="center">UISandbox</h1>
 
-<p align="center"><b>Play with your app's design in a safe sandbox.</b><br>
+<p align="center"><b>Play with your app's design. Right in the browser.</b><br>
 Drop your build, turn the knobs, export the code.<br>
 <sub>Restyle your app without rebuilding it: your build runs 1:1 in the tab, nothing is sent to a server, and closing the tab undoes all of it.</sub></p>
 
