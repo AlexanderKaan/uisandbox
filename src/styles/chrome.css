@@ -427,7 +427,9 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .privacy__card a { color: var(--app-fg); }
 .privacy__fine { font-size: 12.5px; color: var(--app-fg-faint); }
 .privacy__close { position: absolute; top: 10px; right: 10px; }
-.hero__sub { font-size: 16px; line-height: 1.5; color: var(--app-fg-muted); max-width: 58ch; margin: 0 auto 18px; }
+/* Wider than the old 58ch, and `pretty` on top: the last line was falling to
+   a two-word widow ("your agent."), which is exactly what that value is for. */
+.hero__sub { font-size: 16px; line-height: 1.5; color: var(--app-fg-muted); max-width: 66ch; margin: 0 auto 18px; text-wrap: pretty; }
 .install--compact { max-width: 440px; margin: 0 auto; }
 .landing { width: min(760px, 100%); display: flex; flex-direction: column; gap: 40px; margin-top: 24px; }
 .landing__sec h2 { font-size: 20px; letter-spacing: -0.02em; margin: 0 0 10px; }
