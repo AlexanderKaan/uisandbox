@@ -1247,3 +1247,15 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     as its own block rather than forcing a `<br />`, so the break lands on the
     full stop instead of wherever the width runs out.
 
+153. The privacy card's backdrop was a grey haze in dark mode, and the cause is
+    worth keeping: it had grown its own scrim,
+    `color-mix(in srgb, var(--app-fg) 26%, transparent)`. `--app-fg` is
+    near-black in light and near-white in dark, so the same expression dims the
+    page in one scheme and LIGHTENS it in the other. `.dialog__backdrop` was
+    two hundred lines above with a working `rgba(0,0,0,.35)`; the card just did
+    not use it, which is the rule in notes/design.md ("New floating surface? It
+    is a `.popcard` or a `.dialog` — don't invent") applied to a backdrop.
+    Now one `--app-scrim` token for both, per scheme: .35 in light, .6 in dark,
+    because a dim over an already dark page has less to work with. Checked in
+    both schemes on both overlays.
+

@@ -85,6 +85,11 @@ Durations `--app-dur(-md)`; ants/shimmer/corona/flow ~1.4–14s, all under
    plain sentences, above the file (`.exp__how`: numbers in the flow, no box).
    A pane with a Copy button and no instructions only works for somebody who
    already knew, and they are not the one who needed the panel.
-8. A label may not promise more than the thing does. "Drop-in" on a stylesheet
+8. The wash behind an overlay is `--app-scrim`, never a mix of `--app-fg`.
+   That variable is near-black in light and near-white in dark, so a backdrop
+   built from it LIGHTENS the page in dark mode. The privacy card did exactly
+   that and read as a grey haze. One token, defined per scheme (dark needs more,
+   because a dim over an already dark page has less to work with).
+9. A label may not promise more than the thing does. "Drop-in" on a stylesheet
    nothing references is a bug in the copy, not a shortcut — say what it is
    and point at the format that does land.
