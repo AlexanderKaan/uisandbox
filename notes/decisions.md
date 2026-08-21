@@ -1126,3 +1126,35 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     the next on an origin whose whole promise is that nothing of yours sticks
     around. `purgeGuestStorage()` runs on load and on close; ours (`us-`,
     `uicockpit.`) survive, theirs do not.
+
+149. The CSS named colours, and how little they turned out to matter.
+    `parseColor` knew hex, rgb, hsl, oklch and the Tailwind names, so `red`,
+    `navy`, `grey`, `silver` and the rest returned null — and an unreadable
+    colour lands in the `keep` family, frozen. On a page written in names the
+    hue dial moved the hex colours and left the named ones where they were.
+    Fixed at the one parser (CSS_NAMED in colorspace.mjs); `currentColor` stays
+    unreadable on purpose, it has no value of its own.
+
+    Then the measurement, which did not support the reason for doing it:
+    across published classless sheets colour NAMES are rare — Tacit 0 of 43,
+    MVP 0 of 20, new.css 0 of 18, github-markdown 0 of 126. Only Tufte (1 of 6,
+    its `red` sidenote numbers), TodoMVC (2 of 209) and web-design-in-4-minutes
+    (1 of 22) use any. Hand-written CSS in 2026 is written in hex like
+    everything else. So this is a correctness fix with a small blast radius,
+    not the step change the synthetic probe (7 of 11 unreadable) suggested.
+
+    What plain CSS gets right already, checked at the same time: the shorthand
+    is decomposed (`border: 1px solid grey` → a border-width AND a colour),
+    `font-weight: bold` maps to 700 and `normal` to 400, `padding: 4px 8px`
+    becomes two spacing entries. The keyword sizes (`font-size: medium`,
+    `border-width: thin`) are NOT tokenised and stay as they are — a page built
+    on them will not answer the size dials. Rare enough to leave, stated here
+    rather than silently missing.
+
+    Gate over the 52 s16 fixtures (the classless, hand-written population):
+    48 ok · 2 differs · 1 refused · 1 no-load, no new rewriter gap. The one
+    apparent regression, `s16-coloris`, is the fixture: its picker animates its
+    own gradient, and on a re-run the CONTROL side changed too (rgb(224,210,82)
+    → rgb(224,213,82)) — a frame we serve untouched, so nothing of ours can
+    reach it. Recorded as a known `differs`, same class as chroma's random
+    palettes.

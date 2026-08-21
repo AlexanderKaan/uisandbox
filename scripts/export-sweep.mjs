@@ -45,18 +45,26 @@ const perMs = Number(opt('--timeout', '150000'))
  *  custom face, and a build that IS a token system. Plus two that should
  *  degrade honestly rather than invent: greyscale, and a canvas app. */
 /* Smallest first: a sweep should report its first verdict in seconds, not
-   after the 48 MB one has finished loading. */
+   after the 48 MB one has finished loading.
+
+   Plain, hand-written CSS is its own population and it is the one a framework
+   build tells you nothing about: colours by NAME, `border: 1px solid grey`,
+   `font-weight: bold`. Tacit, MVP, new.css, water.css, holiday.css and
+   github-markdown are classless sheets of exactly that kind. */
 const PICKS = [
   'edge-mono.zip',
+  's16-tacit.zip',
+  's16-mvp.zip',
+  's16-newcss.zip',
+  's16-water-latest.zip',
+  's16-holiday-css.zip',
+  's16-gh-markdown-css.zip',
   's11-open-props.zip',
   's16-tufte.zip',
-  's11-vitepress.zip',
   'startbootstrap-sb-admin-2-master.zip',
   's13-flutter-bmi.zip',
   's13-adminlte.zip',
   's11-spectrum-web-components.zip',
-  's12-element-plus.zip',
-  's11-mantine.zip',
 ].filter((f) => !only.length || only.some((o) => f.includes(o)))
 
 /** Anything of ours that leaked into a file meant for somebody else. */

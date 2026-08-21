@@ -1,6 +1,6 @@
 import { chromium } from 'playwright'
 import { readdirSync } from 'node:fs'
-const fixtures = readdirSync('fixtures').filter((f) => f.startsWith('s13-') && f.endsWith('.zip')).sort()
+const fixtures = readdirSync('fixtures').filter((f) => f.startsWith('s16-') && f.endsWith('.zip')).sort()
 const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } })
 for (const f of fixtures) {
   const p = await ctx.newPage()
