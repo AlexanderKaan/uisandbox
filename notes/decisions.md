@@ -1158,3 +1158,29 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     → rgb(224,213,82)) — a frame we serve untouched, so nothing of ours can
     reach it. Recorded as a known `differs`, same class as chroma's random
     palettes.
+
+150. The fear we had not designed for. Feedback from a first user, two fears,
+    and only the first was one we had answered: (a) "you will have my files",
+    and (b) "the changes will be written straight into my own code folder".
+    (b) is not a trust problem, it is a MENTAL MODEL problem — he thought
+    dropping a build opened a live connection to his project. And our own
+    words feed it: "drop your built web app", "export the change as a patch",
+    and above all `npx uisandbox-mcp open`, a CLI you point at a folder.
+
+    Denying it in prose does not fix a picture problem, so the boundary is
+    drawn instead (`.cross`, above the numbered steps): your folder on one
+    side, this tab on the other, one arrow in ("a copy of your build"), one
+    arrow out ("only when you press Export"), and a dashed rule between them
+    saying nothing crosses on its own. It stacks on a phone so the story reads
+    top to bottom.
+
+    And one line inside the drop zone itself, for the reader who gets no
+    further: "A copy is read into this tab. Your folder is never touched."
+    (The two clauses are deliberately the same length; `text-wrap: balance`
+    then breaks at the full stop instead of mid-clause.)
+
+    Checked while writing it, because the claim has to hold for the MCP route
+    too: `mcp/server.ts` imports `readFileSync, existsSync, statSync` and
+    `mcp/zipdir.ts` imports `readdirSync, readFileSync, statSync`. No write
+    function is imported anywhere in the package. That is a claim a sceptic
+    can check in four import statements, which is the kind we prefer.

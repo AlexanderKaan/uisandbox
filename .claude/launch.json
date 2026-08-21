@@ -1,6 +1,6 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "uisandbox", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 5190 }
+    { "name": "uisandbox", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 5190, "autoPort": true }
   ]
 }

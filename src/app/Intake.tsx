@@ -130,11 +130,13 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
                 {way === 'zip' ? (
                   <>
                     <div className="intake__copy">Drop your <b>.zip</b> here. Its <code>dist/</code>, <code>build/</code> or <code>out/</code> folder, or a whole repo that carries the build inside.</div>
+                    <div className="intake__safe">A copy is read into this tab. Your folder is never touched.</div>
                     <div className="intake__choices"><button type="button" className="btn btn--primary" onClick={() => zipRef.current?.click()}><FileArchive size={15} strokeWidth={1.75} /> Choose a zip</button></div>
                   </>
                 ) : (
                   <>
                     <div className="intake__copy">Drop a <b>folder</b> here. The build folder renders 1:1; a source folder is read for the knob stand only.</div>
+                    <div className="intake__safe">Read once, into this tab. Nothing is ever written back to it.</div>
                     <div className="intake__choices"><button type="button" className="btn btn--primary" onClick={() => dirRef.current?.click()}><FolderOpen size={15} strokeWidth={1.75} /> Choose a folder</button></div>
                   </>
                 )}
@@ -205,6 +207,26 @@ function Landing() {
       <section className="landing__sec">
         <h2>How it works</h2>
         <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, in seconds.</p>
+        {/* The boundary, drawn. People have read "drop your build" as "connect
+            your project" and expected their own folder to change under them.
+            That is a picture problem, and denying it in prose does not fix it:
+            two sides, one arrow each way, and the rule that nothing crosses on
+            its own. */}
+        <div className="cross" aria-label="What crosses between your machine and this tab">
+          <div className="cross__side">
+            <b>Your folder</b>
+            <span>Where your build lives. It is read once, and never written to. UISandbox cannot change a file on your machine.</span>
+          </div>
+          <div className="cross__mid" aria-hidden>
+            <span className="cross__arrow"><span className="cross__label">a copy of your build</span><svg viewBox="0 0 64 8" preserveAspectRatio="none"><path d="M0 4h56M52 1l4 3-4 3" /></svg></span>
+            <span className="cross__rule">nothing crosses on its own</span>
+            <span className="cross__arrow cross__arrow--back"><svg viewBox="0 0 64 8" preserveAspectRatio="none"><path d="M64 4H8M12 1L8 4l4 3" /></svg><span className="cross__label">only when you press Export</span></span>
+          </div>
+          <div className="cross__side">
+            <b>This browser tab</b>
+            <span>Where the copy is read, rendered and turned. Close the tab and it is gone: nothing is stored, nothing is uploaded.</span>
+          </div>
+        </div>
         <ol className="steps">
           <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in your browser and served to the frame by a service worker; nothing is uploaded.</li>
           <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included.</li>

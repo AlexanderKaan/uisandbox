@@ -49,9 +49,19 @@ function repoRoute(): Plugin {
   }
 }
 
+/* 5190 by default: the hold-out and export sweeps point `--base` at it, and
+ * the app registers a service worker, which is scoped to an origin — so the
+ * port is part of the address, not an implementation detail.
+ *
+ * When the harness assigns one through PORT we take it instead, and drop
+ * strictPort with it: refusing an assigned port is how a leftover dev server
+ * from an earlier run blocks the next one. */
+const PORT = Number(process.env.PORT) || 5190
+const STRICT = !process.env.PORT
+
 export default defineConfig({
-  server: { port: 5190, strictPort: true },
-  preview: { port: 5190, strictPort: true },
+  server: { port: PORT, strictPort: STRICT },
+  preview: { port: PORT, strictPort: STRICT },
   plugins: [react(), censusStore(), repoRoute()],
   test: {
     projects: [
