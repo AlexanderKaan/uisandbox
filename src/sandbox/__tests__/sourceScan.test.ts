@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { findSourceSpans, patchSourceFile, scanSourceFile } from '../sourceScan'
+import { isGenerated } from '../../export/genSheet'
 import { SubstitutionTable } from '../table'
 import { brandDeclared } from '../baseline'
 
@@ -32,5 +33,25 @@ describe('findSourceSpans', () => {
     scanSourceFile('x.kt', src, t, 'android')
     const out = patchSourceFile('x.kt', src, t, { '--us-v1': '#e11d48', '--us-v2': '0px' })
     expect(out).toBe(`val a = Color(0xFFE11D48)\nval r = RoundedCornerShape(0.dp)`)
+  })
+})
+
+describe('isGenerated', () => {
+  it('keeps a hand-written file and drops a bundle, by line geometry', () => {
+    const source = Array.from({ length: 900 }, (_, i) => `const token${i} = '#4f39f6' // a line a person wrote`).join('\n')
+    expect(source.length).toBeGreaterThan(20000)
+    expect(isGenerated('src/theme.ts', source)).toBe(false)
+    // One long line is the signature of output: same bytes, no newlines.
+    expect(isGenerated('assets/app.js', source.replace(/\n/g, ';'))).toBe(true)
+  })
+
+  it('never patches inside a build directory, however it is spelled', () => {
+    for (const p of ['_next/static/chunks/x.js', 'app/.next/server/y.js', 'node_modules/pkg/index.js', 'assets/app.min.js']) {
+      expect(isGenerated(p, 'const a = 1\n')).toBe(true)
+    }
+  })
+
+  it('leaves a small file alone rather than guessing from its path', () => {
+    expect(isGenerated('src/tokens.json', '{"primary":"#4f39f6"}')).toBe(false)
   })
 })

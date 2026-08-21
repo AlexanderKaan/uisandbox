@@ -79,6 +79,27 @@ export function genPatch(table: SubstitutionTable, vars: Record<string, string>)
 }
 
 /**
+ * Generated output, not source. The source patcher exists for the real files
+ * in an archive that also ships a build (`src/theme.ts` next to `dist/`) — but
+ * on a plain web build the only things matching its extensions are bundles,
+ * and a value written into a bundle is lost on the next build, while the scan
+ * itself is quadratic in the literals it finds.
+ *
+ * Measured on the Mantine docs: 2228 matching files, 161 MB of Next.js chunks,
+ * and the whole export sat on "Preparing…" for 113 seconds to hand back
+ * nothing usable. The test is the file's own line geometry — nobody hand-edits
+ * a 500 KB line — so it needs no list of build directories to stay current.
+ */
+export function isGenerated(path: string, text: string): boolean {
+  if (/(^|\/)(node_modules|\.next|_next|\.nuxt|\.svelte-kit)\//.test(path)) return true
+  if (/\.min\.[a-z]+$/i.test(path)) return true
+  if (text.length < 20000) return false
+  let lines = 1
+  for (let i = 0; i < text.length; i++) if (text.charCodeAt(i) === 10) lines++
+  return text.length / lines > 400
+}
+
+/**
  * Their stylesheets and pages with the sandbox's values written IN PLACE —
  * byte-precise, from the same scanner that tokenised them, so a `12px` that
  * was a radius becomes `0px` while the `12px` that was padding becomes `9px`.
@@ -94,11 +115,13 @@ export async function genPatchedFiles(
   fontCss = '',
 ): Promise<Array<{ path: string; text: string }>> {
   const out: Array<{ path: string; text: string }> = []
+  // One parse per distinct stylesheet, not per file that carries it.
+  const cache = new Map<string, string>()
   const families = [...fontCss.matchAll(/family=([^:&'"]+)|font-family:'([^']+)'/g)].map((m) => (m[1] ?? m[2] ?? '').replace(/\+/g, ' ')).filter(Boolean)
   for (const [path, f] of files) {
     if (/\.css$/i.test(path)) {
       const css = await f.blob.text()
-      let patched = rewriteCss(css, table, path, { mode: 'values', vars })
+      let patched = rewriteCss(css, table, path, { mode: 'values', vars, cache })
       if (patched !== css && fontCss && families.some((fam) => patched.includes(fam))) {
         // @import must precede every rule; keep an existing @charset first.
         const m = patched.match(/^@charset[^;]*;\s*/i)
@@ -107,10 +130,17 @@ export async function genPatchedFiles(
       if (patched !== css) out.push({ path, text: patched })
     } else if (/\.html?$/i.test(path)) {
       const html = await f.blob.text()
-      const patched = rewriteHtml(html, table, path, { mode: 'values', vars })
+      // In `values` mode rewriteHtml only rewrites `<style>` blocks and
+      // `style=` attributes, so a page with neither comes back byte-identical.
+      // Measured on the Mantine docs (364 pre-rendered Next.js pages): the
+      // whole pass took 113 s and the dialog sat on "Preparing…" for two
+      // minutes to hand back the same bytes it was given.
+      if (!/<style|\sstyle\s*=/i.test(html)) continue
+      const patched = rewriteHtml(html, table, path, { mode: 'values', vars, cache })
       if (patched !== html) out.push({ path, text: patched })
     } else if (SOURCE_EXT.test(path)) {
       const text = await f.blob.text()
+      if (isGenerated(path, text)) continue
       const patched = patchSourceFile(path, text, table, vars)
       if (patched !== text) out.push({ path, text: patched })
     }

@@ -20,3 +20,4 @@ describe('sandboxUrl', () => {
     expect(sandboxUrl('p1', 'dashboard')).toBe('/dashboard?__sb=p1')
   })
 })
+

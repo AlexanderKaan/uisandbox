@@ -32,12 +32,18 @@ export interface Coverage {
    *  it knows an element painted the colour as TEXT. Anything that has to
    *  DESCRIBE the design (DESIGN.md, the token file) reads roles from here. */
   painted: Map<number, PaintRoles>
-  /** The page's own ink and ground, straight off `body` — the two colours a
-   *  design system must get right, and the two a census gets wrong most often. */
-  anchors: { text?: string; background?: string }
+  /** What the page itself computes for its ink, its ground and its type — the
+   *  readings a census gets wrong most often, taken straight off the elements
+   *  instead. A type level read here is COHERENT: one element's own family,
+   *  size, weight and leading. Composing those from three separate rankings of
+   *  the stylesheet produces a level that exists nowhere (measured on the
+   *  Mantine docs: body came out 11px/700/1). */
+  anchors: Anchors
 }
 
 export interface PaintRoles { text: number; surface: number; border: number; total: number }
+export interface TypeLevel { fontFamily: string; fontSize: string; fontWeight: string; lineHeight: string }
+export interface Anchors { text?: string; background?: string; type?: { body?: TypeLevel; display?: TypeLevel; heading?: TypeLevel } }
 type PaintRole = 'text' | 'surface' | 'border' | null
 
 const key = (r: number, g: number, b: number) => `${r},${g},${b}`
@@ -176,13 +182,36 @@ export function measureCoverage(doc: Document, table: SubstitutionTable, vars: R
 /** The ink and the ground, as the page computes them. `body` may leave the
  *  background to `html`; a transparent one is not an answer, so it falls
  *  through. Same rule the baseline uses for the canvas. */
-function readAnchors(doc: Document, win: Window): { text?: string; background?: string } {
+function readAnchors(doc: Document, win: Window): Anchors {
   try {
     if (!doc.body) return {}
     const b = win.getComputedStyle(doc.body)
     const h = win.getComputedStyle(doc.documentElement)
     const opaque = (c: string) => c && !/^rgba\(0, 0, 0, 0\)$|^transparent$/.test(c) ? c : undefined
-    return { text: opaque(b.color), background: opaque(b.backgroundColor) ?? opaque(h.backgroundColor) }
+    const level = (el: Element | null): TypeLevel | undefined => {
+      if (!el) return undefined
+      const r = el.getBoundingClientRect()
+      // A heading with no box is not the page's heading — it is a hidden one.
+      if (el !== doc.body && (r.width < 2 || r.height < 2)) return undefined
+      const cs = win.getComputedStyle(el)
+      if (!parseFloat(cs.fontSize)) return undefined
+      return { fontFamily: cs.fontFamily, fontSize: cs.fontSize, fontWeight: cs.fontWeight, lineHeight: cs.lineHeight }
+    }
+    const biggest = (sel: string): Element | null => {
+      let best: Element | null = null, px = 0
+      for (const el of Array.from(doc.querySelectorAll(sel)).slice(0, 40)) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 2 || r.height < 2) continue
+        const s = parseFloat(win.getComputedStyle(el).fontSize)
+        if (s > px) { px = s; best = el }
+      }
+      return best
+    }
+    return {
+      text: opaque(b.color),
+      background: opaque(b.backgroundColor) ?? opaque(h.backgroundColor),
+      type: { body: level(doc.body), display: level(biggest('h1')), heading: level(biggest('h2, h3')) },
+    }
   } catch { return {} }
 }
 

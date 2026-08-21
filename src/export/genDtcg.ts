@@ -18,7 +18,7 @@ import type { SubstitutionTable } from '../sandbox/table'
 import type { Config } from '../tokens/types'
 import { parseCssColor, toSrgb } from '../sandbox/cssColor'
 import { measure, pxOf, type NamedRow, type Row } from './measured'
-import type { PaintRoles } from '../sandbox/coverage'
+import type { Anchors, PaintRoles } from '../sandbox/coverage'
 
 type Json = Record<string, unknown>
 
@@ -93,7 +93,7 @@ export function genDtcg(
   vars: Record<string, string>,
   cfg: Config,
   projectName: string,
-  opts: { date?: string; painted?: Map<number, PaintRoles>; anchors?: { text?: string; background?: string } } = {},
+  opts: { date?: string; painted?: Map<number, PaintRoles>; anchors?: Anchors } = {},
 ): string {
   const m = measure(table, vars, cfg.cPrimary, { display: cfg.fontDisplay, body: cfg.fontBody }, { painted: opts.painted, anchors: opts.anchors })
   const date = opts.date ?? new Date().toISOString().slice(0, 10)
@@ -102,10 +102,18 @@ export function genDtcg(
   }
 
   const color: Json = { $type: 'color' }
+  const unreadable: string[] = []
   for (const p of m.palette) {
     const v = colorValue(p.value)
     if (v) color[p.name] = { $value: v, $description: desc(p, p.name === 'primary' ? 'the brand colour' : `measured on ${p.props[0] ?? 'the build'}`) }
+    else unreadable.push(`${p.name} (${p.value})`)
   }
+  // The format needs sRGB components, and our colour reader knows hex, rgb,
+  // hsl, oklch and the Tailwind names — but not the full CSS name list, so
+  // Tufte's `red` cannot be given components. Dropping it silently would make
+  // this file and DESIGN.md disagree about the palette, and those two are
+  // supposed to be one reading. It is named instead.
+  if (unreadable.length) color.$description = `Not exported, could not be expressed as sRGB components: ${unreadable.join(', ')}. DESIGN.md carries them as written.`
   if (Object.keys(color).length > 1) out.color = color
 
   const font: Json = { $type: 'fontFamily' }

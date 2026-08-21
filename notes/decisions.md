@@ -1049,3 +1049,80 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
         ("System" is not a font-family a browser can resolve).
     Only OPAQUE colours can take a role: `rgba(255,255,255,.5)` is a different
     colour over every backdrop, so it cannot stand alone as "the text colour".
+
+146. An export sweep, and what it found. `scripts/export-sweep.mjs` runs real
+    builds through the real app, turns two knobs, then READS BACK all four
+    files the export hands over and checks them: DESIGN.md's front-matter
+    shape and the spec's section order, the W3C shapes in design.tokens.json
+    ($value/$type, srgb components, {value, unit} dimensions, shadow parts),
+    the AGENTS.md block, and the patch. `--recheck` re-runs the checks over
+    the saved output without a browser, so fixing a check costs seconds
+    instead of twenty minutes of reloading builds that did not change.
+
+    The hold-out runner asks "does it still render 1:1". This asks the other
+    half: is what comes OUT true, and would the thing it is handed to accept
+    it. Seven fixtures, deliberately unalike: greyscale, Open Props, Tufte,
+    SB Admin 2, a Flutter build, AdminLTE, Spectrum web components.
+
+    Two performance findings, both on the route we recommend most:
+    (a) the source patcher was scanning BUILD OUTPUT. On the Mantine docs
+        that is 2228 files and 161 MB of Next.js chunks, its overlap check is
+        quadratic in the literals it finds, and the dialog sat on "Preparing…"
+        for 113 seconds to hand back a patch nobody can use (a value written
+        into a bundle is gone on the next build). Generated files are now told
+        by their own line geometry — nobody hand-edits a 500 KB line — so no
+        list of build directories has to stay current. 113 s → 2.5 s.
+    (b) an HTML page with no `<style>` and no `style=` comes back byte-identical
+        from the rewriter, so it is not rewritten at all, and one parse is
+        shared across every page that inlines the same critical CSS.
+    Both were invisible from the unit tests: the fixtures are small, and the
+    cost only appears at the scale a static-site generator produces.
+
+147. What a design doc may CLAIM, tightened by the same sweep. Every one of
+    these was a real line in a real DESIGN.md before it was fixed:
+    - `text-muted: red` (Tufte's sidenote numbers) and `text-muted: #ffffff`
+      (AdminLTE's dark sidebar). Being the second-most-painted ink does not
+      make a colour muted. It now has to EARN the name: chromatic → an
+      accent; quieter than the body ink AND still readable on the ground
+      (≥ 3:1) → muted; otherwise no name. `#ffffff` on `#f8f9fa` is 1.04:1 —
+      lower contrast, yes, and invisible where the file would put it.
+    - `surface-alt: #0d6efd` — a saturated second background is a FILL (a
+      button, a banner), not the ground a layout sits on.
+    - `body: 11px/700/lineHeight 1` on Mantine: three separate rankings of the
+      stylesheet, glued together into a level that exists nowhere. Levels are
+      now read off the PAGE — `body`, its biggest visible h1, its biggest
+      h2/h3 — because one element's family, size, weight and leading belong
+      together. Whichever of the two headings is actually larger is `display`
+      (AdminLTE's h2 is bigger than its h1). The census stays as a fallback,
+      carrying only what it can defend: the size.
+    - `text-muted: "220 40% 2%"` (Open Props) — not a CSS colour at all. Every
+      colour these files hand over now goes through the one colour reader and
+      comes back as plain CSS. A value the reader does not know (most CSS
+      colour NAMES: the table holds hex, rgb, hsl, oklch and the Tailwind
+      names) is left as written, earns no role, and is therefore absent from
+      DESIGN.md and design.tokens.json alike — the two never disagree.
+    - `small: .125rem` (2px, an icon trick) as a type level; `xs: -0.5rem` as a
+      spacing step. Outside 8–200px it is a mechanism, not a level, and a
+      negative margin is a technique, not a step.
+    - "Headings are set in Inter" over a front matter that said `Times`: the
+      prose was reading the knob's label while the tokens came off the screen.
+    - `primary` and `text` could both vanish when the brand IS the body ink,
+      because the dedupe ran on them too. Those two roles are structural: they
+      appear even when they are the same colour.
+
+148. The caching question, measured rather than reasoned. Nothing of a dropped
+    build is kept: the Cache API is empty, there is no IndexedDB, and the
+    service worker sets `no-store` on purpose (a cache keyed by URL would
+    serve the rewritten sheet to the raw control and poison the 1:1 check).
+    Every drop calls buildProject afresh — new id, every entry re-read, the
+    sheet re-tokenised, the baseline re-derived.
+
+    But the GUEST's own storage did survive. The sandbox is same-origin by
+    design, which is what makes the frame writable and the 1:1 check possible,
+    and it also means a dropped app can write to localStorage on uisandbox.org:
+    `mantine-navbar-opened` was still there after the project was closed. Left
+    alone it is wrong twice — a second drop of the same build looks cached
+    because the app restores its own state, and one tenant's state carries into
+    the next on an origin whose whole promise is that nothing of yours sticks
+    around. `purgeGuestStorage()` runs on load and on close; ours (`us-`,
+    `uicockpit.`) survive, theirs do not.

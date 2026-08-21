@@ -243,3 +243,28 @@ describe('keyframes and data-URI SVGs are in', () => {
     expect(t2.identityVars()['--us-v1']).toContain("d='M4 7h22'")
   })
 })
+
+describe('the values-mode cache', () => {
+  const tokenised = () => { const t = new SubstitutionTable(); rewriteCss('.a{color:#4f39f6;border-radius:8px}', t, 'a.css'); return t }
+
+  it('gives the same answer cached as uncached', () => {
+    const t = tokenised()
+    const brand = t.find('color', '#4f39f6')!
+    const vars = { ...t.identityVars(), [varName(brand.id)]: '#e11d48' }
+    const css = '.a{color:#4f39f6;border-radius:8px}'
+    const bare = rewriteCss(css, t, 'a.css', { mode: 'values', vars })
+    const cache = new Map<string, string>()
+    expect(rewriteCss(css, t, 'a.css', { mode: 'values', vars, cache })).toBe(bare)
+    expect(rewriteCss(css, t, 'b.css', { mode: 'values', vars, cache })).toBe(bare)
+    expect(cache.size).toBe(1)
+  })
+
+  it('never caches while TOKENISING — that pass records sites per file', () => {
+    const t = new SubstitutionTable()
+    const cache = new Map<string, string>()
+    rewriteCss('.a{color:#4f39f6}', t, 'a.css', { cache })
+    rewriteCss('.a{color:#4f39f6}', t, 'b.css', { cache })
+    expect(cache.size).toBe(0)
+    expect(t.find('color', '#4f39f6')!.sites.map((s) => s.file)).toEqual(['a.css', 'b.css'])
+  })
+})

@@ -196,3 +196,35 @@ async function onMessage(e: MessageEvent) {
   }
   port.postMessage({ found: true, type: f.type, body }, [body])
 }
+
+/** Keys this app writes. Everything else on the origin came from a tenant. */
+const OURS = /^(us-|uicockpit\.)/
+
+/**
+ * Wipe what a dropped app left in OUR storage.
+ *
+ * The sandbox is same-origin by design (notes/security.md): that is what makes
+ * the frame writable and the 1:1 check possible, and it also means the guest
+ * can write to `localStorage` on uisandbox.org. They do — the Mantine docs
+ * leave `mantine-navbar-opened` behind, measured after closing the project.
+ *
+ * Left there it is wrong twice. It makes a second drop of the same build look
+ * cached, because the app restores its own state and the user reads that as us
+ * remembering. And it carries one guest's state into the next tenant's session,
+ * on an origin whose whole promise is that nothing of yours sticks around.
+ *
+ * Ours survive; theirs do not.
+ */
+export function purgeGuestStorage(): string[] {
+  const gone: string[] = []
+  for (const store of [localStorage, sessionStorage]) {
+    try {
+      for (const k of Object.keys(store)) {
+        if (OURS.test(k)) continue
+        store.removeItem(k)
+        gone.push(k)
+      }
+    } catch { /* private mode, or storage disabled: nothing to clean either way */ }
+  }
+  return gone
+}

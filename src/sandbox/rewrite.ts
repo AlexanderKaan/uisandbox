@@ -457,10 +457,18 @@ export interface RewriteOptions {
    *  in place, byte-precise. Nothing is registered; unknown literals stay. */
   mode?: 'vars' | 'values'
   vars?: Record<string, string>
+  /** `values` mode only: css → patched css, shared across one export.
+   *
+   *  In that mode this is a pure function of (css, table, vars) — the path is
+   *  only used when tokenising — and a static-site build inlines the SAME
+   *  critical CSS into every pre-rendered page. Measured on the VitePress
+   *  fixture: 433 pages, one answer, computed 433 times, 339 seconds. */
+  cache?: Map<string, string>
 }
 
 export function rewriteCss(css: string, table: SubstitutionTable, file: string, opts: RewriteOptions = {}): string {
   const values = opts.mode === 'values'
+  if (values && opts.cache) { const hit = opts.cache.get(css); if (hit !== undefined) return hit }
   const lookup = (kind: Kind, raw: string): string | null => {
     const e = table.find(kind, raw)
     if (!e) return null
@@ -525,6 +533,9 @@ export function rewriteCss(css: string, table: SubstitutionTable, file: string, 
   for (const e of edits.sort((a, b) => b.start - a.start)) {
     out = out.slice(0, e.start) + e.text + out.slice(e.end)
   }
+  // Bounded: a build with hundreds of genuinely distinct sheets should not be
+  // held in memory to save a parse it will never repeat.
+  if (values && opts.cache && opts.cache.size < 400) opts.cache.set(css, out)
   return out
 }
 

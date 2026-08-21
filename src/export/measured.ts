@@ -21,7 +21,8 @@
 import type { Entry, SubstitutionTable } from '../sandbox/table'
 import { cssValue, varName } from '../sandbox/table'
 import { colorShape, formatCssColor, parseCssColor } from '../sandbox/cssColor'
-import type { PaintRoles } from '../sandbox/coverage'
+import { contrast } from '../tokens/color'
+import type { Anchors, PaintRoles } from '../sandbox/coverage'
 
 export type Role = 'text' | 'surface' | 'border' | 'icon' | 'other'
 
@@ -39,6 +40,8 @@ export interface Row {
   painted: number
   /** Where the screen saw it, when it saw it. null = off this screen. */
   paintRole?: Role | null
+  /** Read straight off `body` rather than ranked for — the ink or the ground. */
+  anchor?: 'text' | 'surface'
 }
 
 export interface MeasureOptions {
@@ -46,9 +49,10 @@ export interface MeasureOptions {
    *  and ranking both come from here when it is available: a census of the
    *  stylesheet gets Bootstrap's body ink wrong, and the screen does not. */
   painted?: Map<number, PaintRoles>
-  /** The page's own ink and ground, off `body` (see Coverage.anchors). These
-   *  two are not ranked for — they are read, and they win. */
-  anchors?: { text?: string; background?: string }
+  /** What the page computes for its own ink, ground and type levels (see
+   *  Coverage.anchors). None of these are ranked for — they are read, and they
+   *  win. */
+  anchors?: Anchors
 }
 
 export interface NamedRow extends Row { name: string }
@@ -68,6 +72,8 @@ export interface Measured {
   lineHeights: Row[]
   weights: Row[]
   totals: { values: number; moved: number }
+  /** The page's own readings, passed through for whoever writes the file. */
+  anchors: Anchors
   /** True when the ranking could use the rendered screen. The prose says so —
    *  a reader has to know whether "most used" means painted or merely declared. */
   fromScreen: boolean
@@ -171,33 +177,67 @@ export function measure(
   const named = (rows: Row[]) => rows.filter((r) => { const c = parseCssColor(r.value); return !c || c.a >= 0.999 })
   const palette: NamedRow[] = []
   const seen = new Set<string>()
-  const push = (name: string, r: Row | undefined) => {
-    if (!r || seen.has(r.value.toLowerCase())) return
-    seen.add(r.value.toLowerCase())
+  // Keyed by the COLOUR, not its spelling: Mantine paints `white` and
+  // `#ffffff`, and a palette that listed both as separate roles would be
+  // handing over one colour twice and calling it a system.
+  // `always` for the roles a design system cannot be without. A greyscale app
+  // whose brand IS its body ink would otherwise lose its `text` entry to the
+  // dedupe and hand an agent a palette with nothing to set type in.
+  const push = (name: string, r: Row | undefined, always = false) => {
+    if (!r || (seen.has(canonical(r.value)) && !always)) return
+    seen.add(canonical(r.value))
     palette.push({ ...r, name })
   }
   const all = [...colors.text, ...colors.surface, ...colors.border, ...colors.icon, ...colors.other]
   const text = named(colors.text), surface = named(colors.surface), border = named(colors.border)
+  const unseen = (rows: Row[]) => rows.find((r) => !seen.has(canonical(r.value)))
   // The ink and the ground are READ off the page, not ranked for. Every census
   // heuristic gets these two wrong somewhere, and they are the two a design
   // system cannot afford to be wrong about. `anchorRow` prefers the sheet entry
   // that carries the colour (so it keeps its count and its "was"), and falls
   // back to the bare computed value when no entry matches.
-  const anchorRow = (css: string | undefined): Row | undefined => {
+  const anchorRow = (css: string | undefined, role: 'text' | 'surface'): Row | undefined => {
     if (!css) return undefined
     // The screen reports `rgb(33, 37, 41)`; the sheet holds `#212529`. Both go
     // through the one printer so the match is on the colour, not the spelling.
     const c = parseCssColor(css)
     const want = c ? formatCssColor(c) : printable(css)
-    const at = all.find((r) => canonical(r.value) === want.toLowerCase())
-    return at ?? { value: want, was: want, changed: false, count: 0, props: [], painted: 0 }
+    const at = all.find((r) => canonical(r.value) === canonical(want))
+    return { ...(at ?? { value: want, was: want, changed: false, count: 0, props: [], painted: 0 }), anchor: role }
   }
   const brandRow = all.find((r) => r.value.toLowerCase() === brand.toLowerCase())
   push('primary', brandRow ?? { value: brand, was: brand, changed: false, count: 0, props: [], painted: 0 })
-  push('text', anchorRow(opts.anchors?.text) ?? text[0])
-  push('surface', anchorRow(opts.anchors?.background) ?? surface[0])
-  push('text-muted', text.find((r) => !seen.has(r.value.toLowerCase())))
-  push('surface-alt', surface.find((r) => !seen.has(r.value.toLowerCase())))
+  push('text', anchorRow(opts.anchors?.text, 'text') ?? text[0], true)
+  push('surface', anchorRow(opts.anchors?.background, 'surface') ?? surface[0], true)
+  // The second ink and the second ground get the name they EARN.
+  //
+  // "text-muted" asserts a relationship — quieter than the body ink — and the
+  // runner-up is not automatically that. Tufte's is `red` (its sidenote
+  // numbers) and AdminLTE's is `#ffffff` (its dark sidebar): both are the
+  // second-most-painted text colour, neither is muted, and an agent told they
+  // were would write red captions. So: chromatic → an accent; lower contrast
+  // on the surface than the ink → muted; otherwise no name at all.
+  const hexOf = (v: string) => { const c = parseCssColor(v); return c && c.a >= 0.999 ? formatCssColor(c) as `#${string}` : null }
+  const ground = hexOf(palette.find((p) => p.name === 'surface')?.value ?? '') ?? '#ffffff'
+  const ink = hexOf(palette.find((p) => p.name === 'text')?.value ?? '')
+  const chroma = (v: string) => parseCssColor(v)?.C ?? 0
+  const secondText = unseen(text)
+  if (secondText) {
+    const hex = hexOf(secondText.value)
+    if (chroma(secondText.value) >= 0.06) push('text-accent', secondText)
+    // Muted means quieter than the body ink AND still readable on the ground.
+    // AdminLTE's runner-up is `#ffffff` on a `#f8f9fa` surface: lower contrast
+    // than the ink, yes, but that is white text on a dark bar somewhere else,
+    // not a muted tone — at 1.04:1 it is invisible where this file puts it.
+    else if (hex && ink && contrast(hex, ground) >= 3 && contrast(hex, ground) < contrast(ink, ground)) push('text-muted', secondText)
+  }
+  const secondSurface = unseen(surface)
+  if (secondSurface) {
+    // A saturated background is a FILL — a button, a banner — not the second
+    // ground a layout sits on. AdminLTE's runner-up is its own brand blue.
+    if (chroma(secondSurface.value) >= 0.06) push('fill', secondSurface)
+    else push('surface-alt', secondSurface)
+  }
   push('border', border[0])
 
   // --- scales ---------------------------------------------------------------
@@ -207,7 +247,10 @@ export function measure(
   const scaleable = (rows: Row[]) => dedupePx(rows.filter((r) => /^-?\d*\.?\d+\s*(px|rem|pt)?$/i.test(r.value.trim()) && pxOf(r.value) !== null))
   const bigFirst = (a: Row, b: Row) => pxOf(b.value)! - pxOf(a.value)!
   const smallFirst = (a: Row, b: Row) => pxOf(a.value)! - pxOf(b.value)!
-  const sizes = scaleable(of('font-size')).sort(bigFirst)
+  // A type level has to be text somebody reads. Mantine's sheet holds a
+  // `.125rem` (2px) font-size for an icon trick, and it came out as the design
+  // system's "small". Outside 8–200px it is a mechanism, not a level.
+  const sizes = scaleable(of('font-size')).filter((r) => { const px = pxOf(r.value)!; return px >= 8 && px <= 200 }).sort(bigFirst)
 
   const radiiRows = scaleable(of('radius')).sort(rank).slice(0, 5).sort(smallFirst)
   const radii: NamedRow[] = radiiRows.map((r, i) => {
@@ -216,7 +259,9 @@ export function measure(
     return { ...r, name }
   })
 
-  const spaceRows = scaleable(of('space')).sort(rank).slice(0, 6).sort(smallFirst)
+  // A negative margin is a real technique and a terrible token: AdminLTE's
+  // scale came out starting at `-0.5rem`. A step of a spacing scale is positive.
+  const spaceRows = scaleable(of('space')).filter((r) => pxOf(r.value)! > 0).sort(rank).slice(0, 6).sort(smallFirst)
   const spacing: NamedRow[] = spaceRows.map((r, i) => ({ ...r, name: LADDER[Math.min(i, LADDER.length - 1)]! }))
 
   const moved = table.entries.filter((e) => (vars[varName(e.id)] ?? cssValue(e.value)) !== cssValue(e.value)).length
@@ -245,6 +290,7 @@ export function measure(
     shadows: of('shadow').sort(rank),
     lineHeights: of('line-height').sort(rank),
     weights: of('font-weight').sort(rank),
+    anchors: opts.anchors ?? {},
     fromScreen: painted !== null,
     totals: { values: table.entries.length, moved },
   }
@@ -264,25 +310,28 @@ function dedupePx(rows: Row[]): Row[] {
   return [...best.values()]
 }
 
-/** A bare triplet (`13, 110, 253`, Bootstrap's `--bs-primary-rgb`) is a colour
- *  only once wrapped. Exports hand their values to other tools, and every one
- *  of them expects a CSS colour, so print it as one. */
+/** One spelling for every colour these files hand over.
+ *
+ *  The sheet keeps a value exactly as the author wrote it, because the patch
+ *  has to put those bytes back. A design doc has the opposite job: whatever it
+ *  says has to be a colour the next tool can read. Open Props writes
+ *  `220 40% 2%` and Bootstrap writes `13, 110, 253` — neither is a CSS colour
+ *  on its own, and both went into DESIGN.md verbatim.
+ *
+ *  So: parse it with the app's one colour reader and print it back as plain
+ *  CSS. A value the reader does not know (most CSS colour names) is left as
+ *  written — it is still a colour, just not one we can restate.
+ */
 function printable(v: string): string {
   const shape = colorShape(v)
-  if (shape === 'css') return v
-  // Wrap before parsing: `86, 94, 100` on its own is not a colour to any
-  // parser, and `hsl:222 47% 11%` is our own marker for bare hsl channels.
-  const wrapped = shape === 'hsl-triplet' ? `hsl(${v.replace(/^hsl:/, '')})` : `rgb(${v})`
+  const wrapped = shape === 'hsl-triplet' ? `hsl(${v.replace(/^hsl:/, '')})` : shape === 'rgb-triplet' ? `rgb(${v})` : v
   const c = parseCssColor(wrapped)
   return c ? formatCssColor(c) : v
 }
 
-/** One colour, one spelling — `#212529`, `rgb(33,37,41)` and `#212529ff` all
- *  land on the same string before anything is compared. */
-function canonical(v: string): string {
-  const c = parseCssColor(v)
-  return (c ? formatCssColor(c) : v).toLowerCase()
-}
+/** One colour, one key: values are already printed in one spelling, so this
+ *  only has to fold case. */
+const canonical = (v: string): string => printable(v).toLowerCase()
 
 /** Two steps of a scale can round to the same ladder name; a duplicate key in
  *  YAML or JSON silently drops one of them, so make them unique here. */

@@ -17,7 +17,7 @@ import { varName } from '../sandbox/table'
 import { codeFonts, deriveBaseline, refineFromDocument, refineFromTable, type BaselineReport } from '../sandbox/baseline'
 import { buildTokens } from '../tokens/buildTokens'
 import { computeVars, familiesOf } from '../sandbox/mapping'
-import { disown, ensureWorker, own, onSheetGrow, onMissing, missingFor } from '../sandbox/host'
+import { disown, ensureWorker, own, onSheetGrow, onMissing, missingFor, purgeGuestStorage } from '../sandbox/host'
 import { varsStyleTag } from '../sandbox/project'
 import { observeFrame } from '../sandbox/live'
 import { measureCoverage, type Coverage } from '../sandbox/coverage'
@@ -298,6 +298,10 @@ export function App() {
       const report = await deriveBaseline(archive, project.table)
       setBusy({ stage: 'open', what: archive.rootName })
       if (loaded) disown(loaded.project)
+      // A previous tenant's leftovers, before the next one renders: the frame
+      // is same-origin, so what the last app wrote to localStorage is still
+      // there and would make this drop look like a cached one.
+      purgeGuestStorage()
       own(project, () => varsRef.current)
       // A fresh project is a fresh start: no history, no hash from the last one.
       reset(report.baseline.cfg)
@@ -375,7 +379,7 @@ export function App() {
   }, [undo, redo])
 
 
-  const closeProject = () => { if (!loaded) return; disown(loaded.project); setLoaded(null); reset(DEFAULT_CONFIG) }
+  const closeProject = () => { if (!loaded) return; disown(loaded.project); purgeGuestStorage(); setLoaded(null); reset(DEFAULT_CONFIG) }
   return (
     <div className="app">
       <header className="app__topbar">

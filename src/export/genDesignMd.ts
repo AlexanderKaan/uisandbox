@@ -18,8 +18,8 @@
 import type { SubstitutionTable } from '../sandbox/table'
 import type { Config } from '../tokens/types'
 import { measure, pxOf, type Measured, type NamedRow, type Row } from './measured'
+import type { Anchors, PaintRoles, TypeLevel } from '../sandbox/coverage'
 import { nameColor } from '../tokens/color'
-import type { PaintRoles } from '../sandbox/coverage'
 
 /** A YAML scalar: plain when it cannot be mistaken for anything else, quoted
  *  otherwise. `#e11d48` unquoted is a comment; `Inter, sans-serif` unquoted is
@@ -35,39 +35,72 @@ const px = (v: string): string => (/^-?\d*\.?\d+$/.test(v.trim()) ? `${v.trim()}
 
 interface Level { name: string; fontFamily: string; fontSize: string; fontWeight?: number; lineHeight?: string | number; letterSpacing?: string }
 
-/** Up to four type levels, taken from the sizes the build actually paints:
- *  the biggest, the one under it, the most-used (that is the body), the
- *  smallest. Sizes nobody uses twice are not a level. */
+/** The type levels.
+ *
+ *  Read off the PAGE where the page will say: `body`, its biggest visible h1,
+ *  its biggest h2/h3. One element's own family, size, weight and leading
+ *  belong together, and that is the whole point of a level.
+ *
+ *  The stylesheet census is the fallback, and it is a weaker one: it ranks
+ *  sizes, weights and line-heights separately and then glues the winners
+ *  together. Measured on the Mantine docs, that produced a body level of
+ *  11px/700/1 — three real numbers describing an element that does not exist.
+ *  So the fallback carries only what it can defend: the size.
+ */
 function levelsOf(m: Measured): Level[] {
-  const sizes = m.sizes
-  if (!sizes.length) return []
-  const byCount = [...sizes].sort((a, b) => b.count - a.count)
-  const body = byCount[0]!
-  const weights = m.weights.map((w) => parseInt(w.value, 10)).filter((n) => Number.isFinite(n))
-  const heavy = weights.length ? Math.max(...weights) : undefined
-  const bodyWeight = m.weights[0] ? parseInt(m.weights[0].value, 10) : undefined
-  const lh = m.lineHeights[0]?.value
-  const picks: Array<[string, Row | undefined, number | undefined]> = [
-    ['display', sizes[0], heavy],
-    ['heading', sizes[1], heavy],
-    ['body', body, Number.isFinite(bodyWeight as number) ? bodyWeight : undefined],
-    ['small', sizes[sizes.length - 1], undefined],
-  ]
   const out: Level[] = []
   const seen = new Set<string>()
-  for (const [name, row, weight] of picks) {
-    if (!row || seen.has(row.value)) continue
-    seen.add(row.value)
-    const display = name === 'display' || name === 'heading'
-    out.push({
-      name,
-      fontFamily: display ? m.fonts.display : m.fonts.body,
-      fontSize: px(row.value),
-      ...(weight && Number.isFinite(weight) ? { fontWeight: weight } : {}),
-      ...(lh && name === 'body' ? { lineHeight: /^-?\d*\.?\d+$/.test(lh) ? parseFloat(lh) : px(lh) } : {}),
-    })
+  const add = (l: Level | undefined) => {
+    if (!l || seen.has(l.fontSize)) return
+    seen.add(l.fontSize)
+    out.push(l)
   }
-  return out
+  const t = m.anchors.type
+  const read = (name: string, at: TypeLevel | undefined): Level | undefined => {
+    if (!at) return undefined
+    const px = parseFloat(at.fontSize)
+    if (!Number.isFinite(px) || px < 8 || px > 200) return undefined
+    const weight = parseInt(at.fontWeight, 10)
+    const lh = parseFloat(at.lineHeight)
+    return {
+      name,
+      fontFamily: at.fontFamily,
+      fontSize: at.fontSize,
+      ...(Number.isFinite(weight) ? { fontWeight: weight } : {}),
+      // Computed leading is px; a design system wants the ratio, and a ratio
+      // survives a size change. `normal` computes to no number: leave it out.
+      ...(Number.isFinite(lh) && px ? { lineHeight: Math.round((lh / px) * 100) / 100 } : {}),
+    }
+  }
+  // A page whose h2 is bigger than its h1 is not unusual (AdminLTE: 26.6 vs
+  // 32.6). Whichever is actually larger is the display level; the name has to
+  // follow the measurement, not the tag.
+  const first = read('display', t?.display)
+  const second = read('heading', t?.heading)
+  const big = first && second && parseFloat(second.fontSize) > parseFloat(first.fontSize) ? second : first
+  const small = big === second ? first : second
+  add(big && { ...big, name: 'display' })
+  add(small && { ...small, name: 'heading' })
+  add(read('body', t?.body))
+
+  // Whatever the page did not answer for, from the sheet — size only.
+  const sizes = m.sizes
+  if (sizes.length) {
+    const byCount = [...sizes].sort((a, b) => b.count - a.count)
+    const want: Array<[string, Row | undefined]> = [
+      ['display', sizes[0]],
+      ['heading', sizes[1]],
+      ['body', byCount[0]],
+      ['small', sizes[sizes.length - 1]],
+    ]
+    for (const [name, row] of want) {
+      if (!row || out.some((l) => l.name === name)) continue
+      const display = name === 'display' || name === 'heading'
+      add({ name, fontFamily: display ? m.fonts.display : m.fonts.body, fontSize: px(row.value) })
+    }
+  }
+  const rank = ['display', 'heading', 'body', 'small']
+  return out.sort((a, b) => rank.indexOf(a.name) - rank.indexOf(b.name))
 }
 
 const list = (rows: NamedRow[]): string =>
@@ -80,8 +113,8 @@ export interface DesignMdOptions {
   notes?: string[]
   /** Where the screen painted each sheet entry — roles and ranking read it. */
   painted?: Map<number, PaintRoles>
-  /** The page's own ink and ground, off `body`. */
-  anchors?: { text?: string; background?: string }
+  /** What the page computes for its own ink, ground and type levels. */
+  anchors?: Anchors
 }
 
 export function genDesignMd(
@@ -145,7 +178,10 @@ export function genDesignMd(
 
   body.push('## Colors', '')
   if (m.palette.length) {
-    for (const p of m.palette) body.push(`- **${cap(p.name)} (${p.value})**${p.count ? ` — ${describeRole(p)}, used ${p.count} time${p.count === 1 ? '' : 's'} in the build` : ' — the brand colour'}.${p.changed ? ` Was ${p.was}.` : ''}`)
+    for (const p of m.palette) {
+      const how = p.count ? `${describeRole(p)}, used ${p.count} time${p.count === 1 ? '' : 's'} in the build` : p.name === 'primary' ? 'the brand colour' : describeRole(p)
+      body.push(`- **${cap(p.name)} (${p.value})** — ${how}.${p.changed ? ` Was ${p.was}.` : ''}`)
+    }
     const named = m.palette[0] && /^#[0-9a-f]{6}$/i.test(m.palette[0].value) ? nameColor(m.palette[0].value as `#${string}`) : ''
     body.push('', `The brand colour reads as ${named || 'the primary'}. Use it for the single most important action on a screen; everything else comes from the neutrals above.`)
   } else {
@@ -155,7 +191,12 @@ export function genDesignMd(
 
   body.push('## Typography', '')
   if (levels.length) {
-    body.push(`Headings are set in **${m.fonts.display}**, body copy in **${m.fonts.body}**.`, '')
+    // From the levels, not from the knob's own label: the two disagreed on
+    // every fixture where the page set a different face on its headings.
+    const famOf = (n: string) => levels.find((l) => l.name === n)?.fontFamily
+    const head = famOf('display') ?? famOf('heading') ?? m.fonts.display
+    const copy = famOf('body') ?? m.fonts.body
+    body.push(head === copy ? `Everything is set in **${copy}**.` : `Headings are set in **${head}**, body copy in **${copy}**.`, '')
     for (const l of levels) body.push(`- **${cap(l.name)}:** ${l.fontFamily} at ${l.fontSize}${l.fontWeight ? `, weight ${l.fontWeight}` : ''}.`)
     if (m.sizes.length > levels.length) body.push('', `The build paints ${m.sizes.length} distinct font sizes; the four above are the ones that carry the page. Snap a new size onto the nearest of them rather than adding another step.`)
   } else {
@@ -170,8 +211,13 @@ export function genDesignMd(
   body.push('')
 
   body.push('## Elevation & Depth', '')
-  if (m.shadows.length) {
-    body.push(`Depth comes from ${m.shadows.length} shadow${m.shadows.length === 1 ? '' : 's'}. The one the build leans on most is \`${m.shadows[0]!.value}\`${m.shadows[0]!.changed ? ` (was \`${m.shadows[0]!.was}\`)` : ''}. Reuse it rather than inventing a new blur.`)
+  // A `shadow` entry that is a bare length is a fragment of a shorthand, not a
+  // shadow (Spectrum's read as `2px`); recommending it would be nonsense.
+  const shadow = m.shadows.find((r) => r.value.trim().split(/\s+/).length >= 3)
+  if (shadow) {
+    body.push(`Depth comes from ${m.shadows.length} shadow${m.shadows.length === 1 ? '' : 's'}. The one the build leans on most is \`${shadow.value}\`${shadow.changed ? ` (was \`${shadow.was}\`)` : ''}. Reuse it rather than inventing a new blur.`)
+  } else if (m.shadows.length) {
+    body.push(`The build holds ${m.shadows.length} shadow value${m.shadows.length === 1 ? '' : 's'}, none of them a complete shadow this reader could restate. Copy the elevation off the existing components rather than from here.`)
   } else {
     body.push('This build paints no shadows. Hierarchy is carried by colour and borders, so keep new surfaces flat.')
   }
@@ -206,6 +252,11 @@ export function genDesignMd(
 const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')
 
 function describeRole(p: NamedRow): string {
+  // An anchor is described by the job it holds in this file, not by wherever
+  // else the value happens to appear: AdminLTE's page ground `#f8f9fa` is also
+  // painted on text somewhere, and "surface — painted on text" reads as a bug.
+  if (p.anchor === 'text') return 'the body ink, read off the page'
+  if (p.anchor === 'surface') return 'the page ground, read off the page'
   // What the SCREEN saw beats what the stylesheet called the property: a
   // colour reached through `--bs-gray-900` is still ink on the page, and
   // "used on --bs-gray-900" tells a reader nothing they can act on.

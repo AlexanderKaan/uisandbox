@@ -288,10 +288,13 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__card:hover { border-color: var(--app-fg-muted); }
 .exp__sub2 { font-size: 11.5px; color: var(--app-fg-faint); line-height: 1.4; }
 .exp__reco { font-style: normal; font-size: 10px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--app-bg); background: var(--app-fg); border-radius: 999px; padding: 2px 7px; margin-left: 7px; vertical-align: 1px; }
-.exp__with { display: flex; flex-direction: column; gap: 10px; padding: 16px 26px 4px; }
-.exp__withrow { display: flex; flex-wrap: wrap; gap: 8px; }
-.exp__chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border: 1px solid var(--app-border); border-radius: 999px; font-size: 12px; font-weight: 550; color: var(--app-fg-muted); background: var(--app-surface); }
-.exp__chip svg { color: var(--app-fg-faint); }
+/* What each destination lands in, at the foot of that destination's own card.
+   A strip of logos under the whole panel says "we work with things"; the same
+   marks under the box they belong to answer "is this the one for me". Quiet by
+   construction: faint, 10.5px, marks at text weight. */
+.exp__uses { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 10px; margin-top: 9px; }
+.exp__use { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 550; color: var(--app-fg-faint); }
+.exp__use svg { width: 12px; height: 12px; flex: none; opacity: .75; }
 .exp__turned { padding: 16px 26px 24px; }
 .exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; }
 .exp__row:first-of-type { border-top: 0; }
@@ -299,7 +302,7 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__from, .exp__to { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .exp__from { color: var(--app-fg-faint); }
 .exp__arrow { color: var(--app-fg-faint); }
-.exp__none { padding: 8px 26px 24px; font-size: 12.5px; color: var(--app-fg-muted); max-width: 52ch; }
+.exp__none { padding: 4px 26px 26px; font-size: 12.5px; line-height: 1.55; color: var(--app-fg-muted); }
 .dialog__nav .menu__item { font-size: 12.5px; }
 .dialog__pane { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .dialog__pane pre {
@@ -480,7 +483,7 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
   .popcard, .verify { left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; }
   /* Export: one destination per row, gutters in from 26 to 16, tabs wrap. */
   .exp__destgrid { grid-template-columns: 1fr; }
-  .exp__stats, .exp__dest, .exp__with, .exp__turned, .exp__how, .exp__head { padding-left: 16px; padding-right: 16px; }
+  .exp__stats, .exp__dest, .exp__none, .exp__turned, .exp__how, .exp__head { padding-left: 16px; padding-right: 16px; }
   .exp__stats { flex-wrap: wrap; }
   .exp__tabs { flex-wrap: wrap; }
 }

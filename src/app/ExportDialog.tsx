@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
 import type { SubstitutionTable } from '../sandbox/table'
-import type { PaintRoles } from '../sandbox/coverage'
+import type { Anchors, PaintRoles } from '../sandbox/coverage'
 import { genSheetCss, genSheetJson, genPatch, genPatchedFiles } from '../export/genSheet'
 import type { ServedFile } from '../sandbox/project'
 import { useEffect } from 'react'
@@ -34,7 +34,7 @@ interface ExportDialogProps {
    *  ground. What the exports that DESCRIBE the design read their roles from —
    *  a stylesheet census alone calls Bootstrap's body ink a background. */
   painted?: Map<number, PaintRoles>
-  anchors?: { text?: string; background?: string }
+  anchors?: Anchors
   onClose: () => void
 }
 
@@ -46,6 +46,10 @@ const M = {
   tailwind: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 6c-2.67 0-4.33 1.33-5 4 1-1.33 2.17-1.83 3.5-1.5.76.19 1.31.74 1.91 1.35.99 1 2.13 2.15 4.59 2.15 2.67 0 4.33-1.33 5-4-1 1.33-2.17 1.83-3.5 1.5-.76-.19-1.31-.74-1.91-1.35C15.6 7.15 14.46 6 12 6zM7 12c-2.67 0-4.33 1.33-5 4 1-1.33 2.17-1.83 3.5-1.5.76.19 1.31.74 1.91 1.35 1 1 2.13 2.15 4.59 2.15 2.67 0 4.33-1.33 5-4-1 1.33-2.17 1.83-3.5 1.5-.76-.19-1.31-.74-1.91-1.35C10.6 13.15 9.46 12 7 12z"/></svg>,
   shadcn: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden><path d="M20 4 4 20M15 4 4 15"/></svg>,
   claude: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/></svg>,
+  figma: <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M8.5 2h3.5v5H8.5a2.5 2.5 0 0 1 0-5zm3.5 0h3.5a2.5 2.5 0 0 1 0 5H12V2zm3.5 6.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM8.5 8.5H12v5H8.5a2.5 2.5 0 0 1 0-5zm0 6.5H12v2.5a2.5 2.5 0 1 1-3.5-2.28V15z"/></svg>,
+  cursor: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden><path d="M12 2.5 21 7.6v8.8L12 21.5 3 16.4V7.6l9-5.1zM3 7.6l9 5.1 9-5.1M12 12.7v8.8"/></svg>,
+  html: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m8 6-6 6 6 6M16 6l6 6-6 6"/></svg>,
+  json: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M8 3.5A2.5 2.5 0 0 0 5.5 6v3A2.5 2.5 0 0 1 3 11.5 2.5 2.5 0 0 1 5.5 14v4A2.5 2.5 0 0 0 8 20.5M16 3.5A2.5 2.5 0 0 1 18.5 6v3a2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0-2.5 2.5v4a2.5 2.5 0 0 1-2.5 2.5"/></svg>,
 }
 
 interface Item {
@@ -226,13 +230,22 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
   }, [cfg, base])
 
   // Six destinations; the formats are tabs INSIDE one, never a wall of files.
+  // Each destination names what it LANDS IN, at its own foot. The marks are the
+  // fastest way to answer "is this the box for me" — a strip under the whole
+  // panel could only say "we work with things".
   const DESTS = [
-    { title: 'Hand it to your agent', sub: 'DESIGN.md and one line in AGENTS.md, so Claude Code, Cursor or Codex builds in this look', icon: <Bot size={15} strokeWidth={1.75} />, ids: ['design-md', 'agents-md', 'dtcg'], reco: true },
-    { title: 'Patch your own files', sub: 'your CSS and HTML with the new values written in, or a find and replace list', icon: <FileCode2 size={15} strokeWidth={1.75} />, ids: ['files', 'sheet-patch'] },
-    { title: 'The raw sheet', sub: 'every value we found and what it is now. A reference to read, not a stylesheet to paste', icon: <Braces size={15} strokeWidth={1.75} />, ids: ['sheet-changed', 'sheet-css', 'sheet-json'] },
-    { title: 'Tailwind or shadcn', sub: 'a theme block for your config, or the block shadcn/ui components already read', icon: <Wind size={15} strokeWidth={1.75} />, ids: ['tokens-tw', 'tokens-shadcn'] },
-    { title: 'A fresh token system', sub: 'a full set seeded from these values, under new names. For starting a system, not patching one', icon: <SwatchBook size={15} strokeWidth={1.75} />, ids: ['tokens-css', 'tokens-json'] },
-    { title: 'Native apps', sub: 'Swift constants, an asset catalog, Android resources', icon: <Smartphone size={15} strokeWidth={1.75} />, ids: ['ios-swift', 'ios-assets', 'android-xml', 'android-kt'] },
+    { title: 'Hand it to your agent', sub: 'DESIGN.md and one line in AGENTS.md, so Claude Code, Cursor or Codex builds in this look', icon: <Bot size={15} strokeWidth={1.75} />, ids: ['design-md', 'agents-md', 'dtcg'], reco: true,
+      uses: [[M.claude, 'Claude Code'], [M.cursor, 'Cursor'], [null, 'Codex'], [M.figma, 'Figma']] },
+    { title: 'Patch your own files', sub: 'your CSS and HTML with the new values written in, or a find and replace list', icon: <FileCode2 size={15} strokeWidth={1.75} />, ids: ['files', 'sheet-patch'],
+      uses: [[M.css, 'CSS'], [M.html, 'HTML'], [null, 'any repo']] },
+    { title: 'The raw sheet', sub: 'every value we found and what it is now. A reference to read, not a stylesheet to paste', icon: <Braces size={15} strokeWidth={1.75} />, ids: ['sheet-changed', 'sheet-css', 'sheet-json'],
+      uses: [[M.css, 'CSS'], [M.json, 'JSON']] },
+    { title: 'Tailwind or shadcn', sub: 'a theme block for your config, or the block shadcn/ui components already read', icon: <Wind size={15} strokeWidth={1.75} />, ids: ['tokens-tw', 'tokens-shadcn'],
+      uses: [[M.tailwind, 'Tailwind'], [M.shadcn, 'shadcn/ui'], [null, 'Lovable']] },
+    { title: 'A fresh token system', sub: 'a full set seeded from these values, under new names. For starting a system, not patching one', icon: <SwatchBook size={15} strokeWidth={1.75} />, ids: ['tokens-css', 'tokens-json'],
+      uses: [[M.css, 'CSS'], [M.json, 'JSON'], [null, 'Style Dictionary']] },
+    { title: 'Native apps', sub: 'Swift constants, an asset catalog, Android resources', icon: <Smartphone size={15} strokeWidth={1.75} />, ids: ['ios-swift', 'ios-assets', 'android-xml', 'android-kt'],
+      uses: [[<Apple size={12} strokeWidth={1.9} />, 'SwiftUI'], [<Smartphone size={11} strokeWidth={1.9} />, 'Android']] },
   ]
   const [active, setActive] = useState('overview')
   const [copied, setCopied] = useState(false)
@@ -313,24 +326,16 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
                 {DESTS.map((d) => (
                   <button key={d.title} type="button" className="exp__card" onClick={() => { setActive(d.ids[0]!); setCopied(false) }}>
                     <span className="exp__ico">{d.icon}</span>
-                    <span className="exp__text"><span className="exp__label">{d.title}{d.reco && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">{d.sub}</span></span>
+                    <span className="exp__text">
+                      <span className="exp__label">{d.title}{d.reco && <em className="exp__reco">start here</em>}</span>
+                      <span className="exp__sub2">{d.sub}</span>
+                      <span className="exp__uses">
+                        {d.uses.map(([mark, name]) => <span key={name as string} className="exp__use">{mark}{name}</span>)}
+                      </span>
+                    </span>
                   </button>
                 ))}
               </div>
-            </div>
-            <div className="exp__with" aria-label="Plays well with">
-              <span className="menu__label" style={{ padding: 0 }}>Plays well with</span>
-              <span className="exp__withrow">
-                <span className="exp__chip">{M.css} CSS</span>
-                <span className="exp__chip">{M.tailwind} Tailwind</span>
-                <span className="exp__chip">{M.shadcn} shadcn/ui</span>
-                <span className="exp__chip"><Apple size={14} strokeWidth={1.9} /> SwiftUI</span>
-                <span className="exp__chip"><Smartphone size={13} strokeWidth={1.9} /> Android</span>
-                <span className="exp__chip">{M.claude} Claude Code</span>
-                <span className="exp__chip">Cursor</span>
-                <span className="exp__chip">Lovable</span>
-                <span className="exp__chip">Codex</span>
-              </span>
             </div>
             {turned.length ? (
               <div className="exp__turned">
