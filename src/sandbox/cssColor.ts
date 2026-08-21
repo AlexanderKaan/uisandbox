@@ -116,6 +116,20 @@ export function formatCssColor(c0: Okla): string {
   return `rgb(${r} ${g} ${b} / ${Math.round(c.a * 1000) / 1000})`
 }
 
+/** sRGB channels on 0..1 plus the hex, for exports that name a colour space
+ *  (the W3C token format asks for components, not a string). Same parser. */
+export function toSrgb(c0: Okla): { components: [number, number, number]; alpha: number; hex: string } {
+  const c = toGamut(c0)
+  const raw = oklchToRgb(clamp01(c.L), Math.max(0, c.C), c.H) as [number, number, number]
+  const ch = raw.map((v) => Math.min(1, Math.max(0, v / 255))) as [number, number, number]
+  const round = (v: number) => Math.round(v * 10000) / 10000
+  return {
+    components: [round(ch[0]), round(ch[1]), round(ch[2])],
+    alpha: Math.round(c.a * 1000) / 1000,
+    hex: '#' + ch.map((v) => Math.round(v * 255).toString(16).padStart(2, '0')).join(''),
+  }
+}
+
 /** Shortest hue delta, in degrees, from `from` to `to` (−180..180). */
 export function hueDelta(from: number, to: number): number {
   let d = to - from

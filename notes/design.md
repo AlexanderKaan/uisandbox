@@ -81,3 +81,10 @@ Durations `--app-dur(-md)`; ants/shimmer/corona/flow ~1.4–14s, all under
    separator in metadata rows and titles.
 5. Every colour through a token; both schemes ride along automatically.
 6. Padding: cards 24–28px, flyouts 20–22px; lists get `gap`, not `<br>`.
+7. A panel that hands over a FILE says what to do with it, in two or three
+   plain sentences, above the file (`.exp__how`: numbers in the flow, no box).
+   A pane with a Copy button and no instructions only works for somebody who
+   already knew, and they are not the one who needed the panel.
+8. A label may not promise more than the thing does. "Drop-in" on a stylesheet
+   nothing references is a bug in the copy, not a shortcut — say what it is
+   and point at the format that does land.

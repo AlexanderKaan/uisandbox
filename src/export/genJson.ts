@@ -31,9 +31,13 @@ export function genJson(cfg: Config): string {
   )
 
   const out = {
-    $schema: 'https://design-tokens.org/v1',
+    // NOT the W3C Design Tokens format — that shape is `$value`/`$type` and it
+    // lives in genDtcg.ts. This is our own kit dump, and it used to carry a
+    // `$schema: design-tokens.org` line that made tooling reject it on import.
+    // A file that names a standard has to be that standard.
+    format: 'uisandbox-kit/1',
     name: 'cockpit-ui-kit',
-    meta: { generator: 'Cockpit' },
+    meta: { generator: 'Cockpit', interchange: 'For the W3C Design Tokens format, export design.tokens.json instead.' },
     decisions: cfg,
     tokens: {
       color: {

@@ -992,3 +992,60 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     gh-pages is source (refused at the door), chroma.js's docs generate random
     palettes per load (differs, said so). Full gate now 164 fixtures:
     146 ok · 4 known differs · 14 honest refusals · 0 silent failures.
+
+143. Export answers "how do you want to apply it?", and the answer that was
+    missing is "hand it to my agent". Three formats added, all describing
+    THEIR app rather than a kit of ours:
+    - `DESIGN.md`, the Google Labs spec (`version: alpha`) — YAML front matter
+      with typed token groups, then the eight prose sections in the spec's
+      order. What we did not measure goes in `omitted:` WITH a reason, which
+      the spec has a field for and which is exactly our doctrine: components
+      are omitted because UISandbox reads values, not structure, and guessing
+      at a component library it never saw would send an agent writing fiction.
+    - `AGENTS.snippet.md`, a BLOCK to append, never a whole file. AGENTS.md in
+      a real repo is full of build and test instructions; handing somebody a
+      complete one to "save" would quietly delete all of it. Same block works
+      in CLAUDE.md / GEMINI.md / .cursorrules.
+    - `design.tokens.json`, the real W3C Design Tokens Format Module 2025.10
+      (`$value`/`$type`, colours as sRGB components, dimensions as
+      `{value, unit}`). A value that cannot be expressed in the format is left
+      out rather than bent into it — an inset shadow has no home in that
+      shape, so the whole shadow is skipped.
+    Also: `tokens.json` used to carry `$schema: design-tokens.org` over a
+    `{value:…}` body, which is NOT that format and made tooling reject it on
+    import. A file that names a standard has to be that standard; it now says
+    `format: uisandbox-kit/1` and points at the real one.
+
+144. Two labels in the export were false and are now true. `sandbox-values.css`
+    was sold as "drop-in": it emits `--sb-color-1: …`, names their stylesheet
+    never mentions, so pasting it changes nothing. It is a reference list and
+    says so, and the copy points at Patch your own files for a change that
+    lands. Every format also carries two or three plain sentences saying what
+    to do with it (`Item.how`), and the zip gets a README.md — thirteen files
+    in a folder with no map is a puzzle handed to somebody who came to save
+    time.
+
+145. A stylesheet census cannot name a colour's role, and we were letting it
+    try. Measured on the Bootstrap docs: `#000` is declared 366 times and
+    painted never; the body ink `#212529` has a sample of sites that is mostly
+    `.bg-dark`, so the census filed the ink as a BACKGROUND and the design doc
+    called a callout green the page surface. The screen does not have that
+    problem. `Coverage.painted` now records, per sheet entry, how many
+    elements painted it and IN WHICH ROLE (text / surface / border), and
+    `Coverage.anchors` reads the ink and the ground straight off `body` —
+    those two are not ranked for at all, they are read, and they win. The
+    coverage percentages are untouched by the change (control: reach stayed
+    100 % colours · 100 % type · 95 % radii on the same fixture).
+    Three smaller readings fixed on the way, all found by rendering a real
+    build instead of trusting the unit fixture:
+    (a) a compound value keeps its parts as variables (`0 1px 2px var(--us-v7)`,
+        so the hue dial can move a shadow's colour) — anything describing the
+        sheet to a human now puts those back.
+    (b) `.5rem` and `0.5rem` are one step of a scale spelled two ways; the
+        sheet keeps them apart on purpose, a ladder must not.
+    (c) `em` is out of every ladder (relative to whatever font-size it
+        inherits, so it is not a token), bare channel triplets print as
+        colours, and the font is the real stack, not our knob's label
+        ("System" is not a font-family a browser can resolve).
+    Only OPAQUE colours can take a role: `rgba(255,255,255,.5)` is a different
+    colour over every backdrop, so it cannot stand alone as "the text colour".

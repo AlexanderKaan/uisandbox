@@ -270,6 +270,13 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__tab--on { background: var(--app-surface); color: var(--app-fg); box-shadow: var(--app-shadow-sm); }
 .exp__head b { font-size: 13.5px; display: block; }
 .exp__headsub { font-size: 11.5px; color: var(--app-fg-faint); }
+/* What to DO with the file you are looking at. A pane with a Copy button and
+   no instructions only ever worked for somebody who already knew. Numbers in
+   the flow, no box: the pane is the surface (notes/design.md). */
+.exp__how { margin: 0; padding: 15px 26px 13px; list-style: none; counter-reset: how; display: flex; flex-direction: column; gap: 7px; border-bottom: 1px solid var(--app-border); }
+.exp__how li { counter-increment: how; position: relative; padding-left: 23px; font-size: 12.5px; line-height: 1.5; color: var(--app-fg-muted); max-width: 82ch; }
+.exp__how li:first-child { color: var(--app-fg); }
+.exp__how li::before { content: counter(how); position: absolute; left: 0; top: 2px; width: 16px; height: 16px; border-radius: 999px; background: var(--app-hover); color: var(--app-fg-muted); font-size: 9.5px; font-weight: 650; display: grid; place-items: center; }
 .exp__overview { flex: 1; overflow: auto; }
 .exp__stats { display: flex; gap: 12px; padding: 24px 26px 10px; }
 .exp__stat { flex: 1; border: 1px solid var(--app-border); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; }
@@ -471,6 +478,11 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
   .door::before { inset: -24px -10px; filter: blur(28px); }
   /* Cards that anchor to a corner of the stage span the viewport instead. */
   .popcard, .verify { left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; }
+  /* Export: one destination per row, gutters in from 26 to 16, tabs wrap. */
+  .exp__destgrid { grid-template-columns: 1fr; }
+  .exp__stats, .exp__dest, .exp__with, .exp__turned, .exp__how, .exp__head { padding-left: 16px; padding-right: 16px; }
+  .exp__stats { flex-wrap: wrap; }
+  .exp__tabs { flex-wrap: wrap; }
 }
 
 /* Phones with a project open: the knobs panel overlays the stage full-width

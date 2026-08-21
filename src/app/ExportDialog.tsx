@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
+import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
 import type { SubstitutionTable } from '../sandbox/table'
+import type { PaintRoles } from '../sandbox/coverage'
 import { genSheetCss, genSheetJson, genPatch, genPatchedFiles } from '../export/genSheet'
 import type { ServedFile } from '../sandbox/project'
 import { useEffect } from 'react'
@@ -11,6 +12,10 @@ import { genTailwind } from '../export/genTailwind'
 import { genShadcn } from '../export/genShadcn'
 import { genSwift, genAssetCatalog } from '../export/genSwift'
 import { genAndroidColorsXml, genAndroidKotlin } from '../export/genAndroid'
+import { genDesignMd } from '../export/genDesignMd'
+import { genAgentsBlock } from '../export/genAgents'
+import { genDtcg } from '../export/genDtcg'
+import { genReadme } from '../export/genReadme'
 import { zipSync } from '../export/zip'
 
 interface ExportDialogProps {
@@ -23,6 +28,13 @@ interface ExportDialogProps {
   /** Their original files — the patched export writes the values into these. */
   files: Map<string, ServedFile>
   fontCss: string
+  /** Where the readings came from; DESIGN.md carries them as provenance. */
+  notes?: string[]
+  /** Where the coverage walk saw each sheet entry, plus the page's own ink and
+   *  ground. What the exports that DESCRIBE the design read their roles from —
+   *  a stylesheet census alone calls Bootstrap's body ink a background. */
+  painted?: Map<number, PaintRoles>
+  anchors?: { text?: string; background?: string }
   onClose: () => void
 }
 
@@ -36,33 +48,156 @@ const M = {
   claude: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/></svg>,
 }
 
-interface Item { id: string; group: string; label: string; sub?: string; icon?: React.ReactNode; file: string; make: () => string }
+interface Item {
+  id: string
+  label: string
+  sub?: string
+  icon?: React.ReactNode
+  file: string
+  /** Two or three plain sentences: what this is and what to do with it. The
+   *  dialog shows them above the code — a pane with a Copy button and no
+   *  instructions only works for somebody who already knew. */
+  how: string[]
+  make: () => string
+}
 
 /**
- * Two things come out, and the dialog says which is which:
- *   YOUR VALUES  — the sheet: exactly what is in the sandbox right now, as
- *                  CSS variables, JSON, or a patch list per file
- *   THE TOKENS   — the --k-* system the knobs describe (CSS/JSON/Tailwind/
- *                  shadcn) and, for iOS, Swift constants + an asset catalog
+ * Export answers one question — how do you want to apply this? — and the
+ * destinations are the honest answers to it, in the order they serve people:
+ *
+ *   AGENT     DESIGN.md + the AGENTS.md line + W3C tokens. Their agent already
+ *             reads these formats; nobody has to understand ours.
+ *   SOURCE    their own files, patched. The complete, provable change.
+ *   SHEET     every value we found, as a reference. NOT a drop-in stylesheet,
+ *             and the copy says so — their CSS does not read our var names.
+ *   SYSTEM    tokens seeded from these values. A different thing: a new system,
+ *             not their app's own names, and labelled that way.
+ *   NATIVE    Swift + Android.
  */
-export function ExportDialog({ cfg, base, table, vars, projectName, files, fontCss, onClose }: ExportDialogProps) {
+export function ExportDialog({ cfg, base, table, vars, projectName, files, fontCss, notes, painted, anchors, onClose }: ExportDialogProps) {
   const [patched, setPatched] = useState<Array<{ path: string; text: string }> | null>(null)
   useEffect(() => { let on = true; void genPatchedFiles(files, table, vars, fontCss).then((p) => { if (on) setPatched(p) }); return () => { on = false } }, [files, table, vars, fontCss])
+  const movedCount = useMemo(() => { const id = table.identityVars(); return Object.keys(vars).filter((k) => vars[k] !== id[k]).length }, [table, vars])
+
   const items = useMemo<Item[]>(() => [
-    { id: 'files', group: 'For your source', label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet', sub: 'your CSS/HTML, new values in place', icon: <FileCode2 size={15} strokeWidth={1.75} />, file: 'patched-files.txt', make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first — then your CSS/HTML appear here with the new values written in place. */' },
-    { id: 'sheet-patch', group: 'For your source', label: 'Patch list', sub: 'find → replace, for your source', icon: <Replace size={15} strokeWidth={1.75} />, file: 'sandbox-patch.txt', make: () => genPatch(table, vars) },
-    { id: 'sheet-css', group: 'For the browser', label: 'CSS variables', sub: 'the whole sheet, drop-in', icon: <Braces size={15} strokeWidth={1.75} />, file: 'sandbox-values.css', make: () => genSheetCss(table, vars) },
-    { id: 'sheet-changed', group: 'For the browser', label: 'CSS, changed only', sub: 'just what you turned', icon: <Diff size={15} strokeWidth={1.75} />, file: 'sandbox-changes.css', make: () => genSheetCss(table, vars, { changedOnly: true }) },
-    { id: 'sheet-json', group: 'For the browser', label: 'JSON', sub: 'every value, machine-readable', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'sandbox-values.json', make: () => genSheetJson(table, vars) },
-    { id: 'tokens-css', group: 'For your design system', label: 'tokens.css', sub: 'the --k-* system as CSS', icon: <SwatchBook size={15} strokeWidth={1.75} />, file: 'tokens.css', make: () => genCss(cfg) },
-    { id: 'tokens-json', group: 'For your design system', label: 'tokens.json', sub: 'the same, as JSON', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'tokens.json', make: () => genJson(cfg) },
-    { id: 'tokens-tw', group: 'For your design system', label: 'Tailwind', sub: 'theme block for your config', icon: <Wind size={15} strokeWidth={1.75} />, file: 'tailwind.tokens.js', make: () => genTailwind(cfg) },
-    { id: 'tokens-shadcn', group: 'For your design system', label: 'shadcn', sub: '--background, --primary, …', icon: <Boxes size={15} strokeWidth={1.75} />, file: 'shadcn.css', make: () => genShadcn(cfg) },
-    { id: 'ios-swift', group: 'For native apps', label: 'DesignTokens.swift', sub: 'constants for SwiftUI/UIKit', icon: <Apple size={15} strokeWidth={1.75} />, file: 'DesignTokens.swift', make: () => genSwift(cfg) },
-    { id: 'ios-assets', group: 'For native apps', label: 'Asset catalog', sub: 'colour sets, light + dark', icon: <FolderTree size={15} strokeWidth={1.75} />, file: 'DesignTokens.xcassets.txt', make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n') },
-    { id: 'android-xml', group: 'For native apps', label: 'colors.xml (+ night)', sub: 'resources, light + night', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'colors.xml', make: () => genAndroidColorsXml(cfg) + '\n' + genAndroidColorsXml(cfg, 'dark') },
-    { id: 'android-kt', group: 'For native apps', label: 'DesignTokens.kt', sub: 'Compose constants', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'DesignTokens.kt', make: () => genAndroidKotlin(cfg) },
-  ], [cfg, table, vars, patched])
+    {
+      id: 'design-md', label: 'DESIGN.md', sub: 'your design system, as agents read it', icon: <FileText size={15} strokeWidth={1.75} />, file: 'DESIGN.md',
+      how: [
+        'Save this as DESIGN.md in the root of your repo.',
+        'Add the AGENTS.md block (next tab) so your agent picks it up on every task.',
+        'Then ask: apply DESIGN.md to the UI.',
+      ],
+      make: () => genDesignMd(table, vars, cfg, projectName, { notes, painted, anchors }),
+    },
+    {
+      id: 'agents-md', label: 'AGENTS.md', sub: 'the one line that points at it', icon: <Bot size={15} strokeWidth={1.75} />, file: 'AGENTS.snippet.md',
+      how: [
+        'Append this to AGENTS.md in your repo root. No AGENTS.md yet? Make one with this in it.',
+        'Claude Code reads CLAUDE.md instead. The same block works there, and in GEMINI.md or .cursorrules.',
+        'It is a block to add, not a file to overwrite: your build and test instructions stay where they are.',
+      ],
+      make: () => genAgentsBlock(projectName, { moved: movedCount }),
+    },
+    {
+      id: 'dtcg', label: 'Design tokens', sub: 'W3C format, for Figma and Style Dictionary', icon: <SwatchBook size={15} strokeWidth={1.75} />, file: 'design.tokens.json',
+      how: [
+        'Save as design.tokens.json. This is the W3C Design Tokens format (2025.10), not a format of ours.',
+        'Import it in Tokens Studio for Figma, or point Style Dictionary at it to build for any platform.',
+        'It describes the app we measured. Values we could not express in the format were left out rather than bent to fit.',
+      ],
+      make: () => genDtcg(table, vars, cfg, projectName, { painted, anchors }),
+    },
+    {
+      id: 'files',
+      label: patched === null ? 'Preparing…' : patched.length ? `${patched.length} file${patched.length === 1 ? '' : 's'} changed` : 'Nothing changed yet',
+      sub: 'your CSS and HTML, new values in place', icon: <FileCode2 size={15} strokeWidth={1.75} />, file: 'patched-files.txt',
+      how: [
+        'Your own files, whole, with the new values written in place.',
+        'Use Everything (.zip) at the top right to get them as real files in their original folders, ready to diff.',
+        'This is the complete change: a find and replace cannot tell a 12px radius from 12px of padding, and this can.',
+      ],
+      make: () => (patched ?? []).map((f) => `/* ===== ${f.path} ===== */\n${f.text}`).join('\n\n') || '/* Turn a knob first, then your CSS and HTML appear here with the new values written in. */',
+    },
+    {
+      id: 'sheet-patch', label: 'Find and replace', sub: 'one line per value, per file', icon: <Replace size={15} strokeWidth={1.75} />, file: 'sandbox-patch.txt',
+      how: [
+        'One line per value: what it was, what it is now, and the file it sits in.',
+        'Hand it to an agent ("apply this patch list to my source"), or run the replacements yourself.',
+        'Shorter to read than the patched files, but blind to context: check radius against padding before replacing.',
+      ],
+      make: () => genPatch(table, vars),
+    },
+    {
+      id: 'sheet-changed', label: 'Changed only', sub: 'just what you turned', icon: <Diff size={15} strokeWidth={1.75} />, file: 'sandbox-changes.css',
+      how: [
+        'The values you turned, under names of our own making.',
+        'A reference to read, diff or hand over as a spec. It is not a drop-in stylesheet: your CSS never mentions these names, so pasting it on its own changes nothing.',
+        'To make the change land, use Patch your own files.',
+      ],
+      make: () => genSheetCss(table, vars, { changedOnly: true }),
+    },
+    {
+      id: 'sheet-css', label: 'Every value', sub: 'the whole sheet, as a list', icon: <Braces size={15} strokeWidth={1.75} />, file: 'sandbox-values.css',
+      how: [
+        'Every design value we found in the build, with how often it is used and where.',
+        'The census behind everything else in this dialog. Useful to read, not to paste.',
+      ],
+      make: () => genSheetCss(table, vars),
+    },
+    {
+      id: 'sheet-json', label: 'JSON', sub: 'the same, machine-readable', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'sandbox-values.json',
+      how: [
+        'Every value with its kind, its old value, its new one, and the places it is used.',
+        'For scripts and codemods: this is the sheet in the shape a program wants.',
+      ],
+      make: () => genSheetJson(table, vars),
+    },
+    {
+      id: 'tokens-tw', label: 'Tailwind', sub: 'theme block for your config', icon: <Wind size={15} strokeWidth={1.75} />, file: 'tailwind.tokens.js',
+      how: ['Paste into the theme block of your tailwind.config.', 'Names are ours, not your app\'s. This starts a system rather than patching one.'],
+      make: () => genTailwind(cfg),
+    },
+    {
+      id: 'tokens-shadcn', label: 'shadcn', sub: '--background, --primary, …', icon: <Boxes size={15} strokeWidth={1.75} />, file: 'shadcn.css',
+      how: ['Replace the :root and .dark blocks in your globals.css with these.', 'The variable names are the ones shadcn/ui components already read.'],
+      make: () => genShadcn(cfg),
+    },
+    {
+      id: 'tokens-css', label: 'tokens.css', sub: 'a full --k-* system', icon: <SwatchBook size={15} strokeWidth={1.75} />, file: 'tokens.css',
+      how: [
+        'A complete token system seeded from your values: colour ramps, a type scale, spacing, z-index, breakpoints.',
+        'Link it before your own stylesheet and build against the variables.',
+        'These are new names, not the ones your app uses. To change the app you already have, use Patch your own files instead.',
+      ],
+      make: () => genCss(cfg),
+    },
+    {
+      id: 'tokens-json', label: 'tokens.json', sub: 'the same system, as JSON', icon: <FileJson2 size={15} strokeWidth={1.75} />, file: 'tokens.json',
+      how: ['The same generated system in JSON, with the decisions that produced it.', 'For the W3C interchange format, use Design tokens under Hand it to your agent.'],
+      make: () => genJson(cfg),
+    },
+    {
+      id: 'ios-swift', label: 'Swift', sub: 'constants for SwiftUI and UIKit', icon: <Apple size={15} strokeWidth={1.75} />, file: 'DesignTokens.swift',
+      how: ['Drop into your Xcode target and reference the constants from SwiftUI or UIKit.'],
+      make: () => genSwift(cfg),
+    },
+    {
+      id: 'ios-assets', label: 'Asset catalog', sub: 'colour sets, light and dark', icon: <FolderTree size={15} strokeWidth={1.75} />, file: 'DesignTokens.xcassets.txt',
+      how: ['Colour sets with light and dark variants.', 'Everything (.zip) writes these out as a real .xcassets folder you can drag into Xcode.'],
+      make: () => genAssetCatalog(cfg).map((f) => `// ${f.path}\n${f.content}`).join('\n'),
+    },
+    {
+      id: 'android-xml', label: 'colors.xml', sub: 'resources, light and night', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'colors.xml',
+      how: ['The first block goes in res/values/colors.xml, the second in res/values-night/colors.xml.'],
+      make: () => genAndroidColorsXml(cfg) + '\n' + genAndroidColorsXml(cfg, 'dark'),
+    },
+    {
+      id: 'android-kt', label: 'Compose', sub: 'Kotlin constants', icon: <Smartphone size={15} strokeWidth={1.75} />, file: 'DesignTokens.kt',
+      how: ['Drop into your theme package and reference from your Compose theme.'],
+      make: () => genAndroidKotlin(cfg),
+    },
+  ], [cfg, table, vars, patched, projectName, notes, painted, anchors, movedCount])
+
   // The overview: which knobs stand off their code, from → to.
   const KNOB_LABELS: Array<[keyof Config, string]> = [
     ['cPrimary', 'Brand'], ['cBackground' as keyof Config, 'Background'], ['fontDisplay', 'Display font'], ['fontBody', 'Body font'],
@@ -89,18 +224,20 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
     }
     return out
   }, [cfg, base])
-  const movedCount = useMemo(() => { const id = table.identityVars(); return Object.keys(vars).filter((k) => vars[k] !== id[k]).length }, [table, vars])
 
-  // Four destinations; the formats are tabs INSIDE a destination, never a wall.
+  // Six destinations; the formats are tabs INSIDE one, never a wall of files.
   const DESTS = [
-    { title: 'Into your source', sub: 'your files patched in place, or a find → replace list', icon: <FileCode2 size={15} strokeWidth={1.75} />, ids: ['files', 'sheet-patch'], reco: true },
-    { title: 'Into the browser', sub: 'CSS variables to drop in, whole or changed-only', icon: <Braces size={15} strokeWidth={1.75} />, ids: ['sheet-changed', 'sheet-css', 'sheet-json'] },
-    { title: 'Into your design system', sub: 'tokens for CSS, Tailwind or shadcn', icon: <SwatchBook size={15} strokeWidth={1.75} />, ids: ['tokens-css', 'tokens-json', 'tokens-tw', 'tokens-shadcn'] },
-    { title: 'Into a native app', sub: 'Swift constants and Android resources', icon: <Smartphone size={15} strokeWidth={1.75} />, ids: ['ios-swift', 'ios-assets', 'android-xml', 'android-kt'] },
+    { title: 'Hand it to your agent', sub: 'DESIGN.md and one line in AGENTS.md, so Claude Code, Cursor or Codex builds in this look', icon: <Bot size={15} strokeWidth={1.75} />, ids: ['design-md', 'agents-md', 'dtcg'], reco: true },
+    { title: 'Patch your own files', sub: 'your CSS and HTML with the new values written in, or a find and replace list', icon: <FileCode2 size={15} strokeWidth={1.75} />, ids: ['files', 'sheet-patch'] },
+    { title: 'The raw sheet', sub: 'every value we found and what it is now. A reference to read, not a stylesheet to paste', icon: <Braces size={15} strokeWidth={1.75} />, ids: ['sheet-changed', 'sheet-css', 'sheet-json'] },
+    { title: 'Tailwind or shadcn', sub: 'a theme block for your config, or the block shadcn/ui components already read', icon: <Wind size={15} strokeWidth={1.75} />, ids: ['tokens-tw', 'tokens-shadcn'] },
+    { title: 'A fresh token system', sub: 'a full set seeded from these values, under new names. For starting a system, not patching one', icon: <SwatchBook size={15} strokeWidth={1.75} />, ids: ['tokens-css', 'tokens-json'] },
+    { title: 'Native apps', sub: 'Swift constants, an asset catalog, Android resources', icon: <Smartphone size={15} strokeWidth={1.75} />, ids: ['ios-swift', 'ios-assets', 'android-xml', 'android-kt'] },
   ]
   const [active, setActive] = useState('overview')
   const [copied, setCopied] = useState(false)
   const item = items.find((i) => i.id === active)
+  const dest = item ? DESTS.find((d) => d.ids.includes(item.id)) : undefined
   const text = useMemo(() => item ? item.make() : '', [item])
 
   const download = (name: string, blob: Blob) => {
@@ -111,10 +248,18 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
     setTimeout(() => URL.revokeObjectURL(a.href), 2000)
   }
   const downloadAll = () => {
-    const files = items.filter((i) => i.id !== 'files').map((i) => ({ name: i.file, data: i.make() }))
-    for (const f of genAssetCatalog(cfg)) files.push({ name: f.path, data: f.content })
-    for (const f of patched ?? []) files.push({ name: `patched/${f.path}`, data: f.text })
-    download(`${projectName.replace(/[^\w.-]+/g, '-')}-uisandbox.zip`, zipSync(files.map((f) => ({ name: f.name, text: f.data }))))
+    const out = items.filter((i) => i.id !== 'files').map((i) => ({ name: i.file, data: i.make() }))
+    for (const f of genAssetCatalog(cfg)) out.push({ name: f.path, data: f.content })
+    for (const f of patched ?? []) out.push({ name: `patched/${f.path}`, data: f.text })
+    // A map of the folder, first in the list: thirteen files and no README is
+    // a puzzle handed to somebody who came here to save time.
+    out.unshift({
+      name: 'README.md',
+      data: genReadme(projectName, items.filter((i) => i.id !== 'files').map((i) => ({ name: i.file, what: i.sub ?? i.label })), {
+        moved: movedCount, total: table.entries.length, changedFiles: patched?.length ?? 0,
+      }),
+    })
+    download(`${projectName.replace(/[^\w.-]+/g, '-')}-uisandbox.zip`, zipSync(out.map((f) => ({ name: f.name, text: f.data }))))
   }
 
   return (
@@ -133,15 +278,18 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
         {item ? (
           <div className="dialog__pane">
             <div className="exp__head">
-              <span className="exp__ico exp__ico--lg">{DESTS.find((d) => d.ids.includes(item.id))?.icon}</span>
-              <div><b>{DESTS.find((d) => d.ids.includes(item.id))?.title}</b><span className="exp__headsub">{DESTS.find((d) => d.ids.includes(item.id))?.sub}</span></div>
+              <span className="exp__ico exp__ico--lg">{dest?.icon}</span>
+              <div><b>{dest?.title}</b><span className="exp__headsub">{dest?.sub}</span></div>
               <span className="stage__spacer" style={{ flex: 1 }} />
               <div className="exp__tabs" role="tablist">
-                {(DESTS.find((d) => d.ids.includes(item.id))?.ids ?? []).map((id) => { const it = items.find((x) => x.id === id)!; return (
+                {(dest?.ids ?? []).map((id) => { const it = items.find((x) => x.id === id)!; return (
                   <button key={id} type="button" role="tab" aria-selected={id === active} className={`exp__tab ${id === active ? 'exp__tab--on' : ''}`} onClick={() => { setActive(id); setCopied(false) }}>{it.label}</button>
                 ) })}
               </div>
             </div>
+            <ol className="exp__how">
+              {item.how.map((h, i) => <li key={i}>{h}</li>)}
+            </ol>
             <pre>{text}</pre>
             <div className="dialog__tools">
               <span>{item.file} · {text.length.toLocaleString()} chars</span>
@@ -160,12 +308,12 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
               <div className="exp__stat"><b>{turned.length}</b><span>knob{turned.length === 1 ? '' : 's'} turned</span></div>
             </div>
             <div className="exp__dest">
-              <div className="menu__label">Where do you want it?</div>
+              <div className="menu__label">How do you want to apply it?</div>
               <div className="exp__destgrid">
                 {DESTS.map((d) => (
                   <button key={d.title} type="button" className="exp__card" onClick={() => { setActive(d.ids[0]!); setCopied(false) }}>
                     <span className="exp__ico">{d.icon}</span>
-                    <span className="exp__text"><span className="exp__label">{d.title}{d.reco && movedCount > 0 && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">{d.sub}</span></span>
+                    <span className="exp__text"><span className="exp__label">{d.title}{d.reco && <em className="exp__reco">start here</em>}</span><span className="exp__sub2">{d.sub}</span></span>
                   </button>
                 ))}
               </div>

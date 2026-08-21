@@ -100,7 +100,9 @@ export function App() {
   useEffect(() => {
     if (!import.meta.env.DEV) return
     ;(window as unknown as { __us?: unknown }).__us = loaded
-      ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, coverage: coverageRef.current, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
+      // `coverage` is a getter: the walk finishes after this effect runs, so a
+      // snapshot here always read null and the handle looked broken.
+      ? { project: loaded.project, baseline: loaded.report.baseline, cfg, vars, get coverage() { return coverageRef.current }, identity: loaded.project.table.identityVars(), dispatch, patch: () => genPatch(loaded.project.table, vars), patched: () => genPatchedFiles(loaded.project.raw, loaded.project.table, vars, fontCss) }
       : null
   }, [loaded, cfg, vars, dispatch, fontCss])
   // The tab title says which project is open (a hostile page may rewrite it —
@@ -452,7 +454,7 @@ export function App() {
       </div>
       {loaded && <Footer />}
       {showExport && loaded && (
-        <ExportDialog cfg={cfg} base={loaded.report.baseline.cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} onClose={() => setShowExport(false)} />
+        <ExportDialog cfg={cfg} base={loaded.report.baseline.cfg} table={loaded.project.table} vars={vars} projectName={loaded.project.name} files={loaded.project.raw} fontCss={fontCss} notes={loaded.report.notes} painted={coverage?.painted} anchors={coverage?.anchors} onClose={() => setShowExport(false)} />
       )}
     </div>
   )
