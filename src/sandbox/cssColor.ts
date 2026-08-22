@@ -43,17 +43,29 @@ function alphaOf(input: string): number {
 }
 
 /** The three notations a sheet entry can be in. */
+/** One spelling of a bare rgb triplet, read by `colorShape` and `parseCssColor`
+ *  both, so the two can never disagree about what a triplet is. */
+const RGB_TRIPLET = /^\d{1,3}(\s*,\s*|\s+)\d{1,3}(\s*,\s*|\s+)\d{1,3}$/
+
 export type ColorShape = 'css' | 'rgb-triplet' | 'hsl-triplet'
 export function colorShape(v: string): ColorShape {
   if (v.startsWith('hsl:')) return 'hsl-triplet'
-  if (/^\d{1,3}(\s*,\s*|\s+)\d{1,3}(\s*,\s*|\s+)\d{1,3}$/.test(v.trim())) return 'rgb-triplet'
+  if (RGB_TRIPLET.test(v.trim())) return 'rgb-triplet'
   return 'css'
 }
 
 /** Parse any CSS colour literal — or a bare rgb / `hsl:` triplet — to OKLCH + alpha, or null. */
 export function parseCssColor(input: string): Okla | null {
-  const s = input.trim().replace(/^hsl:/, '')
+  let s = input.trim().replace(/^hsl:/, '')
   if (/^transparent$/i.test(s)) return { L: 0, C: 0, H: 0, a: 0 }
+  // A bare channel triplet with COMMAS. `colorShape` and `formatLike` both
+  // already know this spelling; only the reader did not, so Bootstrap 5's
+  // whole `-rgb` family (`--bs-primary-rgb: 13, 110, 253`, and the
+  // `--bs-tertiary-bg-rgb` that paints AdminLTE's page) parsed to null and
+  // `mapEntry` handed the literal straight back. Frozen for every dial: brand,
+  // background, hue, contrast, dark mode. The space-separated form parsed all
+  // along, which is what hid it — Tailwind and shadcn use spaces.
+  if (RGB_TRIPLET.test(s)) s = s.replace(/,/g, ' ')
   const rgb = parseColor(s) as [number, number, number] | null
   if (!rgb) return null
   const [L, C, H] = rgbToOklch(rgb[0], rgb[1], rgb[2]) as [number, number, number]

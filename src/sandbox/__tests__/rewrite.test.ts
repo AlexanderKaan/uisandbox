@@ -299,6 +299,17 @@ describe('a shadow held in a custom property', () => {
     expect(k.some((x) => x.startsWith('shadow:'))).toBe(false)
   })
 
+  it('a channel triplet named for a shadow is a COLOUR, not a shadow', () => {
+    // `--bs-btn-focus-shadow-rgb: 49, 132, 253` is the blue of a focus ring,
+    // wrapped in rgba() at the point of use. Read as a shadow, the elevation
+    // dial scales the CHANNELS: at 0 every focus ring turns black. Identity
+    // cannot catch it — the var still holds the literal — so it is held here.
+    // Bootstrap writes seventeen of these on one AdminLTE build.
+    const k = kinds(':root{--bs-btn-focus-shadow-rgb:49, 132, 253}')
+    expect(k).toEqual(['color:49, 132, 253'])
+    expect(kinds(':root{--shadow-rgb:248 249 250}')).toEqual(['color:248 249 250'])
+  })
+
   it('still reads inset shadows and multi-layer stacks', () => {
     expect(kinds(':root{--bs-box-shadow-inset:inset 0 1px 2px rgba(0,0,0,.075)}').some((x) => x.startsWith('shadow:'))).toBe(true)
     expect(kinds(':root{--shadow-2:0 1px 2px rgba(0,0,0,.1), 0 2px 8px rgba(0,0,0,.1)}').some((x) => x.startsWith('shadow:'))).toBe(true)

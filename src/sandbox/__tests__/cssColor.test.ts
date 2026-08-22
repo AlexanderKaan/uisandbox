@@ -34,3 +34,26 @@ describe('the CSS named colours', () => {
     expect(fams.of.get(navy.id)).toBe(fams.of.get(hexBlue.id))
   })
 })
+
+describe('a bare channel triplet', () => {
+  it('reads the same colour whichever separator it uses', () => {
+    // Tailwind and shadcn write spaces, Bootstrap writes commas. Only the
+    // space form parsed, so every `--bs-*-rgb` came back null and `mapEntry`
+    // handed the literal straight back: frozen for brand, background, hue,
+    // contrast and dark mode alike. Measured on AdminLTE, `.btn-primary`
+    // (a hex) followed the brand while `.card.bg-primary`
+    // (`rgba(var(--bs-primary-rgb), …)`) stayed Bootstrap's own blue.
+    const hex = parseCssColor('#0d6efd')!
+    for (const spelling of ['13 110 253', '13, 110, 253', '13,110,253']) {
+      const c = parseCssColor(spelling)
+      expect(c, spelling).not.toBeNull()
+      expect(formatCssColor(c!), spelling).toBe(formatCssColor(hex))
+    }
+  })
+
+  it('is not confused with anything else that holds three numbers', () => {
+    expect(parseCssColor('0 1px 2px')).toBeNull()
+    expect(parseCssColor('1, 2, 3, 4')).toBeNull()
+    expect(parseCssColor('300, 110, 253')).toBeNull()   // out of channel range
+  })
+})

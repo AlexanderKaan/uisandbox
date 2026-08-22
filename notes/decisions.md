@@ -1459,3 +1459,73 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     Different causes, not yet diagnosed. `s15-hover-fx` had no expectation and
     now has one (`ok`).
 
+161. Bootstrap 5's whole `-rgb` family was frozen, and one separator was why.
+
+    Reported as "I pick a background and the page does not follow". It was not
+    the Background dial. `parseCssColor` read a bare channel triplet only when
+    it was SPACE separated:
+
+        parseCssColor('248 249 250')   -> a colour
+        parseCssColor('248, 249, 250') -> null
+
+    Tailwind and shadcn write spaces, Bootstrap writes commas, and `mapEntry`
+    opens with `if (!c) return e.value`. So every `--bs-*-rgb` custom property
+    came back untouched from EVERY dial: brand, background, hue, saturation,
+    contrast, dark mode. `colorShape` and `formatLike` next door both already
+    knew the comma spelling; only the reader did not, which is why the two now
+    share one `RGB_TRIPLET` regex and cannot drift apart again.
+
+    What it cost, measured on AdminLTE with the control run beside it:
+
+      brand -> #c2410c      without fix      with fix
+        .btn-primary        follows          follows     (hex --bs-btn-bg)
+        .card.bg-primary    #0d6efd          follows     (rgba(var(--bs-primary-rgb)))
+
+      background -> #2d82d7
+        body                rgb(248,249,250) rgb(45,130,215)
+
+    The half that worked is what hid it: a Bootstrap page under a brand pick
+    changes a great deal, and nobody counts which parts did not.
+
+    Not changed, and worth knowing: pure white cards still do not follow the
+    background. `shiftL` scales its delta so 0 and 1 never move, deliberately,
+    so a white surface stays white over a blue page. That is a design decision,
+    not this bug.
+
+162. A shadow needs a UNIT, and #160 shipped without one.
+
+    Yesterday's custom-property shadow rule tested "two or more lengths once
+    the colours are taken out". `--bs-btn-focus-shadow-rgb: 49, 132, 253` has
+    three numbers and no colour to take out, so it read as a shadow: 17 of the
+    41 shadow entries on AdminLTE were colour triplets, and the elevation dial
+    was scaling the CHANNELS of a blue. At 0 every focus ring would go black.
+
+    The shape test now requires at least one of those lengths to carry a unit.
+    A triplet has none, and falls through to the triplet rule below it where it
+    belongs.
+
+    The gate could not catch this and said so in its own entry: identity holds
+    by construction because the var still holds the literal it replaced. The
+    knob sweep could not catch it either — a focus shadow only paints on focus,
+    so no visible element moved. It took loading the build and asking what the
+    sheet thought each value WAS. That question is now worth asking directly:
+    a `shadow` entry with no unit anywhere in it is a contradiction.
+
+    Measured after the tightening, with #160's gain intact: AdminLTE's shadow
+    census 41 -> 24 (exactly the 17 triplets), and the dial still reaches the
+    same 7 elements. 24 is five more than the 19 it held before #160, and those
+    five are the real `--bs-box-shadow` values that fix was written for.
+
+163. `s11-ng-bootstrap.github.io.zip` differs about once in five full runs,
+    always the same way: one element, `margin-left: 0px -> 127px`.
+
+    That property is free space under `margin: auto`, so it reports whatever
+    the box was when the two frames were read — the same class as the AdminLTE
+    `ms-auto` case in #157. Held to the method: three isolated runs clean, then
+    a second full gate clean, against one dirty run inside a loaded gate. Four
+    to one, on a layout-derived property, is a flake.
+
+    Left recorded as `ok` on purpose. Recording it as `differs` would mean the
+    gate stops reporting it when it is genuinely broken, which is worse than
+    reading one line of a summary now and then.
+

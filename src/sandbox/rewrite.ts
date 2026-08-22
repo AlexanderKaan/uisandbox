@@ -174,12 +174,18 @@ const HEX = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi
 const FUNC_COLOR = /\b(?:rgba?|hsla?|hwb|oklch|oklab|lch|lab|color)\((?:[^()]|\([^()]*\))*\)/gi
 const NAMED = /(?<![\w-])([a-z]{3,20})(?![\w-])/gi
 
-/** Two or more lengths once the colours are taken out: `0 .5rem 1rem rgba(…)`
- *  is a shadow, `rgba(0, 0, 0, .5)` is a colour that happens to hold zeroes. */
+/** Two or more lengths once the colours are taken out, AT LEAST ONE OF THEM
+ *  CARRYING A UNIT: `0 .5rem 1rem rgba(…)` is a shadow, `rgba(0, 0, 0, .5)` is
+ *  a colour that happens to hold zeroes, and `49, 132, 253` is a colour too.
+ *  The unit is what separates the two. Without it, Bootstrap's
+ *  `--bs-btn-focus-shadow-rgb: 49, 132, 253` reads as three lengths and the
+ *  elevation dial scales a BLUE into nonsense — a bug that identity cannot
+ *  see, because a var still holds the literal it replaced. */
 function isShadowShape(bare: string): boolean {
   const noColor = bare.replace(FUNC_COLOR, ' ').replace(HEX, ' ')
   const lengths = noColor.match(/(?<![\w.#-])-?\d*\.?\d+(px|rem|em)?(?![\w%])/g)
-  return (lengths?.length ?? 0) >= 2
+  if ((lengths?.length ?? 0) < 2) return false
+  return lengths!.some((l) => /(px|rem|em)$/.test(l))
 }
 
 interface Splice { start: number; end: number; kind: Kind; raw: string }
@@ -399,8 +405,10 @@ export function splicesFor(prop: string, value: string): Splice[] {
     //
     // Shape is checked on the value with its COLOURS STRIPPED, because `bare`
     // still holds them: `--shadow-color: rgba(0, 0, 0, .5)` is named like a
-    // shadow and its zeroes would pass a naive length test. Two lengths
-    // outside the colour is what makes a shadow a shadow.
+    // shadow and its zeroes would pass a naive length test. Two lengths with a
+    // UNIT between them is what makes a shadow a shadow; a bare triplet like
+    // `--bs-btn-focus-shadow-rgb: 49, 132, 253` is a colour, and it is claimed
+    // by the triplet rule below.
     // Order mirrors the real `box-shadow` branch: inner colours first, then
     // the whole value, whose registered text already carries their var()s.
     if (/shadow|elevation/i.test(prop) && isShadowShape(bare)) {
