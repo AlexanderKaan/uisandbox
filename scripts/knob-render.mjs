@@ -72,12 +72,26 @@ const DERIVED = new Set([
   'border-top-left-radius', 'border-bottom-right-radius',
 ])
 
-/* `kind` is the sheet kind the knob consumes, and it is the precondition:
+/* `kind` is the sheet kind the knob consumes, and it is HALF the precondition:
    if the build declares no shadow, the elevation dial has nothing to move and
    that is not a fault. An earlier version guessed that population from the
    computed styles instead and counted the BROWSER's own defaults, so `weight`
    appeared to have 1411 chances to move on a page that declares none. The
-   sheet knows exactly, so ask the sheet. */
+   sheet knows exactly, so ask the sheet.
+
+   The other half is the SCREEN, and leaving it out made this sweep overreport.
+   Spectrum's sheet holds twelve shadows and its demo page paints none — the
+   components that use them (dialogs, menus, popovers) are not on it — so
+   "twelve in the sheet and none reached the screen" was read out as a fault
+   for months when the honest answer is that there was nothing to reach.
+   A finding needs both: the sheet must hold the kind AND the screen must
+   already paint at least one. Reading the population off the BEFORE snapshot
+   is safe here for the reason the browser defaults were not: that snapshot is
+   the build at its own stand, and the 1:1 gate separately proves that stand is
+   identical to the untouched control. So a zero means their page paints none,
+   not that we erased them. Where a default is not filtered out (font-weight's
+   400), the population only comes out too HIGH, which keeps a finding visible
+   rather than hiding one. */
 const KNOBS = [
   { name: 'elevation → flat', kind: 'shadow', patch: { sb: { shadow: 0 } }, owns: ['box-shadow'],
     mustNotMove: ['color', 'background-color', 'font-size', 'border-top-width'] },
@@ -144,6 +158,10 @@ for (const [i, f] of PICKS.entries()) {
 
     // One snapshot function, installed once, reading the frame's own window.
     await page.evaluate((props) => {
+      // Open Props' docs page carries 3941 elements and its only shadows sit
+      // past the four-thousandth. A cap that silently drops the tail reports
+      // "this screen paints none" about a screen that paints six.
+      const CAP = 8000
       window.__snap = () => {
         const fr = document.querySelector('.stage__frame iframe')
         const d = fr && fr.contentDocument
@@ -153,7 +171,20 @@ for (const [i, f] of PICKS.entries()) {
         // length whenever a knob changes layout (border width x3 did exactly
         // that), and a shifted array compares unrelated elements.
         const out = []
-        const els = Array.from(d.querySelectorAll('*')).slice(0, 1500)
+        // Into shadow roots as well, in document order. Spectrum is in the
+        // picks BECAUSE it is web components, and reading only the light DOM
+        // meant every one of its readings was of the hosts, not the parts —
+        // 437 visible elements, of which the light DOM holds a fraction.
+        const walk = (root, into) => {
+          for (const el of root.children ? root.querySelectorAll('*') : []) {
+            into.push(el)
+            if (el.shadowRoot) walk(el.shadowRoot, into)
+          }
+          return into
+        }
+        const all = walk(d, [])
+        window.__snapTruncated = all.length > CAP
+        const els = all.slice(0, CAP)
         for (const el of els) {
           if (el.id === 'us-vars' || el.id === 'us-fonts' || el.id === 'us-guard') { out.push(null); continue }
           const r = el.getBoundingClientRect()
@@ -190,6 +221,7 @@ for (const [i, f] of PICKS.entries()) {
       await page.waitForTimeout(1200)
       const after = await page.evaluate(() => window.__snap())
       if (!before || !after || before.length !== after.length) { say(`  ? ${k.name}: the frame changed shape between snapshots, skipped`); continue }
+      if (await page.evaluate(() => window.__snapTruncated)) say(`  ! ${k.name}: the page is larger than the snapshot cap, the tail was not read`)
 
       const moved = {}
       const population = {}
@@ -207,8 +239,10 @@ for (const [i, f] of PICKS.entries()) {
       const ownMoved = k.owns.map((p) => `${p} ${moved[p]}`).join(' · ')
       const over = k.mustNotMove.filter((p) => !DERIVED.has(p) && moved[p] > 0)
 
+      const onScreen = k.owns.reduce((n, p) => n + population[p], 0)
       if (!inSheet) say(`  – ${k.name}: n/a, the sheet holds no ${k.kind}`)
-      else if (!k.owns.some((p) => moved[p] > 0)) { findings++; say(`  ✗ ${k.name}: the sheet holds ${inSheet} ${k.kind}, and none of it reached the screen`) }
+      else if (!onScreen) say(`  – ${k.name}: n/a, the sheet holds ${inSheet} ${k.kind} and this screen paints none`)
+      else if (!k.owns.some((p) => moved[p] > 0)) { findings++; say(`  ✗ ${k.name}: the sheet holds ${inSheet} ${k.kind}, ${onScreen} on screen, and none of it moved`) }
       else if (over.length) { findings++; say(`  ✗ ${k.name}: also moved ${over.map((p) => `${p} on ${moved[p]}`).join(', ')} — ${ownMoved}`) }
       else say(`  ✓ ${k.name}: ${ownMoved} (sheet: ${inSheet})`)
     }

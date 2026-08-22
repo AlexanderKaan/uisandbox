@@ -1529,3 +1529,54 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     gate stops reporting it when it is genuinely broken, which is worse than
     reading one line of a summary now and then.
 
+164. The knob sweep was reading a fraction of the page, and eleven of its
+    thirteen findings were the instrument, not the build.
+
+    Three faults in the reader, all of them making it report faults elsewhere:
+
+    a. It asked only the SHEET whether a knob had anything to move. Spectrum's
+       sheet holds twelve shadows and its demo page paints none — the dialogs
+       and menus that use them are not on it — so "twelve in the sheet and none
+       reached the screen" was read out as a fault. A finding now needs the
+       sheet to hold the kind AND the screen to already paint one. Reading that
+       population off the BEFORE snapshot is safe for the reason the browser
+       defaults were not: that snapshot is the build at its own stand, and the
+       1:1 gate separately proves the stand matches the untouched control, so a
+       zero means their page paints none rather than that we erased them.
+
+    b. It stopped at the 1500th element. Open Props' docsite carries 3941, and
+       its only six shadows sit past the cap. "This screen paints none" about a
+       screen that paints six. Cap raised to 8000 and it now SAYS when it
+       truncates, which is the rule we already hold everything else to.
+
+    c. It never entered a shadow root. Spectrum is in the picks BECAUSE it is
+       web components, so every reading it gave was of the hosts. Walking the
+       roots: radius 2 -> 104 elements, motion 2 -> 121, line-height 22 -> 286,
+       weight 22 -> 264. The build was never the weak one.
+
+    Findings 11 -> 2, and the two that survive are both Open Props. Also
+    retired by this: the letter-spacing "faults" on Spectrum (3) and AdminLTE
+    (4), reported earlier this month. Neither screen has a single element with
+    a letter-spacing other than `normal`. There was nothing to move.
+
+165. Open Props' spacing and border knobs move nothing because half its CSS is
+    outside the served root, and the door already said so.
+
+    `docsite/index.html` is the entry, so the base directory is `docsite/`.
+    `docsite/index.css` opens `@import "../src/index.css"`, which imports
+    `props.sizes.css`, `props.shadows.css`, `props.borders.css` and the rest.
+    Everything in `src/` is OUTSIDE the base: not rewritten, not in the sheet
+    (`--size-*` entries: zero), and not loaded by the browser either, which is
+    why that screen paints no border-radius at all.
+
+    The sheet holds ONE space value and TWO border-widths for a page with 277
+    paddings and 95 borders. That ratio is the tell, and it is not a knob that
+    fails to apply — it is a knob with nothing to apply.
+
+    The gate has been printing `16 outside` on this fixture the whole time, and
+    the door asks "Is this the built app?" on it, because a repo with a
+    `docsite/` beside a `src/` is a source tree. Both were right. Nobody read
+    the column. Not changing the base rule for this: a build keeps its files
+    under one root, and serving parent directories to reach a source tree would
+    trade a correct default for an uncommon case.
+
