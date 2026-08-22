@@ -243,6 +243,16 @@ function Landing() {
         <picture><source srcSet="/shot-stage-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" /></picture>
         <figcaption>A real build in the sandbox. Brand turned to crimson: five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
       </figure>
+      {/* The objection an experienced developer reaches for first, in their own
+          words, answered where they are rather than in a launch comment they
+          may never read. It concedes the half that is true: DevTools needs no
+          build and works on any page on the internet. */}
+      <section className="landing__sec">
+        <h2>Isn't this just Inspect?</h2>
+        <p>Same instinct, different scale. DevTools changes one declaration on one element. Here every literal in the build becomes a variable first, so a colour used 144 times moves once and moves everywhere it is used, including the runtime styles a framework injects and the stylesheets it pulls from a CDN.</p>
+        <p>And Inspect forgets. Reload the page and your afternoon is gone. What you turn here comes out as code: your own files patched in place, a find and replace list, design tokens, or a <code>DESIGN.md</code> your agent reads on every task.</p>
+        <p><b>What Inspect does better:</b> it is already open, it needs no build, and it works on any page on the internet. This needs a built app. When you have one, you get the whole design at once instead of one rule at a time, and a measurement that it still renders as it did.</p>
+      </section>
       <section className="landing__sec landing__cols">
         <div>
           <h2>Honest by construction</h2>
@@ -265,6 +275,7 @@ function Landing() {
         <h2>From your terminal, or from your agent</h2>
         <p>The same engine runs as an MCP server, and as a <b>Claude Code skill</b>, <code>/uisandbox</code>. Say <em>"open this app in UISandbox"</em> and it builds, loads and opens the real sandbox in your browser; what you turn comes back, so <em>"export what I changed"</em> just works. The plugin installs the skill and the server in one step; any MCP client (Cursor, Claude Desktop, Codex) gets the server and its own <code>/uisandbox:open</code> prompt. Or <code>npx uisandbox-mcp open</code> inside your project, without any agent.</p>
         <InstallLine />
+        <p className="landing__more"><b>Or a link.</b> <code>uisandbox.org/?load=</code> followed by a public GitHub or GitLab repository URL, or a direct link to a <code>.zip</code> that allows CORS, opens straight into the sandbox. It is how the samples above load, and it is a way to show somebody a build without asking them to find it: <a href="https://uisandbox.org/?load=https://github.com/edwardtufte/tufte-css" target="_blank" rel="noopener">uisandbox.org/?load=https://github.com/edwardtufte/tufte-css</a>.</p>
       </section>
       <section className="landing__sec landing__sec--quiet">
         <h2>Who made this</h2>

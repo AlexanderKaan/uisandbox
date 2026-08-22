@@ -1290,3 +1290,27 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     is a rounded L of two quarter-round forms. Eleven marks now, one word left
     (Style Dictionary, which has no mark).
 
+155. Two things a launch needs that the page did not have.
+
+    The Inspect objection, answered on the page. "Isn't this just DevTools?" is
+    the first thing an experienced developer reaches for, and the answer only
+    existed in `brand/marketing/copy.md`, staged for HN and PH comments that
+    most visitors will never read. It is a section now, in the objection's own
+    words, sitting between "How it works" and "Honest by construction". It
+    concedes the half that is true — Inspect is already open, needs no build,
+    and works on any page on the internet — because a comparison that only
+    flatters us is the one nobody believes.
+
+    And `?load=`, which existed and was documented nowhere a person would look.
+    A public GitHub or GitLab repository URL, or a direct `.zip` that allows
+    CORS, opens straight into the sandbox; it is how the samples load and how
+    the hold-out runner drives 165 fixtures. As a shareable link it costs
+    nothing and does what a demo video cannot: the reader arrives inside the
+    tool with a real build already open. Now on the landing page (under the
+    other non-drop routes), in the README, and in both llms.txt files.
+
+    The example link is `github.com/edwardtufte/tufte-css`, checked before it
+    was published: 1 screen, 51 values, 100 % colour reach. The obvious choice,
+    `twbs/bootstrap`, is source without a build and would have been refused at
+    the door — a broken example in the docs is worse than no example.
+

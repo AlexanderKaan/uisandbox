@@ -443,6 +443,10 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .landing__sec p { font-size: 14.5px; line-height: 1.6; color: var(--app-fg-muted); margin: 0 0 10px; }
 .landing__sec p b { color: var(--app-fg); font-weight: 600; }
 .landing__sec a { color: var(--app-fg); }
+/* A route that is not the drop zone, set apart from the paragraph above it
+   without becoming a card: a hairline, not a box (notes/design.md). */
+.landing__more { margin-top: 16px !important; padding-top: 14px; border-top: 1px solid var(--app-border); }
+.landing__more a { word-break: break-all; }
 .landing__cols { display: grid; grid-template-columns: 1.2fr .8fr; gap: 28px; align-items: start; }
 @media (max-width: 720px) { .landing__cols { grid-template-columns: 1fr; } }
 /* The boundary between your machine and this tab, drawn rather than claimed.

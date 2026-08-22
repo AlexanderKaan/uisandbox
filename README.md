@@ -37,6 +37,22 @@ Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand
 3. **Turn the knobs.** Brand, and the colour families your CSS actually contains (secondary, accent, the status set, a palette row for what is neither); page background; grey tint and border tone; display and body font (yours listed first, then alternatives by character); dials for text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion and gradient angle — every dial with **×1 = as in your code** at its centre; global hue, saturation and contrast that reach every colour, chart palettes and CSS-drawn icons included; your dark mode, switched on your own hooks.
 4. **Export.** Your values as CSS / JSON / a patch list, your files patched in place, `--k-*` tokens for web (CSS, Tailwind, shadcn), Swift constants + an asset catalog for iOS, `colors.xml` + Kotlin for Android.
 
+### Open one by link
+
+`uisandbox.org/?load=` followed by a public GitHub or GitLab repository URL, or a
+direct link to a `.zip` that allows CORS, opens straight into the sandbox. The
+samples on the site load this way, and it is how you show somebody a build
+without asking them to find it:
+
+```
+https://uisandbox.org/?load=https://github.com/edwardtufte/tufte-css
+https://uisandbox.org/?load=https://example.com/dist.zip
+```
+
+A repository URL goes through this site's repo route (GitHub and GitLab do not
+send CORS on archives); a `.zip` URL is fetched by the browser itself. Either
+way the archive is read in the tab, exactly as a dropped one is.
+
 ## Honest by construction
 
 - **"1:1" is measured, not felt.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
