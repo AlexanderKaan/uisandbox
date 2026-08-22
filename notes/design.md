@@ -93,3 +93,18 @@ Durations `--app-dur(-md)`; ants/shimmer/corona/flow ~1.4–14s, all under
 9. A label may not promise more than the thing does. "Drop-in" on a stylesheet
    nothing references is a bug in the copy, not a shortcut — say what it is
    and point at the format that does land.
+10. A row that REPORTS a setting reads value first, the knob's name second:
+    `×1 → ×1.2` on top at 12.5/550, `Text size` under it at 11.5 faint, with a
+    26px icon tile to its left (a filled chip in the colour when the value is
+    one). Two such rows fit a column, a label of fixed width beside a value
+    does not — which is what makes the export's list foldable in half at all.
+11. The name in that row is the PANEL's name, read from `DIALS`, never spelled
+    again at the reporting end. Splitting a config key on its capitals gave
+    "Border Tone", "Grad Angle", "Sat" and "C Accent" for knobs the panel calls
+    Border tone, Gradient angle, Saturation and Accent. A row nobody can find
+    again is worse than no row.
+12. And its unit is the dial's own. Weight moves in steps, hue and gradient
+    angle in degrees, contrast and the tones in lightness; only the scales are
+    multipliers. `×-1` for a weight one step lighter is not shorthand, it is a
+    different claim.
+

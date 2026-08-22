@@ -1580,3 +1580,26 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     under one root, and serving parent directories to reach a source tree would
     trade a correct default for an uncommon case.
 
+166. The export's settings list folds into two columns, and doing it forced two
+    corrections it did not ask for.
+
+    A fixed-width label beside the value is what a full-width row can afford.
+    Folded in half there is no room, so the row became value-on-top and the
+    knob's name underneath, with an icon tile at the left — the shape the kit
+    panel has always used. Multicol rather than grid, so it fills DOWN then
+    across and the list reads in exactly the order it did before; one column
+    again under 900px, where the pane is the dialog minus a 236px nav. Every
+    row keeps its rule, including the first of each column: the single-column
+    exception left one column starting bare and the other ruled.
+
+    Two things were wrong and only showed once the rows got names of their own:
+
+    - The list spelled the knob names itself by splitting the config key on its
+      capitals, giving "Border Tone", "Grad Angle", "Sat" and "C Accent" for
+      knobs the panel calls Border tone, Gradient angle, Saturation and Accent.
+      It now reads `DIALS`, the panel's own source.
+    - It printed every number as a multiplier. Weight moves in STEPS, hue and
+      gradient angle in degrees, contrast and the tones in lightness. `×0 → ×-1`
+      for a weight one step lighter is not a compact way of saying it; it is a
+      different claim. `DIALS` carries the unit, so it asks.
+

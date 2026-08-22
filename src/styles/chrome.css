@@ -302,11 +302,26 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
 .exp__use { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 550; color: var(--app-fg-faint); }
 .exp__use svg { width: 12px; height: 12px; flex: none; opacity: .75; }
 .exp__turned { padding: 16px 26px 24px; }
-.exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; }
-.exp__row:first-of-type { border-top: 0; }
-.exp__rowlabel { flex: none; width: 130px; font-weight: 550; }
-.exp__from, .exp__to { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
-.exp__from { color: var(--app-fg-faint); }
+/* Two columns, filled DOWN then across, so the list reads in the same order it
+   always did and is simply folded in half. Every row carries its own rule,
+   including the first of each column: dropping it on the first only (which is
+   what a single column wanted) leaves one column starting bare and the other
+   ruled, and the eye reads that as a mistake. */
+.exp__cols { columns: 2; column-gap: 30px; }
+/* The value is the headline and the knob's name is its caption, the way the
+   kit panel has always read them. A fixed-width label beside the value was
+   what a full-width row could afford; folded in half there is no room for it,
+   and stacking says the same thing in less. */
+.exp__row { display: flex; align-items: center; gap: 10px; padding: 8px 2px; border-top: 1px solid var(--app-border); break-inside: avoid; }
+.exp__rowico {
+  flex: none; display: inline-grid; place-items: center; width: 26px; height: 26px;
+  border-radius: 7px; border: 1px solid var(--app-border); background: var(--app-surface); color: var(--app-fg-muted);
+}
+.exp__rowtext { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.exp__rowval { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 550; }
+.exp__rowlabel { font-size: 11.5px; color: var(--app-fg-faint); }
+.exp__from, .exp__to { display: inline-flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
+.exp__from { color: var(--app-fg-faint); font-weight: 400; }
 .exp__arrow { color: var(--app-fg-faint); }
 .exp__none { padding: 4px 26px 26px; font-size: 12.5px; line-height: 1.55; color: var(--app-fg-muted); }
 .dialog__nav .menu__item { font-size: 12.5px; }
@@ -511,6 +526,10 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
    labels; the MCP flyout becomes a viewport sheet (anchored right it would
    leave the screen); the footer keeps to two short lines; the corona stays
    inside the card's column. */
+/* The pane is the dialog minus a 236px nav minus its gutters, so two columns
+   only fit while the dialog is at its full 920. Below that, one column. */
+@media (max-width: 900px) { .exp__cols { columns: 1; } }
+
 @media (max-width: 560px) {
   .app__brand small { display: none; }
   .intake__way { padding: 0 9px; font-size: 12px; }
@@ -527,6 +546,7 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
   .popcard, .verify { left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; }
   /* Export: one destination per row, gutters in from 26 to 16, tabs wrap. */
   .exp__destgrid { grid-template-columns: 1fr; }
+  .exp__cols { columns: 1; }
   .exp__stats, .exp__dest, .exp__none, .exp__turned, .exp__how, .exp__head { padding-left: 16px; padding-right: 16px; }
   .exp__stats { flex-wrap: wrap; }
   .exp__tabs { flex-wrap: wrap; }

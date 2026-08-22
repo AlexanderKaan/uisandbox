@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X,
+  Scaling, AlignVerticalSpaceAround, AlignHorizontalSpaceAround, Bold, MoveHorizontal, Square, Frame, SquareDashed, Layers, Zap, Palette, Droplet, Droplets, Contrast, Blend, PaintBucket, SunMoon, Type, CaseSensitive, Sparkles, Circle } from 'lucide-react'
 import type { Config } from '../tokens/types'
+import { DIALS } from '../sandbox/dials'
 import type { SubstitutionTable } from '../sandbox/table'
 import type { Anchors, PaintRoles } from '../sandbox/coverage'
 import { genSheetCss, genSheetJson, genPatch, genPatchedFiles } from '../export/genSheet'
@@ -230,13 +233,63 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
     },
   ], [cfg, table, vars, patched, projectName, notes, painted, anchors, movedCount])
 
+  // Every dial carries its own unit, and printing them all as a multiplier
+  // was wrong for four of them: weight moves in STEPS of 100, hue and gradient
+  // angle in degrees, contrast and the tones in lightness. "×-1" for a weight
+  // one step lighter is not a smaller way of saying it, it is a different
+  // claim. `DIALS` already knows, so ask it.
+  const UNIT_ELSE: Record<string, string> = { bgTone: 'ΔL' }
+  const fmtDial = (key: string, x: unknown): string => {
+    if (x === undefined) return 'as is'
+    const v = String(x)
+    if (!/^-?[\d.]+$/.test(v)) return v
+    const n = Number(v)
+    const unit = DIALS.find((d) => d.key === key)?.unit ?? UNIT_ELSE[key] ?? '×'
+    if (unit === '×') return `×${v}`
+    if (unit === '°') return `${v}°`
+    if (unit === 'em') return `${v}em`
+    return n > 0 ? `+${v}` : v          // steps and ΔL read as a signed offset
+  }
+
   // The overview: which knobs stand off their code, from → to.
-  const KNOB_LABELS: Array<[keyof Config, string]> = [
-    ['cPrimary', 'Brand'], ['cBackground' as keyof Config, 'Background'], ['fontDisplay', 'Display font'], ['fontBody', 'Body font'],
-    ['radius', 'Radius'], ['typeScale', 'Text size'], ['neutral', 'Grey tint'], ['colorTheme', 'Colour theme'],
-  ]
+  //
+  // The wording is the PANEL's, taken from `DIALS` rather than spelled again
+  // here, because a row nobody can find again is worse than no row: splitting
+  // the key on its capitals gave "Border Tone", "Grad Angle", "Sat" and
+  // "C Accent" for knobs the panel calls Border tone, Gradient angle,
+  // Saturation and Accent.
+  const KNOB_META: Record<string, { label: string; icon: ReactNode }> = useMemo(() => {
+    const ic = (I: typeof Square) => <I size={14} strokeWidth={1.75} />
+    const GLYPH: Record<string, typeof Square> = {
+      type: Scaling, lineHeight: AlignVerticalSpaceAround, tracking: AlignHorizontalSpaceAround,
+      weight: Bold, space: MoveHorizontal, radius: Square, borderWidth: Frame, borderTone: SquareDashed,
+      shadow: Layers, motion: Zap, hue: Palette, sat: Droplets, contrast: Contrast, gradAngle: Blend,
+      bgTone: PaintBucket, dark: SunMoon, typeScale: Scaling,
+      fontDisplay: Type, fontBody: CaseSensitive, neutral: Droplet, colorTheme: Sparkles,
+    }
+    const m: Record<string, { label: string; icon: ReactNode }> = {}
+    for (const d of DIALS) m[d.key] = { label: d.label, icon: ic(GLYPH[d.key] ?? Circle) }
+    const extra: Array<[string, string]> = [
+      ['bgTone', 'Background tone'], ['dark', 'Dark mode'], ['cBackground', 'Background'],
+      ['cPrimary', 'Brand'], ['cSecondary', 'Secondary'], ['cAccent', 'Accent'], ['cSuccess', 'Success'],
+      ['cWarning', 'Warning'], ['cDanger', 'Danger'], ['cInfo', 'Info'],
+      ['fontDisplay', 'Display font'], ['fontBody', 'Body font'], ['radius', 'Radius'],
+      ['typeScale', 'Text size'], ['neutral', 'Grey tint'], ['colorTheme', 'Colour theme'],
+    ]
+    for (const [k, label] of extra) m[k] = { label, icon: ic(GLYPH[k] ?? Circle) }
+    return m
+  }, [])
+
   const turned = useMemo(() => {
-    const out: Array<{ label: string; from: string; to: string; swatch?: boolean }> = []
+    const out: Array<{ label: string; icon: ReactNode; from: string; to: string; chip?: string }> = []
+    const add = (key: string, from: string, to: string) => {
+      const meta = KNOB_META[key]
+      out.push({
+        label: meta?.label ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()),
+        icon: meta?.icon ?? <Circle size={14} strokeWidth={1.75} />,
+        from, to, chip: /^#[0-9a-f]{3,8}$/i.test(to) ? to : undefined,
+      })
+    }
     const all = new Set([...Object.keys(base), ...Object.keys(cfg)]) as Set<keyof Config>
     for (const k of all) {
       const a = (base as unknown as Record<string, unknown>)[k as string], b = (cfg as unknown as Record<string, unknown>)[k as string]
@@ -245,17 +298,14 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
         const sa = (a ?? {}) as Record<string, unknown>, sb = (b ?? {}) as Record<string, unknown>
         for (const dk of new Set([...Object.keys(sa), ...Object.keys(sb)])) {
           if (JSON.stringify(sa[dk]) === JSON.stringify(sb[dk])) continue
-          const label = dk === 'cBackground' ? 'Background' : dk.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase())
-          const fmt = (x: unknown) => x === undefined ? 'as is' : /^-?[\d.]+$/.test(String(x)) ? `×${x}` : String(x)
-          out.push({ label, from: fmt(sa[dk]), to: fmt(sb[dk]), swatch: /^#/.test(String(sb[dk])) })
+          add(dk, fmtDial(dk, sa[dk]), fmtDial(dk, sb[dk]))
         }
         continue
       }
-      const named = KNOB_LABELS.find(([kk]) => kk === k)
-      out.push({ label: named ? named[1] : String(k), from: String(a), to: String(b), swatch: /^#/.test(String(b)) })
+      add(String(k), String(a), String(b))
     }
     return out
-  }, [cfg, base])
+  }, [cfg, base, KNOB_META])
 
   // Six destinations; the formats are tabs INSIDE one, never a wall of files.
   // Each destination names what it LANDS IN, at its own foot. The marks are the
@@ -368,14 +418,21 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
             {turned.length ? (
               <div className="exp__turned">
                 <div className="menu__label">Settings, from your code → the sandbox</div>
+                <div className="exp__cols">
                 {turned.map((t, i) => (
                   <div key={i} className="exp__row">
-                    <span className="exp__rowlabel">{t.label}</span>
-                    <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 10, height: 10 }} />}{t.from}</span>
-                    <span className="exp__arrow">→</span>
-                    <span className="exp__to">{t.swatch && <span className="fmrow__dot" style={{ background: t.to, width: 10, height: 10 }} />}{t.to}</span>
+                    <span className="exp__rowico" aria-hidden style={t.chip ? { background: t.chip } : undefined}>{t.chip ? null : t.icon}</span>
+                    <span className="exp__rowtext">
+                      <span className="exp__rowval">
+                        <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 9, height: 9 }} />}{t.from}</span>
+                        <span className="exp__arrow">→</span>
+                        <span className="exp__to">{t.to}</span>
+                      </span>
+                      <span className="exp__rowlabel">{t.label}</span>
+                    </span>
                   </div>
                 ))}
+                </div>
               </div>
             ) : (
               <p className="exp__none">Nothing turned yet: every export is your code's own stand (the identity). Turn a knob and this list says exactly what changed.</p>
