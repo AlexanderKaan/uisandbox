@@ -1370,3 +1370,54 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     the revert is what turns it into an answer. The first flakiness guess was
     right for the wrong reason, which is not the same as being right.
 
+159. A sweep for the knobs you cannot see, and what it found.
+
+    Colour gets checked every day because colour is loud. Elevation, motion,
+    tracking and border width do not, so `scripts/knob-render.mjs` asks the
+    question the eye cannot: load a build, snapshot every visible element's
+    computed styles, turn ONE knob to its extreme, snapshot again, and hold the
+    result to a contract — what the knob OWNS must move, what it must not touch
+    must not.
+
+    Three times the instrument was wrong before the app was, and each correction
+    is the interesting part:
+
+    (a) Element counts drifted between snapshots, because the snapshot filtered
+        by size and a knob that changes layout changes what is 2px tall. Pair by
+        DOM position and carry a `_seen` flag instead.
+    (b) `border-radius` reported as overreach when border width tripled.
+        AdminLTE writes `border-radius: 50%` eighty times, and a percentage
+        resolves against the box: widening a border moves the computed radius.
+        Geometry-derived, like margin and padding, so never evidence.
+    (c) The population of "things this knob could move" was guessed from
+        computed styles, which counts the BROWSER's defaults: every element
+        reports a font-weight, so the weight dial looked like it had 1411
+        chances on a page that declares none. The sheet knows exactly how many
+        values of each kind it holds; ask it.
+
+    What survived, over five builds:
+
+    ELEVATION DOES NOT REACH THE SCREEN on any Bootstrap-5-era build. Measured
+    on AdminLTE: every visible shadow is declared `var(--bs-box-shadow)` or
+    `var(--bs-btn-box-shadow)`, and when the rewriter meets
+    `--bs-box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)` it tokenises the COLOUR
+    inside it and nothing else. The kind is decided by the property name, and a
+    custom property has no name to decide from. Same on Spectrum (12 shadow
+    values, none painted) and Open Props (6). SB Admin 2 is the control: it is
+    Bootstrap 4 with literal `box-shadow:` declarations, and there 19 elements
+    follow the dial.
+
+    LETTER SPACING likewise on Spectrum (3 values) and AdminLTE (4).
+
+    OPEN PROPS moves almost nothing: its sheet holds 112 values for a page
+    whose whole styling is one 117-rule stylesheet, and shadow, duration,
+    radius, border-width and space all fail to reach the screen. Only
+    line-height and font-size land. Not yet diagnosed further.
+
+    The shape of the fix for elevation is small and does not touch existing
+    classification: when the property IS a custom property, infer the kind from
+    the VALUE, and a shadow is inferable because its shape is distinctive (two
+    to four lengths and a colour). A length alone stays ambiguous and stays out.
+    Identity is unaffected, so the 1:1 gate is not at risk. It is still a
+    rewriter change, and it is days before a launch.
+
