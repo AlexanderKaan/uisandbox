@@ -12,6 +12,7 @@ Drop your build, turn the knobs, export the code.<br>
   <a href="https://uisandbox.org">uisandbox.org</a> ·
   <a href="https://www.npmjs.com/package/uisandbox-mcp">npm: uisandbox-mcp</a> ·
   <a href="https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox">MCP registry</a> ·
+  <a href="https://github.com/AlexanderKaan/uisandbox/discussions">Discussions</a> ·
   <a href="LICENSE">MIT</a>
 </p>
 

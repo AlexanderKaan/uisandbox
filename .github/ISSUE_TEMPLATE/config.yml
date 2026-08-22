@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Question, idea, or a build to show
+    url: https://github.com/AlexanderKaan/uisandbox/discussions
+    about: Not a build rendering wrong? Show a build with a ?load= link, ask a question, or propose a knob.
   - name: Security report (private)
     url: https://github.com/AlexanderKaan/uisandbox/security/advisories/new
     about: A way for a dropped archive to reach beyond notes/security.md — report privately.

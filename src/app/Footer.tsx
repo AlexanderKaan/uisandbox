@@ -11,6 +11,7 @@ export function Footer() {
       <span className="foot__sep" aria-hidden>·</span>
       <nav className="foot__links" aria-label="UISandbox links">
         <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">Source</a>
+        <a href="https://github.com/AlexanderKaan/uisandbox/discussions" target="_blank" rel="noopener">Discussions</a>
         <a href="https://www.npmjs.com/package/uisandbox-mcp" target="_blank" rel="noopener">MCP server</a>
         <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">Privacy &amp; security</a>
         <a href="/llms.txt">llms.txt</a>
