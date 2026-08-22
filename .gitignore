@@ -8,3 +8,10 @@ fixtures/*.zip
 mcp/dist/
 mcp/*.tgz
 mcp/mcp-publisher
+
+# Working notes from the move out of UIcockpit: Dutch, and they name a local
+# path to a private sibling project. Useful on this machine, not something a
+# visitor evaluating the project should meet. They stay on disk, out of the repo.
+HANDOFF.md
+PROMPT.md
+

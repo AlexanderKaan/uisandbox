@@ -12,7 +12,13 @@
 # The app itself, and everything else: sensible defaults. No CSP script-src
 # yet — the sandbox needs Google Fonts, blob: fonts and CORS zip fetches, and a
 # policy is measured against the hold-outs before it is set (notes/roadmap.md).
+# HSTS: a year, and every subdomain. The Worker already redirects http and
+# every *.uisandbox.org to the apex over https, so this only tells the browser
+# to stop asking. `preload` is deliberately NOT set: joining the preload list
+# is easy and leaving it takes months, so it is a decision to make on purpose
+# rather than a line inherited from a header file.
 /*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()

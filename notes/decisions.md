@@ -1314,3 +1314,23 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     `twbs/bootstrap`, is source without a build and would have been refused at
     the door — a broken example in the docs is worse than no example.
 
+156. HSTS, and two documents that should not have been public.
+
+    `Strict-Transport-Security: max-age=31536000; includeSubDomains` in
+    `public/_headers`, which Workers Static Assets serves from `dist/` (that is
+    where the other security headers already came from). `includeSubDomains` is
+    safe here because the Worker itself already redirects http and every
+    *.uisandbox.org to the apex over https; the header only tells the browser
+    to stop asking. `preload` is deliberately left off: joining that list is
+    easy and leaving it takes months, so it is a decision to make on purpose.
+    The comment sits ABOVE the block, not indented inside it, because the
+    `_headers` format takes comments at the start of a line.
+
+    `HANDOFF.md` and `PROMPT.md` are untracked (`git rm --cached` plus
+    .gitignore, so they stay on the machine). They are Dutch working notes from
+    the move out of UIcockpit, they name a local path to a private sibling
+    project, and they open with "Alles hier is een KOPIE". A developer checking
+    whether this project is serious opens exactly those files. Nothing in them
+    is secret, so the history is left alone: rewriting it would break every
+    clone to hide something that was only ever untidy.
+
