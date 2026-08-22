@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
-import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X,
-  Scaling, AlignVerticalSpaceAround, AlignHorizontalSpaceAround, Bold, MoveHorizontal, Square, Frame, SquareDashed, Layers, Zap, Palette, Droplet, Droplets, Contrast, Blend, PaintBucket, SunMoon, Type, CaseSensitive, Sparkles, Circle } from 'lucide-react'
+import { Bot, Braces, Check, ChevronLeft, Copy, Diff, Download, FileCode2, FileJson2, FileText, Replace, Smartphone, SwatchBook, Wind, Boxes, Apple, FolderTree, X } from 'lucide-react'
 import type { Config } from '../tokens/types'
 import { DIALS } from '../sandbox/dials'
 import type { SubstitutionTable } from '../sandbox/table'
@@ -258,17 +256,14 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
   // the key on its capitals gave "Border Tone", "Grad Angle", "Sat" and
   // "C Accent" for knobs the panel calls Border tone, Gradient angle,
   // Saturation and Accent.
-  const KNOB_META: Record<string, { label: string; icon: ReactNode }> = useMemo(() => {
-    const ic = (I: typeof Square) => <I size={14} strokeWidth={1.75} />
-    const GLYPH: Record<string, typeof Square> = {
-      type: Scaling, lineHeight: AlignVerticalSpaceAround, tracking: AlignHorizontalSpaceAround,
-      weight: Bold, space: MoveHorizontal, radius: Square, borderWidth: Frame, borderTone: SquareDashed,
-      shadow: Layers, motion: Zap, hue: Palette, sat: Droplets, contrast: Contrast, gradAngle: Blend,
-      bgTone: PaintBucket, dark: SunMoon, typeScale: Scaling,
-      fontDisplay: Type, fontBody: CaseSensitive, neutral: Droplet, colorTheme: Sparkles,
-    }
-    const m: Record<string, { label: string; icon: ReactNode }> = {}
-    for (const d of DIALS) m[d.key] = { label: d.label, icon: ic(GLYPH[d.key] ?? Circle) }
+  // The wording is the PANEL's, taken from `DIALS` rather than spelled again
+  // here, because a row nobody can find again is worse than no row: splitting
+  // the key on its capitals gave "Border Tone", "Grad Angle", "Sat" and
+  // "C Accent" for knobs the panel calls Border tone, Gradient angle,
+  // Saturation and Accent.
+  const KNOB_LABEL: Record<string, string> = useMemo(() => {
+    const m: Record<string, string> = {}
+    for (const d of DIALS) m[d.key] = d.label
     const extra: Array<[string, string]> = [
       ['bgTone', 'Background tone'], ['dark', 'Dark mode'], ['cBackground', 'Background'],
       ['cPrimary', 'Brand'], ['cSecondary', 'Secondary'], ['cAccent', 'Accent'], ['cSuccess', 'Success'],
@@ -276,18 +271,16 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
       ['fontDisplay', 'Display font'], ['fontBody', 'Body font'], ['radius', 'Radius'],
       ['typeScale', 'Text size'], ['neutral', 'Grey tint'], ['colorTheme', 'Colour theme'],
     ]
-    for (const [k, label] of extra) m[k] = { label, icon: ic(GLYPH[k] ?? Circle) }
+    for (const [k, label] of extra) m[k] = label
     return m
   }, [])
 
   const turned = useMemo(() => {
-    const out: Array<{ label: string; icon: ReactNode; from: string; to: string; chip?: string }> = []
+    const out: Array<{ label: string; from: string; to: string; swatch?: boolean }> = []
     const add = (key: string, from: string, to: string) => {
-      const meta = KNOB_META[key]
       out.push({
-        label: meta?.label ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()),
-        icon: meta?.icon ?? <Circle size={14} strokeWidth={1.75} />,
-        from, to, chip: /^#[0-9a-f]{3,8}$/i.test(to) ? to : undefined,
+        label: KNOB_LABEL[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()),
+        from, to, swatch: /^#/.test(to),
       })
     }
     const all = new Set([...Object.keys(base), ...Object.keys(cfg)]) as Set<keyof Config>
@@ -305,7 +298,7 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
       add(String(k), String(a), String(b))
     }
     return out
-  }, [cfg, base, KNOB_META])
+  }, [cfg, base, KNOB_LABEL])
 
   // Six destinations; the formats are tabs INSIDE one, never a wall of files.
   // Each destination names what it LANDS IN, at its own foot. The marks are the
@@ -421,15 +414,10 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
                 <div className="exp__cols">
                 {turned.map((t, i) => (
                   <div key={i} className="exp__row">
-                    <span className="exp__rowico" aria-hidden style={t.chip ? { background: t.chip } : undefined}>{t.chip ? null : t.icon}</span>
-                    <span className="exp__rowtext">
-                      <span className="exp__rowval">
-                        <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 9, height: 9 }} />}{t.from}</span>
-                        <span className="exp__arrow">→</span>
-                        <span className="exp__to">{t.to}</span>
-                      </span>
-                      <span className="exp__rowlabel">{t.label}</span>
-                    </span>
+                    <span className="exp__rowlabel">{t.label}</span>
+                    <span className="exp__from">{/^#/.test(t.from) && <span className="fmrow__dot" style={{ background: t.from, width: 10, height: 10 }} />}{t.from}</span>
+                    <span className="exp__arrow">→</span>
+                    <span className="exp__to">{t.swatch && <span className="fmrow__dot" style={{ background: t.to, width: 10, height: 10 }} />}{t.to}</span>
                   </div>
                 ))}
                 </div>

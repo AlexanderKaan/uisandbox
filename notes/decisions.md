@@ -1583,16 +1583,20 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
 166. The export's settings list folds into two columns, and doing it forced two
     corrections it did not ask for.
 
-    A fixed-width label beside the value is what a full-width row can afford.
-    Folded in half there is no room, so the row became value-on-top and the
-    knob's name underneath, with an icon tile at the left — the shape the kit
-    panel has always used. Multicol rather than grid, so it fills DOWN then
-    across and the list reads in exactly the order it did before; one column
-    again under 900px, where the pane is the dialog minus a 236px nav. Every
-    row keeps its rule, including the first of each column: the single-column
-    exception left one column starting bare and the other ruled.
+    Multicol rather than grid, so it fills DOWN then across and the list reads
+    in exactly the order it did before; one column again under 900px, where the
+    pane is the dialog minus a 236px nav. Every row keeps its rule, including
+    the first of each column: the single-column exception left one column
+    starting bare and the other ruled.
 
-    Two things were wrong and only showed once the rows got names of their own:
+    The row stayed ONE LINE — name at a fixed 104px, then `from → to`. A
+    value-on-top form with an icon tile beside it (the shape the old UIcockpit
+    kit panel used) was built and rejected on sight: at this density the icons
+    are noise, the arrow column stops lining up, and a settings list is read by
+    scanning the NAMES, so the names hold the left edge. The label does fit in
+    104px once it is the panel's own word, which is the fix below.
+
+    Two things were wrong all along, and folding the list is what exposed them:
 
     - The list spelled the knob names itself by splitting the config key on its
       capitals, giving "Border Tone", "Grad Angle", "Sat" and "C Accent" for
