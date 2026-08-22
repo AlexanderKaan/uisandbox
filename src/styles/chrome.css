@@ -307,6 +307,11 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
    including the first of each column: dropping it on the first only (which is
    what a single column wanted) leaves one column starting bare and the other
    ruled, and the eye reads that as a mistake. */
+/* `.menu__label` is indented 10px for the nav it was written for; over these
+   rows, which sit 2px in, that put the heading eight pixels right of the first
+   knob's name. A heading that does not share its list's left edge reads as a
+   different block. */
+.exp__turned > .menu__label { padding-left: 2px; padding-right: 2px; }
 .exp__cols { columns: 2; column-gap: 30px; }
 .exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; break-inside: avoid; }
 .exp__rowlabel { flex: none; width: 104px; font-weight: 550; }
