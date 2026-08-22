@@ -1279,3 +1279,14 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     beside it already carries the name, so a title could never be announced and
     only turned the accessible text into "ClaudeClaude Code".
 
+    Correction, same session: Lovable DOES publish a brand hub
+    (lovablebrand.lovable.app/brand/logo) with the logomark in Color, Black and
+    White, so monochrome is a sanctioned variant. The outline is taken
+    unmodified from their own favicon (lovable.dev/favicon.svg), which carries
+    it as a single clip path on a 180 viewBox; the gradient inside is
+    decoration, the silhouette is the mark. Kept on its native viewBox rather
+    than rescaled to 24, because rescaling by hand is how a transcription turns
+    back into a redraw. And it is not a heart, whatever the name suggests: it
+    is a rounded L of two quarter-round forms. Eleven marks now, one word left
+    (Style Dictionary, which has no mark).
+
