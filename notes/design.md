@@ -27,7 +27,7 @@ one deliberate exception (the brand's dark bar in both schemes).
 | 11.5 | 400 | fine print (footer, hints under inputs) |
 | 12 – 12.5 | 400 | card body, chips, samples row, hero proof |
 | 13 – 13.5 | 400–500 | panel rows, buttons, stage foot |
-| **15** | **650, -0.01em** | **every card/dialog title** (popcard h3, dialog h2, privacy h3, MCP head) |
+| **15** | **650, -0.01em** | **every card/dialog title** (popcard h3, dialog h2, privacy h3, MCP head) **and every section heading inside a pane** (`.exp__sec`) |
 | 20 | 650 | landing section h2 |
 | clamp(34–56) | 700, -0.03em | the hero H1 |
 
@@ -93,17 +93,26 @@ Durations `--app-dur(-md)`; ants/shimmer/corona/flow ~1.4–14s, all under
 9. A label may not promise more than the thing does. "Drop-in" on a stylesheet
    nothing references is a bug in the copy, not a shortcut — say what it is
    and point at the format that does land.
-10. A row that REPORTS a setting is one line: the knob's name at a fixed 104px,
+10. A heading is a heading. `.menu__label` — 10px uppercase grey, indented for
+    the nav it belongs to — labels a LIST; it is not a section heading, and the
+    export's two sections wore it for months. They were `<div>`s, so a reader
+    navigating by heading found nothing between the dialog's h2 and the end of
+    the pane, and "How do you want to apply it?" — the question the pane exists
+    to ask — was whispered at ten pixels. Sections are `<h3>` at the title
+    scale, sharing the left edge of the block they introduce, 12px above it.
+    Don't invent a level in between: 13/650 over cards at 12.5/550 reads flat,
+    because half a pixel and one weight step is not a hierarchy.
+11. A row that REPORTS a setting is one line: the knob's name at a fixed 104px,
     then `from → to`. The two-line form (value on top, name under it, an icon
     tile beside) was tried and rejected — at this density the icons are noise
     and the arrow column stops lining up. A settings list is read by scanning
     the names, so the names hold the left edge.
-11. The name in that row is the PANEL's name, read from `DIALS`, never spelled
+12. The name in that row is the PANEL's name, read from `DIALS`, never spelled
     again at the reporting end. Splitting a config key on its capitals gave
     "Border Tone", "Grad Angle", "Sat" and "C Accent" for knobs the panel calls
     Border tone, Gradient angle, Saturation and Accent. A row nobody can find
     again is worse than no row.
-12. And its unit is the dial's own. Weight moves in steps, hue and gradient
+13. And its unit is the dial's own. Weight moves in steps, hue and gradient
     angle in degrees, contrast and the tones in lightness; only the scales are
     multipliers. `×-1` for a weight one step lighter is not shorthand, it is a
     different claim.

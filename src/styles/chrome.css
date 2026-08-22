@@ -307,13 +307,24 @@ button { background: none; border: 0; padding: 0; cursor: pointer; }
    including the first of each column: dropping it on the first only (which is
    what a single column wanted) leaves one column starting bare and the other
    ruled, and the eye reads that as a mistake. */
-/* `.menu__label` is indented 10px for the nav it was written for; over these
-   rows, which sit 2px in, that put the heading eight pixels right of the first
-   knob's name. A heading that does not share its list's left edge reads as a
-   different block. */
-.exp__turned > .menu__label { padding-left: 2px; padding-right: 2px; }
+/* The pane's section headings. They used to borrow `.menu__label`, the class
+   written for the nav down the side — 10px uppercase grey, indented 10px, with
+   3px of air under it. Three things wrong with that here: they are HEADINGS,
+   not list labels, so they were divs and a reader navigating by heading found
+   nothing between the dialog's h2 and the end; the indent put them to the
+   right of the block they introduce; and "How do you want to apply it?" is the
+   question the whole pane exists to ask, whispered at ten pixels.
+   It takes the system's ONE title scale, 15/650, rather than inventing a level
+   for itself: 13/650 was tried and reads flat against the cards' 12.5/550 —
+   half a pixel and one weight step is not a hierarchy. The dialog's own h2 is
+   the same size, and that is fine, because it lives in the head bar behind a
+   border while these scroll with the body. */
+.exp__sec {
+  margin: 0; padding: 8px 0 12px; font-size: 15px; font-weight: 650;
+  letter-spacing: -0.01em; color: var(--app-fg);
+}
 .exp__cols { columns: 2; column-gap: 30px; }
-.exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-top: 1px solid var(--app-border); font-size: 12.5px; break-inside: avoid; }
+.exp__row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--app-border); font-size: 12.5px; break-inside: avoid; }
 .exp__rowlabel { flex: none; width: 104px; font-weight: 550; }
 .exp__from, .exp__to { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .exp__from { color: var(--app-fg-faint); font-weight: 400; }

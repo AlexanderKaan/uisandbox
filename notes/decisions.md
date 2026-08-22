@@ -1607,3 +1607,25 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
       for a weight one step lighter is not a compact way of saying it; it is a
       different claim. `DIALS` carries the unit, so it asks.
 
+167. Two eyebrows in the export were section headings wearing a nav label.
+
+    `.menu__label` is written for the menu down the side: 10px uppercase grey,
+    indented 10px, 3px of air under it because there it sits on top of a list
+    that starts immediately. "How do you want to apply it?" and "Settings, from
+    your code → the sandbox" borrowed it, and three things followed.
+
+    They were `<div>`s. The dialog has an h2 and nothing under it, so anyone
+    navigating by heading fell straight from the dialog's name to the end of
+    the pane. They are `<h3>` now: h2 → h3 → h3, no level skipped.
+
+    The 10px indent put both headings to the RIGHT of the block they introduce.
+    Every left edge in the pane now measures 367: heading, first card, second
+    heading, first row. (The row's own 2px inset went too; a heading that does
+    not share its list's left edge reads as a different block.)
+
+    And ten pixels is the wrong voice for the question the pane exists to ask.
+    They take the system's one title scale, 15/650. 13/650 was tried first and
+    reads flat against the cards' 12.5/550 — half a pixel and one weight step
+    is not a hierarchy. Sharing the size of the dialog's own h2 is fine: that
+    one lives in the head bar behind a border, these scroll with the body.
+

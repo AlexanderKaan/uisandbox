@@ -392,7 +392,7 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
               <div className="exp__stat"><b>{turned.length}</b><span>knob{turned.length === 1 ? '' : 's'} turned</span></div>
             </div>
             <div className="exp__dest">
-              <div className="menu__label">How do you want to apply it?</div>
+              <h3 className="exp__sec">How do you want to apply it?</h3>
               <div className="exp__destgrid">
                 {DESTS.map((d) => (
                   <button key={d.title} type="button" className="exp__card" onClick={() => { setActive(d.ids[0]!); setCopied(false) }}>
@@ -410,7 +410,7 @@ export function ExportDialog({ cfg, base, table, vars, projectName, files, fontC
             </div>
             {turned.length ? (
               <div className="exp__turned">
-                <div className="menu__label">Settings, from your code → the sandbox</div>
+                <h3 className="exp__sec">Settings, from your code → the sandbox</h3>
                 <div className="exp__cols">
                 {turned.map((t, i) => (
                   <div key={i} className="exp__row">
