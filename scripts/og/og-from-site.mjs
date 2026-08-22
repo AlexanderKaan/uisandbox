@@ -4,7 +4,7 @@ import { chromium } from 'playwright'
 import { join } from 'node:path'
 const out = process.argv[2], base = process.argv[3] ?? 'http://localhost:5190'
 const b = await chromium.launch()
-const CSS = '.app__topbar{display:none!important}.intake{padding-top:28px!important}.hero__kicker{margin-top:0!important}.foot{display:none!important}.landing{display:none!important}'
+const CSS = '.app__topbar{display:none!important}.intake{padding-top:28px!important}.foot{display:none!important}.landing{display:none!important}'
 // B2: zoomed to 0.78 so hero + drop zone fit in 1200×630
 for (const scheme of ['light', 'dark']) {
   const p = await b.newPage({ viewport: { width: 1200, height: 820 }, deviceScaleFactor: 2, colorScheme: scheme })

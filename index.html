@@ -69,9 +69,11 @@
       .pre header span{display:inline-block;width:16px;height:16px;background:var(--fg);border-radius:3px;margin-right:8px}
       .pre main{flex:1;padding:48px 24px 64px;display:flex;flex-direction:column;align-items:center;text-align:center}
       .pre .m{width:44px;height:44px;background:var(--fg);border-radius:4px;margin-top:12px}
+      .pre .beats{font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--fg);margin:0 0 14px}
       .pre .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--fa);margin-top:14px}
-      .pre h1{font-size:clamp(34px,6vw,56px);line-height:1.02;letter-spacing:-.03em;margin:8px 0 16px;font-weight:700}
-      .pre .s{font-size:16px;line-height:1.5;color:var(--mu);max-width:58ch;margin:0 auto 18px}
+      .pre h1{font-size:clamp(30px,5.4vw,52px);line-height:1.05;letter-spacing:-.03em;margin:22px 0 14px;font-weight:700}
+      .pre h1 span{display:block}
+      .pre .s{font-size:16px;line-height:1.5;color:var(--mu);max-width:66ch;margin:0 auto 18px}
       .pre .i{width:min(440px,100%);height:48px;border:1px solid var(--bd);border-radius:999px;margin:0 auto 28px;background:var(--sf)}
       .pre .c{width:min(680px,100%);min-height:320px;border:1px solid var(--bd);border-radius:16px;background:var(--sf);padding:28px 24px;box-sizing:border-box;font-size:14px;color:var(--mu)}
       .pre .c p{margin:0 0 10px}.pre .c p:last-child{margin:0}.pre .c b{color:var(--fg)}.pre .c a{color:var(--fg)}
@@ -83,9 +85,9 @@
         <header><span></span>UISandbox</header>
         <main>
           <div class="m"></div>
-          <div class="k">Drop your build, turn the knobs, export the code.</div>
-          <h1>Play with your real<br>app's design, live.</h1>
-          <p class="s">Drop your built web app, in your browser or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob; turn them, watch the real app follow 1:1, and export the change as a patch or tokens.</p>
+          <h1><span>Play with your app's design.</span><span>Right in the browser.</span></h1>
+          <p class="beats">Drop your build, turn the knobs, export the code.</p>
+          <p class="s">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server and nothing is stored: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
           <div class="i"></div>
           <p class="k" style="text-transform:none;letter-spacing:0;font-size:12.5px;margin:-16px 0 28px">✓ Free · ✓ Open source (MIT) · ✓ Your files never leave your browser</p>
           <div class="c">
