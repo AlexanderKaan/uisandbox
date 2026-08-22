@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { findSourceSpans, patchSourceFile, scanSourceFile } from '../sourceScan'
+import { rewriteCss } from '../rewrite'
 import { isGenerated } from '../../export/genSheet'
 import { SubstitutionTable } from '../table'
 import { brandDeclared } from '../baseline'
@@ -53,5 +54,45 @@ describe('isGenerated', () => {
 
   it('leaves a small file alone rather than guessing from its path', () => {
     expect(isGenerated('src/tokens.json', '{"primary":"#4f39f6"}')).toBe(false)
+  })
+})
+
+describe('CSS colour functions in source', () => {
+  const sheet = () => { const t = new SubstitutionTable(); rewriteCss('.btn{background:#4e73df}.a{color:#2e59d9}', t, 'app.css'); return t }
+
+  it('moves an rgba() that the stylesheet wrote as hex, keeping notation and alpha', () => {
+    // SB Admin 2: the bar and pie demos write #4e73df and followed the brand;
+    // the area demo writes the same colour as rgba() and did not.
+    const t = sheet()
+    const brand = t.find('color', '#4e73df')!
+    const vars = { ...t.identityVars(), [`--us-v${brand.id}`]: '#e11d48' }
+    const js = 'borderColor: "rgba(78, 115, 223, 1)", backgroundColor: "rgba(78, 115, 223, 0.05)", point: "#4e73df"'
+    const out = patchSourceFile('js/demo/chart-area-demo.js', js, t, vars)
+    expect(out).toContain('rgba(225, 29, 72, 1)')
+    expect(out).toContain('rgba(225, 29, 72, 0.05)')   // the tint keeps its own alpha
+    expect(out).toContain('"#e11d48"')                  // the hex sibling still works
+  })
+
+  it('keeps the file\'s own spacing, and rgb() stays rgb()', () => {
+    const t = sheet()
+    const brand = t.find('color', '#4e73df')!
+    const vars = { ...t.identityVars(), [`--us-v${brand.id}`]: '#e11d48' }
+    expect(patchSourceFile('a.js', 'c: rgb(78,115,223)', t, vars)).toBe('c: rgb(225,29,72)')
+    expect(patchSourceFile('a.js', 'c: rgb(78, 115, 223)', t, vars)).toBe('c: rgb(225, 29, 72)')
+  })
+
+  it('leaves a colour the sheet never saw exactly as it is', () => {
+    const t = sheet()
+    const vars = t.identityVars()
+    const js = 'grid: "rgba(234, 236, 244, 1)", brand: "rgba(78, 115, 223, 1)"'
+    expect(patchSourceFile('a.js', js, t, vars)).toBe(js)
+  })
+
+  it('is not fooled by three numbers that are not a colour', () => {
+    const t = sheet()
+    const brand = t.find('color', '#4e73df')!
+    const vars = { ...t.identityVars(), [`--us-v${brand.id}`]: '#e11d48' }
+    const js = 'translate3d(78, 115, 223)'
+    expect(patchSourceFile('a.js', js, t, vars)).toBe(js)
   })
 })

@@ -88,6 +88,27 @@ export function findSourceSpans(path: string, text: string): Span[] {
       return h.slice(0, 2) + (/[A-F]/.test(h) ? out.toUpperCase() : out)
     } })
   }
+  // CSS colour functions inside source. Chart.js and friends write the brand as
+  // `rgba(78, 115, 223, 1)` where the stylesheet wrote `#4e73df`: the same
+  // colour in another notation, so the sheet never matched it and the chart
+  // stayed behind. Measured on SB Admin 2, whose bar and pie demos use hex and
+  // followed the brand while its area demo, in rgba, did not.
+  //
+  // Matched by the COLOUR, printed back in the file's own notation, with the
+  // span's OWN alpha kept: `rgba(78, 115, 223, .05)` is the chart's fill tint
+  // and must stay a tint of whatever the brand becomes.
+  for (const m of text.matchAll(/\brgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*([\d.]+)\s*)?\)/g)) {
+    const r = Number(m[1]), g = Number(m[2]), b = Number(m[3])
+    if (r > 255 || g > 255 || b > 255) continue
+    const alpha = m[4], whole = m[0], sep = /,\s/.test(whole) ? ', ' : ','
+    push({ start: m.index, end: m.index + whole.length, kind: 'color', value: hex6(r, g, b), prop: nameBefore(m.index) || 'rgb()', print: (v) => {
+      const c = parseCssColor(v)
+      if (!c) return whole
+      const h = formatCssColor({ ...c, a: 1 })
+      const ch = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+      return alpha === undefined ? `rgb(${ch.join(sep)})` : `rgba(${[...ch, alpha].join(sep)})`
+    } })
+  }
   // Swift `Color(red: 0.4, green: 0.2, blue: 0.9)` / UIColor(red:…) with 0–1 floats
   for (const m of text.matchAll(/(?:UI|NS)?Color\(\s*red:\s*([\d.]+)\s*,\s*green:\s*([\d.]+)\s*,\s*blue:\s*([\d.]+)/g)) {
     const [r, g, b] = [m[1]!, m[2]!, m[3]!]

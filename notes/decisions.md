@@ -1334,3 +1334,39 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     is secret, so the history is left alone: rewriting it would break every
     clone to hide something that was only ever untidy.
 
+157. Chart palettes follow now, and the reason they did not is exact.
+
+    Measured on SB Admin 2: the export patched `chart-bar-demo.js` and
+    `chart-pie-demo.js` but not `chart-area-demo.js`. The bar and pie demos
+    write the brand as `#4e73df`, the same literal the stylesheet uses; the
+    area demo writes `rgba(78, 115, 223, 1)`. Same colour, other notation, and
+    `findSourceSpans` had no matcher for CSS colour FUNCTIONS at all: it reads
+    `#rrggbb`, `0xAARRGGBB`, Swift's `Color(red:…)` and Kivy triplets, but an
+    `rgb()`/`rgba()` inside JavaScript was never even seen.
+
+    Added, matched by the COLOUR and printed back in the file's own notation
+    with its own alpha: `rgba(78, 115, 223, .05)` is the chart's fill tint and
+    has to stay a tint of whatever the brand becomes. All three chart files now
+    move; on the same fixture the patch went from 12 files to 13, and Spectrum
+    from 21 to 28.
+
+    What still does not happen is the LIVE canvas: Chart.js draws once at load,
+    so the preview cannot follow a knob. The export reaches further than the
+    preview does, which is worth saying out loud rather than leaving people to
+    infer that charts are out of scope.
+
+158. `s16-anime-docs` recorded as a known `differs`, and the way that was
+    established is the point. It read `ok` this morning and `differs` this
+    afternoon, so the obvious suspect was the source-scanner change above. It
+    was not: reverting that file and re-running gave the same 8 differences,
+    and three consecutive runs with the change gave an identical count. What
+    moved was the element total, 1402 then 1395, which means the page itself
+    renders differently between runs. It is anime.js's own documentation: the
+    demos animate colour, and `rgb(255, 75, 75)` is their brand red caught
+    mid-animation. Same family as chroma's random palettes and coloris's live
+    picker.
+
+    Worth keeping as a habit: "it changed after my edit" is a hypothesis, and
+    the revert is what turns it into an answer. The first flakiness guess was
+    right for the wrong reason, which is not the same as being right.
+
