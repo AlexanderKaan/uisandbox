@@ -1421,3 +1421,41 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     Identity is unaffected, so the 1:1 gate is not at risk. It is still a
     rewriter change, and it is days before a launch.
 
+160. Elevation reaches the screen again, and the bug was one line of control
+    flow rather than a missing feature.
+
+    The custom-property branch of `splicesFor` reads:
+
+        const s = [...svgs, ...angles, ...findColors(value, m, false)]
+        if (s.length) return s
+        for (const [rx, kind] of CUSTOM_ROLE) …   // includes [/shadow/, 'shadow']
+
+    Every shadow contains a colour, so `findColors` always matched, the early
+    return always fired, and the `shadow` rule two dozen lines below was
+    unreachable for exactly the values it was written for. The rule was right;
+    nothing ever got to it.
+
+    A `--*shadow*` custom property now returns its inner colours AND the whole
+    value as a shadow, the same shape the real `box-shadow` branch returns, so
+    elevation rescales the geometry while the brand still turns the colour of a
+    focus ring. The shape test runs on the value with its COLOURS STRIPPED,
+    because `bare` still holds them and `--shadow-color: rgba(0, 0, 0, .5)` is
+    named like a shadow and would pass a naive length test on its own zeroes.
+    Two lengths outside the colour is what makes a shadow.
+
+    Measured on AdminLTE: the sheet went from 19 shadow values to 41, and the
+    elevation dial from 0 elements to 7. SB Admin 2 (Bootstrap 4, literal
+    `box-shadow:`) is unchanged at 19, which is the control that says the fix
+    added a path rather than moving one.
+
+    Full gate afterwards: 165 fixtures, 147 ok, 3 differs (chroma, todomvc,
+    docsify, all recorded), 1 refused, 14 no-load, 0 errors, no regressions.
+    Identity is untouched by this change by construction — the variable still
+    holds the literal it replaced — which is why the gate was the right check
+    and why it passed.
+
+    Still open, and NOT fixed here: Spectrum's shadows (13 in the sheet, none
+    painted) and Open Props, where almost nothing reaches the screen at all.
+    Different causes, not yet diagnosed. `s15-hover-fx` had no expectation and
+    now has one (`ok`).
+

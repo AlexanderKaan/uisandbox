@@ -268,3 +268,39 @@ describe('the values-mode cache', () => {
     expect(t.find('color', '#4f39f6')!.sites.map((s) => s.file)).toEqual(['a.css', 'b.css'])
   })
 })
+
+describe('a shadow held in a custom property', () => {
+  const kinds = (css: string) => { const t = new SubstitutionTable(); rewriteCss(css, t, 'a.css'); return t.entries.map((e) => `${e.kind}:${e.value}`) }
+
+  it('registers the whole value, not only the colour inside it', () => {
+    // Bootstrap 5, Spectrum and Open Props all declare shadows this way, and
+    // every one of them contains a colour — which used to end the scan early.
+    const k = kinds(':root{--bs-box-shadow:0 .5rem 1rem rgba(0, 0, 0, 0.15)}')
+    expect(k).toContain('color:rgba(0, 0, 0, 0.15)')
+    expect(k.some((x) => x.startsWith('shadow:'))).toBe(true)
+  })
+
+  it('keeps the inner colour a variable of its own, so brand and elevation stay separate', () => {
+    const t = new SubstitutionTable()
+    const out = rewriteCss(':root{--bs-box-shadow:0 .5rem 1rem rgba(0, 0, 0, 0.15)}', t, 'a.css')
+    const shadow = t.ofKind('shadow')[0]!
+    expect(shadow.value).toMatch(/var\(--us-v\d+\)/)   // the colour inside it
+    expect(out).toMatch(/--bs-box-shadow:\s*var\(--us-v\d+\)/)
+  })
+
+  it('does not mistake a shadow COLOUR for a shadow', () => {
+    // Named like one, and its zeroes would pass a naive length test.
+    const k = kinds(':root{--shadow-color:rgba(0, 0, 0, 0.5);--elevation-tint:#000}')
+    expect(k.some((x) => x.startsWith('shadow:'))).toBe(false)
+  })
+
+  it('leaves a custom property that is not named for a shadow alone', () => {
+    const k = kinds(':root{--card-outline:0 .5rem 1rem rgba(0, 0, 0, 0.15)}')
+    expect(k.some((x) => x.startsWith('shadow:'))).toBe(false)
+  })
+
+  it('still reads inset shadows and multi-layer stacks', () => {
+    expect(kinds(':root{--bs-box-shadow-inset:inset 0 1px 2px rgba(0,0,0,.075)}').some((x) => x.startsWith('shadow:'))).toBe(true)
+    expect(kinds(':root{--shadow-2:0 1px 2px rgba(0,0,0,.1), 0 2px 8px rgba(0,0,0,.1)}').some((x) => x.startsWith('shadow:'))).toBe(true)
+  })
+})

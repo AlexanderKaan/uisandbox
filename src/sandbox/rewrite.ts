@@ -174,6 +174,14 @@ const HEX = /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b/gi
 const FUNC_COLOR = /\b(?:rgba?|hsla?|hwb|oklch|oklab|lch|lab|color)\((?:[^()]|\([^()]*\))*\)/gi
 const NAMED = /(?<![\w-])([a-z]{3,20})(?![\w-])/gi
 
+/** Two or more lengths once the colours are taken out: `0 .5rem 1rem rgba(…)`
+ *  is a shadow, `rgba(0, 0, 0, .5)` is a colour that happens to hold zeroes. */
+function isShadowShape(bare: string): boolean {
+  const noColor = bare.replace(FUNC_COLOR, ' ').replace(HEX, ' ')
+  const lengths = noColor.match(/(?<![\w.#-])-?\d*\.?\d+(px|rem|em)?(?![\w%])/g)
+  return (lengths?.length ?? 0) >= 2
+}
+
 interface Splice { start: number; end: number; kind: Kind; raw: string }
 
 /** Mask strings and url() so nothing inside them is ever matched — and the
@@ -381,6 +389,23 @@ export function splicesFor(prop: string, value: string): Splice[] {
   if (prop.startsWith('--')) {
     // A custom property: colours always; lengths only when the name says the role.
     const s = [...svgs, ...(HAS_GRADIENT.test(m) ? findAngles(m) : []), ...findColors(value, m, false)]
+    // A SHADOW held in a custom property is the modern default: Bootstrap 5
+    // writes `--bs-box-shadow`, and Spectrum and Open Props do the same. Every
+    // shadow contains a colour, so the early return below used to hand back
+    // that colour and stop, and the `shadow` rule in CUSTOM_ROLE two dozen
+    // lines down was unreachable for exactly the values it was written for.
+    // Measured: on AdminLTE every visible shadow is `var(--bs-box-shadow)` and
+    // the elevation dial moved none of the eighteen.
+    //
+    // Shape is checked on the value with its COLOURS STRIPPED, because `bare`
+    // still holds them: `--shadow-color: rgba(0, 0, 0, .5)` is named like a
+    // shadow and its zeroes would pass a naive length test. Two lengths
+    // outside the colour is what makes a shadow a shadow.
+    // Order mirrors the real `box-shadow` branch: inner colours first, then
+    // the whole value, whose registered text already carries their var()s.
+    if (/shadow|elevation/i.test(prop) && isShadowShape(bare)) {
+      return [...s, { start: 0, end: value.length, kind: 'shadow', raw: value }]
+    }
     if (s.length) return s
     // Bare channel triplets — Bootstrap `--bs-primary-rgb: 13,110,253`,
     // Tailwind `--color-x: 66 80 175`, shadcn `--primary: 222.2 47.4% 11.2%` —
