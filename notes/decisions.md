@@ -1259,3 +1259,23 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     because a dim over an already dark page has less to work with. Checked in
     both schemes on both overlays.
 
+154. The compatibility marks are the owners' marks now. They used to be
+    hand-drawn approximations: a four-pointed sparkle for Claude, a generic
+    cube for Cursor, a shape or two for Figma. A gesture at a logo, placed
+    where a logo goes, is a small untruth of the same family as the copy ones
+    fixed in #147, so the path data is transcribed from simple-icons rather
+    than redrawn from memory (the icon data is CC0; the marks stay their
+    owners' trademarks, used monochrome and unmodified to say what an export
+    lands in). Ten of them: CSS3, HTML5, Tailwind, shadcn/ui, Claude, OpenAI,
+    Cursor, Figma, Swift, Android.
+
+    Two absences on purpose. The APPLE logo is not used even though the export
+    targets Apple platforms: Apple's guidelines do not permit its logo to
+    indicate compatibility, and the Swift mark is both allowed and more honest
+    about what actually comes out of that card. LOVABLE has no published mark
+    in the set, so it stays a word rather than a drawing of ours.
+
+    No `<title>` on any of them: the svg is `aria-hidden` and the visible label
+    beside it already carries the name, so a title could never be announced and
+    only turned the accessible text into "ClaudeClaude Code".
+
