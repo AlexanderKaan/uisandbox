@@ -19,8 +19,6 @@ Drop your build, turn the knobs, export the code.<br>
 <p align="center">
   <img alt="MIT" src="https://img.shields.io/badge/license-MIT-black">
   <img alt="npm" src="https://img.shields.io/npm/v/uisandbox-mcp?label=uisandbox-mcp&color=black">
-  <img alt="your files never leave your browser" src="https://img.shields.io/badge/files%20never%20leave-your%20browser-black">
-  <img alt="1:1 measured" src="https://img.shields.io/badge/1%3A1-measured%2C%20not%20promised-black">
 </p>
 
 ```bash
@@ -54,11 +52,11 @@ A repository URL goes through this site's repo route (GitHub and GitLab do not
 send CORS on archives); a `.zip` URL is fetched by the browser itself. Either
 way the archive is read in the tab, exactly as a dropped one is.
 
-## Honest by construction
+## How to check it yourself
 
-- **"1:1" is measured, not felt.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
+- **You can check the 1:1 yourself.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
 - **A reach meter** in the stage foot says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).
-- **It refuses what it cannot show.** iOS/Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so ("that usually means source, not the built output").
+- **It says so when it can't help.** iOS/Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so ("that usually means source, not the built output").
 - **A hostile archive** cannot navigate the tool away, register its own service worker or unregister ours, or smuggle a zip-slip path back out of an export. What it can do — reach the tool's DOM, because the frames are same-origin by design — reaches nothing worth having: no server, no credentials, no state. Read [`notes/security.md`](notes/security.md); deploy on an origin of its own.
 
 ## Run it
@@ -73,7 +71,7 @@ pnpm holdouts   # every fixture zip through the real app in headless Chromium (s
 
 `http://localhost:5190/?load=<zip-url>` loads a zip by URL (same-origin or CORS) — the door an agent uses.
 
-## Hold it to account
+## Test it against real builds
 
 `pnpm holdouts` runs every archive in `fixtures/` (real builds from public repos — gitignored, [`notes/decisions.md`](notes/decisions.md) says where each came from) through the app: load, Check 1:1, reach, and a host check (same origin, one worker). Verdicts are held against [`scripts/holdouts.expect.json`](scripts/holdouts.expect.json); a fixture expected `ok` that is not fails the run. `--only <name>`, `--record`, `--base <url> --fixtures <url>` for a production build or the live site.
 
@@ -105,10 +103,21 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 One origin, one Cloudflare Worker (`worker/index.mjs`, `wrangler.jsonc`): static assets from `dist/`, the SPA fallback for `?load=`, http→https and www→apex redirects, and the `/__repo/` route that fetches a public GitHub zip for "Connect a repo" (nothing stored; same-origin callers only; a rate-limit rule in the zone). `public/_headers` keeps `sw.js` uncached and sets the security headers. Put nothing else on the origin — the sandboxed frames are same-origin by design ([`notes/security.md`](notes/security.md)).
 
+## Who made this
+
+I'm [Alexander Kaan](https://github.com/AlexanderKaan), and I build open-source
+tooling for user interfaces. UISandbox came out of the design system generator I
+made before it: I could hand somebody a finished kit, but I could not show them
+what their own app would look like in it. This does that other half.
+
+I won't pretend I knew what I was doing at the start. Every decision, and every
+trap I fell into on the way, is in [`notes/decisions.md`](notes/decisions.md) —
+including the ones I had to undo. Issues and pull requests are welcome.
+
 ## Roadmap
 
 [`notes/roadmap.md`](notes/roadmap.md): ship (uisandbox.org) · the intake as a front door · being found (SEO, `llms.txt`, analytics) · the MCP server · after launch.
 
 ---
 
-Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE), free forever · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)
+Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE) · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)

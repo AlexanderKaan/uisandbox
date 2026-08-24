@@ -1629,3 +1629,37 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     is not a hierarchy. Sharing the size of the dialog's own h2 is fine: that
     one lives in the head bar behind a border, these scroll with the body.
 
+168. A tone pass before the Hacker News and Product Hunt launches: the copy was
+    not loud, it was DEFENSIVE, and it had no author.
+
+    Nothing in it said "revolutionary" or "10x". The register was the problem.
+    It argued with a sceptic who had not spoken yet — "Honest by construction",
+    "measured, not promised", "It refuses what it cannot show", "Don't take our
+    word for it" — and two of the four README badges were claims rather than
+    facts, sitting next to the licence and the npm version as if they were the
+    same kind of thing. Pre-emptive defence reads as overclaiming or as nerves,
+    and the evidence is all there anyway, so it can be said quietly.
+
+    Swapped: "Honest by construction" -> "How to check it yourself"; "Don't take
+    our word for it" -> "You don't have to take my word for it"; "'1:1' is
+    measured, not felt" -> "You can check the 1:1 yourself"; "It refuses what it
+    cannot show" -> "It says so when it can't help"; "Hold it to account" ->
+    "Test it against real builds"; "in seconds" -> "without touching the repo";
+    "free forever" dropped in all three places (MIT already says it, and nobody
+    can promise forever); both claim badges dropped.
+
+    The bigger miss was that there was no person in it. "UISandbox is made by
+    Alexander Kaan at Pageminds" is a credit line, not a reason, and the whole
+    positioning — someone who builds open-source UI tooling and is early in it —
+    appeared nowhere. On a solo launch the top comment is usually about the
+    maker. "Who made this" is now first person and says where the tool came
+    from (the design system generator that could hand you a kit but not show you
+    your own app in it) and that the notes hold the mistakes as well as the
+    decisions. That last part was already true, which is what makes it usable:
+    it is the least boastful thing on the page and the most convincing.
+
+    The DESIGN.md preamble keeps "This file was measured, not written" — same
+    move, but addressed to an agent about a specific file, where it is load-
+    bearing information rather than a posture. "at Pageminds" left the about
+    paragraph and stayed in both footers.
+

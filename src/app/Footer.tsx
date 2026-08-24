@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="foot" aria-label="About UISandbox">
       <span className="foot__credit">Made with ♥ by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener author">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a></span>
       <span className="foot__sep" aria-hidden>·</span>
-      <span>© {year} Pageminds · <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">MIT</a>, free forever</span>
+      <span>© {year} Pageminds · <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">MIT</a></span>
       <span className="foot__sep" aria-hidden>·</span>
       <nav className="foot__links" aria-label="UISandbox links">
         <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">Source</a>

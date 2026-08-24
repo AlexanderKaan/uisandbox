@@ -180,7 +180,8 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
 }
 
 /** The claim, verifiable: what leaves the tab (nothing), and three checks a
- *  sceptic can run in a minute. Every line here is measured, not promised. */
+ *  sceptic can run in a minute. Every line here is something a reader can go
+ *  and check, which is the only reason it is safe to write it down. */
 function PrivacyCard({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -193,7 +194,7 @@ function PrivacyCard({ onClose }: { onClose: () => void }) {
         <button type="button" className="btn btn--ghost btn--icon privacy__close" onClick={onClose} aria-label="Close"><X size={15} /></button>
         <h3><ShieldCheck size={16} strokeWidth={2} /> Your files never leave your browser</h3>
         <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read here, in the page, and served to the sandbox frame by a service worker on this origin. Exports are generated here too.</p>
-        <p><b>Don't take our word for it:</b></p>
+        <p><b>You don't have to take my word for it:</b></p>
         <ul>
           <li><b>Watch the network tab</b> while you drop, turn knobs and export: no request carries your bytes anywhere.</li>
           <li><b>Go offline.</b> Load the page, switch off your network, then drop the zip: everything still works, because nothing needed the network.</li>
@@ -211,7 +212,7 @@ function Landing() {
     <div className="landing">
       <section className="landing__sec">
         <h2>How it works</h2>
-        <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, in seconds.</p>
+        <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, without touching the repo.</p>
         {/* The boundary, drawn. People have read "drop your build" as "connect
             your project" and expected their own folder to change under them.
             That is a picture problem, and denying it in prose does not fix it:
@@ -255,10 +256,10 @@ function Landing() {
       </section>
       <section className="landing__sec landing__cols">
         <div>
-          <h2>Honest by construction</h2>
+          <h2>How to check it yourself</h2>
           <p><b>"1:1" is measured.</b> <em>Check 1:1</em> loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences, or it says what differs.</p>
           <p><b>A reach meter</b> says how much of what you see the knobs touch (painted colours, families, sizes, radii) and what lies outside: images, canvas, video.</p>
-          <p><b>It refuses what it cannot show.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
+          <p><b>It says so when it can't help.</b> iOS and Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so.</p>
         </div>
         <figure className="shot shot--stack" aria-label="Three things the tool says out loud">
           <picture><source srcSet="/shot-verify-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-verify.png" alt="The 1:1 check card: 67 elements paired, zero computed-style differences across 18 properties" loading="lazy" width="880" height="296" /></picture>
@@ -269,7 +270,7 @@ function Landing() {
       </section>
       <section className="landing__sec">
         <h2 id="privacy">Your files never leave your browser</h2>
-        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. Don't take our word for it: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip: everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. You can check this yourself: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip: everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>
@@ -279,7 +280,8 @@ function Landing() {
       </section>
       <section className="landing__sec landing__sec--quiet">
         <h2>Who made this</h2>
-        <p>UISandbox is made by <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a> at <a href="https://pageminds.com/" target="_blank" rel="noopener">Pageminds</a>. MIT, free forever, <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">open source</a>. Every decision that shaped it (and every trap it fell into) is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a>.</p>
+        <p>I'm <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a>, and I build open-source tooling for user interfaces. UISandbox came out of the design system generator I made before it: I could hand somebody a finished kit, but I could not show them what their own app would look like in it. This does that other half.</p>
+        <p>I won't pretend I knew what I was doing at the start. Every decision, and every trap I fell into on the way, is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a> — including the ones I had to undo. It's <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">MIT</a>, and issues and pull requests are welcome.</p>
       </section>
     </div>
   )
