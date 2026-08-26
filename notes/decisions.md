@@ -1663,3 +1663,31 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     bearing information rather than a posture. "at Pageminds" left the about
     paragraph and stayed in both footers.
 
+169. The launch clip picks its builds by measurement, and then overrules it.
+
+    `scripts/launch-clip.mjs` captures frames one at a time rather than screen
+    recording, so every cut is exact and the playback speed is a choice rather
+    than whatever the machine managed that afternoon. 306 frames at 20fps, 15s,
+    0.7 MB of h264 and a 1.1 MB gif.
+
+    The first cut swept the BRAND knob on three builds I picked by eye:
+    sb-admin-2, vitepress and the Start Bootstrap agency template. Then I
+    measured what each knob actually moves, as a share of stage pixels:
+
+      build                brand    hue   dark  shape
+      sb-admin-2           19.8%  20.3%   0.0%  11.9%
+      material-dashboard    1.7%   3.2%  87.7%   7.2%
+      vitepress             1.6%  15.4%  73.9%  25.5%
+      agency                0.3%   0.3%   0.0%  28.7%
+
+    Agency moves 0.3% under the brand. Two of my three scenes were a still
+    image of a page not changing, and I would have shipped it. The cut now
+    gives each build the knob it actually shows: brand on the dashboard, their
+    own dark mode on Material Dashboard, hue on VitePress, then the type.
+
+    And the measurement has its own limit, which agency also demonstrates. Its
+    28.7% on `shape` is the biggest number in the table and the scene was still
+    unusable: nearly all of it is TEXT REFLOWING as spacing grows. Pixels
+    moving is not the same as a design visibly changing. The table shortlists;
+    the eye decides. Both halves were needed and neither was sufficient.
+
