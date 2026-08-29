@@ -1724,3 +1724,34 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     OG image now shows the hero over a real build rather than an empty drop
     zone, which is a better picture anyway.
 
+171. The clip moved back down, and got bigger. The drop zone is the focus.
+
+    #170 put it between the hero and the door, which pushed the door to 898px
+    on a 1280×900 window — technically inside the first screen, and still the
+    wrong trade. The drop zone is what the page is FOR. The clip now sits where
+    the static screenshot was, below the steps, and the door is back at 558px.
+
+    The still it replaced was a picture of the same thing, and a still cannot
+    show a knob being turned, which is the only part that is hard to believe in
+    prose. So the still goes; there is no reason to carry both.
+
+    It breaks OUT of the 760px reading column — `flex: none` plus `align-self:
+    center`, capped at `min(1080px, 92vw)` so a narrow window never scrolls
+    sideways. At column width the app inside it is a thumbnail, which defeats
+    the point of showing an app at all.
+
+    Two things had to follow from making it large:
+
+    - It is encoded at 1920×1080 now, not the 720 the viewport was. Upscaling a
+      1280 source to 1080 CSS px on a 2x screen is soft, and this clip is mostly
+      small UI type, which is where softness shows first.
+    - The SITE's cut starts after the door scene. The clip opens on the
+      UISandbox landing page, and on the landing page that means showing a
+      visitor the screen they are already looking at. `launch-clip.mjs` records
+      the door's frame count and encodes `public/how-it-works.mp4` from the
+      frame after it, so the trim is the real number rather than a guess. Off
+      the site — on X, in the README — the door is useful context and stays.
+
+    The hero paragraph got its last sentence back. It was cut in #170 because a
+    clip sat directly underneath narrating it, and that clip is no longer there.
+

@@ -498,10 +498,13 @@ kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border: 1px s
 .steps li { counter-increment: step; position: relative; padding-left: 40px; font-size: 14.5px; line-height: 1.55; color: var(--app-fg-muted); }
 .steps li b { color: var(--app-fg); }
 .steps li::before { content: counter(step); position: absolute; left: 0; top: 1px; width: 26px; height: 26px; border-radius: 999px; border: 1px solid var(--app-border); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--app-fg); }
-/* The clip between the hero and the drop zone. Capped well under the door's
-   width so the drop zone still starts on the first screen of a laptop: the
-   clip is there to get you the last two hundred pixels, not to replace them. */
-.clip { margin: 2px auto 16px; width: min(520px, 100%); }
+/* The clip, and the one picture on the page. It breaks OUT of the 760px
+   reading column — `align-self` centres it and `flex: none` stops the column
+   shrinking it back — because a knob being turned is the part that is hard to
+   believe in prose, and at column width the app inside it is thumbnail-sized.
+   Capped against the viewport so a narrow window never scrolls sideways. */
+.clip { margin: 4px 0 0; width: min(760px, 100%); }
+.clip--wide { flex: none; align-self: center; width: min(1080px, 92vw); }
 .clip__vid {
   display: block; width: 100%; height: auto; border-radius: 12px;
   border: 1px solid var(--app-border); background: var(--app-surface); box-shadow: var(--app-shadow-sm);

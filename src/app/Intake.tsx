@@ -33,9 +33,6 @@ const SAMPLES = [
 export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps) {
   const [way, setWay] = useState<Way>('zip')
   const [showPrivacy, setShowPrivacy] = useState(false)
-  // CSS can suppress an animation but not an autoplaying video, so the clip
-  // asks here and hands over the controls instead of starting on its own.
-  const [stillPlease] = useState(() => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [over, setOver] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
   const [repo, setRepo] = useState('')
@@ -75,11 +72,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
             to repeat the loop and can spend its words on what the beats cannot
             say: where it runs, how faithful it is, and what comes out. */}
         <p className="hero__beats">Drop your build, turn the knobs, export the code.</p>
-        {/* Shorter since the clip landed under it: the sentence about what the
-            knobs reach and what comes out is now a thing you can watch, and a
-            paragraph that narrates the picture below it costs a line of the
-            first screen for nothing. */}
-        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server: close the tab and it is all undone.</p>
+        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server and nothing is stored: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
@@ -87,27 +80,6 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
           <li><Check size={13} strokeWidth={2.5} /> Your files never leave your browser <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
         </ul>
       </section>
-      {/* The clip goes ABOVE the drop zone, not below it, because the moment it
-          answers is the one right before you hand over a folder. Four real
-          builds from public repos, one knob each — nothing staged, which is
-          also the only reason it is worth showing. */}
-      <figure className="clip">
-        <video
-          className="clip__vid"
-          src="/how-it-works.mp4"
-          poster="/how-it-works-poster.png"
-          width={1280}
-          height={720}
-          autoPlay={!stillPlease}
-          controls={stillPlease}
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-label="Four builds in the sandbox: a dashboard's brand colour swept through the spectrum, a documentation site switched to its own dark mode, a docs page's hue rotated and its type swapped to monospace, then the 1:1 check reporting no differences and the export panel"
-        />
-        <figcaption>Four real builds from public repos, one knob each. Nothing staged.</figcaption>
-      </figure>
       {showPrivacy && <PrivacyCard onClose={() => setShowPrivacy(false)} />}
       <div className="door">
       <div className="card intake__card">
@@ -236,6 +208,9 @@ function PrivacyCard({ onClose }: { onClose: () => void }) {
 
 /** The one-pager under the door: what it does, what moves, how it stays honest, for agents. Plain, black and white, no claims the meter would contradict. */
 function Landing() {
+  // CSS can suppress an animation but not an autoplaying video, so the clip
+  // asks here and hands over the controls instead of starting on its own.
+  const [stillPlease] = useState(() => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)
   return (
     <div className="landing">
       <section className="landing__sec">
@@ -272,9 +247,28 @@ function Landing() {
           </div>
         </div>
       </section>
-      <figure className="shot">
-        <picture><source srcSet="/shot-stage-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" /></picture>
-        <figcaption>A real build in the sandbox. Brand turned to crimson: five values moved, the page followed; <em>Back to your code</em> is one click.</figcaption>
+      {/* Wider than the 760px column on purpose: this is the one picture on
+          the page and a stranger decides from it. It replaced a still of the
+          same thing, and a still cannot show a knob being turned, which is the
+          only part that is hard to believe in prose. The drop zone stays the
+          page's focus, so the clip sits below it rather than in the gap above
+          it, where it pushed the door off the first screen. */}
+      <figure className="clip clip--wide">
+        <video
+          className="clip__vid"
+          src="/how-it-works.mp4"
+          poster="/how-it-works-poster.png"
+          width={1280}
+          height={720}
+          autoPlay={!stillPlease}
+          controls={stillPlease}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-label="Four builds in the sandbox: a dashboard's brand colour swept through the spectrum, a documentation site switched to its own dark mode, a docs page's hue rotated and its type swapped to monospace, then the 1:1 check reporting no differences and the export panel"
+        />
+        <figcaption>Four real builds from public repos, one knob each. Nothing staged.</figcaption>
       </figure>
       {/* The objection an experienced developer reaches for first, in their own
           words, answered where they are rather than in a launch comment they

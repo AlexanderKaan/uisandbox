@@ -69,10 +69,12 @@ const brandAt = (deg) => {
   return '#' + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('')
 }
 
+/** Where the door scene ends, so the site's cut can start after it. */
+let doorFrames = 0
 const open = async (fixture, { door = false } = {}) => {
   const page = await ctx.newPage()
   await page.goto(`http://localhost:${port}/?load=${encodeURIComponent('/fixtures/' + fixture)}`, { waitUntil: 'domcontentloaded' })
-  if (door) for (let i = 0; i < 22 && !(await page.$('.stage__foot')); i++) await shot(page)
+  if (door) { for (let i = 0; i < 22 && !(await page.$('.stage__foot')); i++) await shot(page); doorFrames = n }
   await page.waitForFunction(() => document.querySelector('.stage__foot'), null, { timeout: 120000 })
   await page.waitForTimeout(4500)
   // The read-out card covers the app. In a still it is the point; in a clip it
@@ -132,6 +134,21 @@ console.log(`${n} frames · ${Math.round(n / FPS * 10) / 10}s at ${FPS}fps`)
 const ff = (args) => { const r = spawnSync('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] })
   if (r.status !== 0) { console.error(String(r.stderr).split('\n').slice(-6).join('\n')); process.exit(1) } }
 const src = join(FRAMES, 'f%05d.png')
-ff(['-y', '-framerate', String(FPS), '-i', src, '-vf', `scale=${W}:${H}:flags=lanczos`, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-movflags', '+faststart', join(OUT, 'launch.mp4')])
+const PUBLIC = join(root, 'public')
+// 1080p, not the 720 the viewport was: the clip is shown up to ~1080 CSS px
+// wide on the landing page, and a 1280-wide source upscales visibly on a 2x
+// screen — this clip is mostly small UI type, which is where that shows first.
+ff(['-y', '-framerate', String(FPS), '-i', src, '-vf', 'scale=1920:1080:flags=lanczos', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', join(OUT, 'launch.mp4')])
 ff(['-y', '-framerate', String(FPS), '-i', src, '-vf', `fps=14,scale=900:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=200[p];[b][p]paletteuse=dither=bayer:bayer_scale=3`, join(OUT, 'launch.gif')])
-for (const f of ['launch.mp4', 'launch.gif']) console.log(f, (statSync(join(OUT, f)).size / 1024 / 1024).toFixed(1) + ' MB')
+
+// The site's own cut starts AFTER the door. On the landing page the clip sits
+// below the drop zone, so opening on a shot of that same landing page shows a
+// visitor the screen they are already looking at. Off the site — on X, in the
+// README — the door is useful context and stays in.
+ff(['-y', '-start_number', String(doorFrames + 1), '-framerate', String(FPS), '-i', src, '-vf', 'scale=1920:1080:flags=lanczos',
+  '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', join(PUBLIC, 'how-it-works.mp4')])
+ff(['-y', '-i', join(PUBLIC, 'how-it-works.mp4'), '-ss', '2.4', '-frames:v', '1', join(PUBLIC, 'how-it-works-poster.png')])
+
+for (const [d, f] of [[OUT, 'launch.mp4'], [OUT, 'launch.gif'], [PUBLIC, 'how-it-works.mp4'], [PUBLIC, 'how-it-works-poster.png']])
+  console.log(f, (statSync(join(d, f)).size / 1024 / 1024).toFixed(1) + ' MB')
+console.log(`door scene: frames 1–${doorFrames}, cut from the site's copy`)

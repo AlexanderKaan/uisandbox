@@ -27,7 +27,9 @@ npx uisandbox-mcp open            # run inside your project: it finds the build 
 
 Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand? *Try a sample* under the drop zone (the Bootstrap docs, a VitePress site, an admin dashboard). Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
 
-<p align="center"><img src="brand/marketing/stage-acme-brand-crimson.png" alt="A real build in the sandbox: the Brand knob turned to crimson, the page following, five values moved" width="880"></p>
+<p align="center"><img src="brand/marketing/launch.gif" alt="Four real builds in the sandbox: a dashboard's brand colour swept through the spectrum, a docs site switched to its own dark mode, another's hue rotated and its type swapped to monospace, then the 1:1 check reporting no differences" width="880"></p>
+
+<p align="center"><sub>Four real builds from public repos, one knob each. Nothing staged.</sub></p>
 
 ## What it does
 
