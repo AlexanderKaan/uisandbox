@@ -33,6 +33,9 @@ const SAMPLES = [
 export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps) {
   const [way, setWay] = useState<Way>('zip')
   const [showPrivacy, setShowPrivacy] = useState(false)
+  // CSS can suppress an animation but not an autoplaying video, so the clip
+  // asks here and hands over the controls instead of starting on its own.
+  const [stillPlease] = useState(() => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches)
   const [over, setOver] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
   const [repo, setRepo] = useState('')
@@ -72,7 +75,11 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
             to repeat the loop and can spend its words on what the beats cannot
             say: where it runs, how faithful it is, and what comes out. */}
         <p className="hero__beats">Drop your build, turn the knobs, export the code.</p>
-        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server and nothing is stored: close the tab and it is all undone. The code comes out as a patch, design tokens, or a DESIGN.md for your agent.</p>
+        {/* Shorter since the clip landed under it: the sentence about what the
+            knobs reach and what comes out is now a thing you can watch, and a
+            paragraph that narrates the picture below it costs a line of the
+            first screen for nothing. */}
+        <p className="hero__sub">In your browser, or straight from your agent via MCP. Every colour, font, radius and spacing in its CSS becomes a knob, and the real app follows 1:1. Nothing is sent to a server: close the tab and it is all undone.</p>
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
@@ -80,6 +87,27 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
           <li><Check size={13} strokeWidth={2.5} /> Your files never leave your browser <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
         </ul>
       </section>
+      {/* The clip goes ABOVE the drop zone, not below it, because the moment it
+          answers is the one right before you hand over a folder. Four real
+          builds from public repos, one knob each — nothing staged, which is
+          also the only reason it is worth showing. */}
+      <figure className="clip">
+        <video
+          className="clip__vid"
+          src="/how-it-works.mp4"
+          poster="/how-it-works-poster.png"
+          width={1280}
+          height={720}
+          autoPlay={!stillPlease}
+          controls={stillPlease}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-label="Four builds in the sandbox: a dashboard's brand colour swept through the spectrum, a documentation site switched to its own dark mode, a docs page's hue rotated and its type swapped to monospace, then the 1:1 check reporting no differences and the export panel"
+        />
+        <figcaption>Four real builds from public repos, one knob each. Nothing staged.</figcaption>
+      </figure>
       {showPrivacy && <PrivacyCard onClose={() => setShowPrivacy(false)} />}
       <div className="door">
       <div className="card intake__card">
@@ -212,7 +240,17 @@ function Landing() {
     <div className="landing">
       <section className="landing__sec">
         <h2>How it works</h2>
-        <p className="landing__lead">Restyle your app without rebuilding it: a new look on the real thing, without touching the repo.</p>
+        {/* What the visitor gets, before what the tool does. The four steps
+            below used to open the section, and every one of them described the
+            MECHANISM — bring, see, turn, export. A stranger who has not yet
+            decided to hand over a folder is asking a different question. */}
+        <p className="landing__lead">What would your app look like in a different brand colour, at a bigger type scale, or in dark mode? Find out in about a minute, on the real app, instead of guessing or spending an afternoon on it. Keep what you see and it comes out as code. Close the tab and nothing happened.</p>
+        <ol className="steps">
+          <li><b>Drop your build in.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. It is read here in the page and served to the frame by a service worker; nothing is sent to a server.</li>
+          <li><b>It is your actual app, not a preview of one.</b> Every CSS literal becomes a variable holding that same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included. There is a button that proves it.</li>
+          <li><b>Turn one knob, the whole app follows.</b> A colour used 144 times moves once. Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue, saturation, contrast, your own dark mode. Every dial has <em>×1 = as in your code</em> at its centre, so you always know your way back.</li>
+          <li><b>Keep it, or bin it.</b> Keep it and you get code: your own files patched in place, a find and replace list, design tokens (CSS, Tailwind, shadcn), Swift and Android constants, or a <code>DESIGN.md</code> for your agent. Bin it by closing the tab.</li>
+        </ol>
         {/* The boundary, drawn. People have read "drop your build" as "connect
             your project" and expected their own folder to change under them.
             That is a picture problem, and denying it in prose does not fix it:
@@ -233,12 +271,6 @@ function Landing() {
             <span>Where the copy is read, rendered and turned. Close the tab and it is gone: nothing is stored, nothing is sent to a server.</span>
           </div>
         </div>
-        <ol className="steps">
-          <li><b>Bring the build.</b> A zip of <code>dist/</code>, <code>build/</code> or <code>out/</code>, a folder, or a public GitHub or GitLab repo. Files are read in your browser and served to the frame by a service worker; nothing is sent to a server.</li>
-          <li><b>See it 1:1.</b> Every CSS literal becomes a variable holding the very same value, so the page renders exactly as it was, runtime styles, CDN stylesheets and nested frames included.</li>
-          <li><b>Turn the knobs.</b> Brand and the colour families your CSS actually contains, background, fonts, size, spacing, radius, elevation, motion, hue/saturation/contrast, your dark mode. Every dial has <em>×1 = as in your code</em> at its centre.</li>
-          <li><b>Export what you see.</b> Your values as CSS / JSON / a patch, your files patched in place, design tokens (CSS, Tailwind, shadcn), Swift and Android constants.</li>
-        </ol>
       </section>
       <figure className="shot">
         <picture><source srcSet="/shot-stage-dark.png" media="(prefers-color-scheme: dark)" /><img src="/shot-stage.png" alt="UISandbox: a real app in the sandbox with the knobs panel beside it; the Brand knob opened and set to crimson, the page following" loading="lazy" width="1440" height="900" /></picture>

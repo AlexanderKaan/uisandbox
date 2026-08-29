@@ -1691,3 +1691,36 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     moving is not the same as a design visibly changing. The table shortlists;
     the eye decides. Both halves were needed and neither was sufficient.
 
+170. The landing page answered "how does it work" before it answered "why
+    would I". The clip goes above the drop zone, not below it.
+
+    The order was hero → drop zone → How it works, so the page asked a stranger
+    to hand over a folder while the only evidence was a headline. The hesitation
+    is real and it happens in that gap. The clip now sits between the hero and
+    the door, capped at 520px so the door still starts within the first screen
+    of a 1280×900 window (measured: door top at 898). It plays muted and looped,
+    and under `prefers-reduced-motion` it does not autoplay at all but hands
+    over the controls, because CSS can suppress an animation and not a video.
+
+    The section itself opened with `.cross`, the boundary drawing — a
+    reassurance about safety, answering the fear before the value. It now comes
+    after the steps. And every one of those four steps described the MECHANISM:
+    bring, see, turn, export. That is what the TOOL does, and a stranger who has
+    not yet decided is asking a different question, so they read as outcomes
+    now, ending on "Keep it, or bin it. Bin it by closing the tab" — the
+    risk-reversal, and true.
+
+    The lead is the promise, which the page did not previously make anywhere:
+    what would your app look like in another brand colour, at a bigger type
+    scale, in dark mode, and you can find out in about a minute.
+
+    The hero paragraph lost a sentence in the process. With a clip under it
+    showing what the knobs reach and what comes out, narrating the picture cost
+    a line of the first screen for nothing.
+
+    Every marketing image was regenerated. They were all made on 22 August and
+    carried "MIT, free forever" baked into their footers — copy #168 removed six
+    days later — so the pictures were contradicting the page they sat on. The
+    OG image now shows the hero over a real build rather than an empty drop
+    zone, which is a better picture anyway.
+
