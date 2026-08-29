@@ -1755,3 +1755,35 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     The hero paragraph got its last sentence back. It was cut in #170 because a
     clip sat directly underneath narrating it, and that clip is no longer there.
 
+172. `scripts/live-check.mjs`: the deployed site held to what the repo says,
+    and three of its own bugs found on the first run.
+
+    24 checks — headers (HSTS, nosniff, sw.js uncached), the assets the new
+    page needs and their sizes, the rendered DOM (the clip is there and wide,
+    the still is gone, the door is above the fold, no sideways scroll, the
+    headings are the current ones, no retired copy on screen), the clip
+    actually decoding, a real build carried end to end, and one knob turned on
+    it. `node scripts/live-check.mjs [url]`, non-zero on any failure.
+
+    All three faults were in the CHECK, and all three had the same shape: a
+    probe that could not tell "it did not work" from "I did not run it".
+
+    a. It counted elements whose computed colour EQUALS the pick. The mapping
+       is a delta from their brand, so only a value that started at the centre
+       lands on it exactly. Zero was the right answer to the wrong question.
+
+    b. It drove the app through `window.__us`, which is a dev hook and does not
+       exist in the production bundle. `if (u) u.dispatch(...)` did nothing,
+       silently, and the nothing was reported as a knob that fails to reach the
+       screen. It drives the real UI now, and asserts the click and the pick as
+       their own two checks before believing the result.
+
+    c. Its probe build was `edwardtufte/tufte-css`, whose brand family holds
+       exactly ONE value and does not paint it on the first screen. The stage
+       foot said "1 value moved": the knob worked and the check called it
+       broken. It now loads the site's own admin-dashboard sample, which also
+       exercises the sample route a visitor clicks and does not depend on
+       GitHub being up.
+
+    Live run after the deploy: 24 of 24, uisandbox.org.
+
