@@ -72,6 +72,21 @@ ok('the promise is in the lead', dom.promise)
 ok('"Who made this" is first person', dom.firstPerson)
 ok('no retired copy on screen', dom.stale.length === 0, dom.stale.join(', '))
 
+// The repo moved to the organisation; a link left behind still works, because
+// GitHub redirects, which is exactly why nobody notices one.
+const links = await page.evaluate(() => {
+  const hrefs = [...document.querySelectorAll('a[href]')].map((a) => a.href)
+  return {
+    wrongOwner: [...new Set(hrefs.filter((h) => /github\.com\/[^/]+\/uisandbox/.test(h) && !/github\.com\/Ideelab\//.test(h)))],
+    org: hrefs.some((h) => h.startsWith('https://github.com/Ideelab/uisandbox')),
+    ideelab: hrefs.some((h) => h.startsWith('https://ideelab.nl')),
+    person: hrefs.some((h) => h === 'https://github.com/AlexanderKaan'),
+  }
+})
+ok('every repo link points at Ideelab', links.wrongOwner.length === 0 && links.org, links.wrongOwner.join(', '))
+ok('the footer credits Ideelab', links.ideelab)
+ok('the profile link is still the person', links.person)
+
 // the video: does it actually decode and start?
 const vid = await page.evaluate(async () => {
   const v = document.querySelector('.clip__vid')
