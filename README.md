@@ -105,6 +105,12 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 One origin, one Cloudflare Worker (`worker/index.mjs`, `wrangler.jsonc`): static assets from `dist/`, the SPA fallback for `?load=`, http→https and www→apex redirects, and the `/__repo/` route that fetches a public GitHub zip for "Connect a repo" (nothing stored; same-origin callers only; a rate-limit rule in the zone). `public/_headers` keeps `sw.js` uncached and sets the security headers. Put nothing else on the origin — the sandboxed frames are same-origin by design ([`notes/security.md`](notes/security.md)).
 
+## Contributing
+
+The most useful thing you can send is a build that does not work. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the 1:1 gate a change to the rewriter is
+held to, and how to run it against the three real builds that ship in this repo.
+
 ## Who made this
 
 I'm [Alexander Kaan](https://github.com/AlexanderKaan), and I build open-source
