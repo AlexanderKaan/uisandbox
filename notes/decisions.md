@@ -1788,6 +1788,7 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     Live run after the deploy: 24 of 24, uisandbox.org.
 
 173. The repo moved to `Ideelab/uisandbox`, and the credit with it.
+    (The MCP namespace held back here was renamed a few minutes later — #175.)
 
     Every link, slug and remote now points at the organisation:
     `github.com/Ideelab/uisandbox`, the plugin marketplace slug in the README,
@@ -1822,4 +1823,31 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     `##`, skipping the badges and centred HTML that are markup for GitHub rather
     than prose for a reader. The preamble's own "How honesty is enforced" became
     "How to check it", the same correction #168 made everywhere else.
+
+175. The MCP namespace moved too, and #173 was right about the rule and wrong
+    about the moment.
+
+    #173 left `io.github.AlexanderKaan/uisandbox` alone on the grounds that a
+    published identifier sitting in other people's configs should not be
+    renamed. That rule is sound. What it skipped was measuring how much was
+    actually out there before applying it:
+
+      npm uisandbox-mcp   5 versions, first published 10 days ago
+      MCP registry        4 entries, 0.1.0 through 0.3.2
+      stars               5, all of them friends of the author
+
+    And the npm package NAME does not change — `uisandbox-mcp` is what people
+    type, and `mcpName` is a field inside it. The blast radius today is four
+    registry rows nobody has found yet. In three months it is other people's
+    configs, blog posts and whatever the registry search has ranked, and by
+    then it genuinely cannot move.
+
+    So: `io.github.Ideelab/uisandbox` at 0.3.3, with `server.json`'s name,
+    `server.json`'s `repository.url`, its own version, its `packages[0].version`
+    and `package.json`'s `version` and `mcpName` all lined up — the registry
+    rejects a manifest whose package version disagrees with npm's.
+
+    The rule to keep is not "never rename a published identifier". It is
+    "rename it while it is cheap, and know the number before you decide which
+    that is."
 

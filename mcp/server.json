@@ -1,19 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "io.github.AlexanderKaan/uisandbox",
+  "name": "io.github.Ideelab/uisandbox",
   "description": "Play with your app's design, right in the browser: load a built web app, turn its knobs, verify 1:1, export.",
   "title": "UISandbox",
   "repository": {
-    "url": "https://github.com/AlexanderKaan/uisandbox",
+    "url": "https://github.com/Ideelab/uisandbox",
     "source": "github"
   },
   "websiteUrl": "https://uisandbox.org",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "uisandbox-mcp",
-      "version": "0.3.2",
+      "version": "0.3.3",
       "transport": {
         "type": "stdio"
       },
