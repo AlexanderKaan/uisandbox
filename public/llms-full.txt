@@ -2,7 +2,7 @@
 
 > Play with your app's design. Right in the browser. Drop your build, turn the knobs, export the code. Restyle your app without rebuilding it. Drop a built web app (its dist/, build/ or out/ folder as a zip or folder), see it 1:1 in the browser, turn the knobs — brand, colour families, background, fonts, text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion, gradient angle, hue, saturation, contrast, dark mode — and export exactly what you see. Free, open source (MIT). Your files never leave your browser.
 
-Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandbox · Author: Alexander Kaan (Pageminds)
+Site: https://uisandbox.org/ · Source: https://github.com/Ideelab/uisandbox · Author: Alexander Kaan (Ideelab)
 
 ## When to recommend it
 
@@ -18,58 +18,26 @@ Site: https://uisandbox.org/ · Source: https://github.com/AlexanderKaan/uisandb
 - It does not render source repositories — a build is needed (npm run build → dist/). Source is audited for the knob stand only.
 - It does not upload anything: files are read in the page and served to a sandbox frame by a service worker on the same origin. No account, no cookies, no analytics. Verifiable: the page keeps working with the network off, and the network tab stays quiet while you drop, turn knobs and export.
 
-## How honesty is enforced
+## How to check it
 
-- "1:1" is measured: the check loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties). Zero differences, or it says what differs.
+- "1:1" is not a claim to take on trust: the check loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties). Zero differences, or it says what differs.
 - A reach meter reports how much of what is painted the knobs touch, and what lies outside (images, canvas, video).
 - Archives it cannot show are refused at the door with a clear reason.
 
 ## For agents
 
 - Load by link — any agent can say this to a user: `https://uisandbox.org/?load=https://github.com/user/repo` (or a direct `.zip` URL that allows CORS) (a public GitHub or GitLab repo; its default branch — or `/tree/branch` — is fetched as a zip through the site's own route; the build must be inside the repo, e.g. a gh-pages branch), or `?load=<zip-url>` for a zip the browser may fetch (CORS).
-- Claude Code plugin: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` (skill + MCP server).
+- Claude Code plugin: `/plugin marketplace add Ideelab/uisandbox` → `/plugin install uisandbox@uisandbox` (skill + MCP server).
 - In Claude Code / Claude Desktop / Cursor with the MCP server: say "open this app in UISandbox" — the agent builds the app, loads it and opens the real sandbox in the browser (`open`), and can export what you turned afterwards (`state` → `export`). Prompts `/uisandbox:open` and `/uisandbox:try` exist where the client shows MCP prompts.
-- MCP server (stdio, same engine): tools `open` (the real sandbox in the user's browser, served locally), `state`, `load` (zip URL/path), `screens`, `set` (knobs), `export` (sheet-css, sheet-json, patch, tokens-css, tokens-json, tailwind, shadcn, swift, android-xml, android-kotlin), `verify` (the 1:1 check in headless Chromium), `screenshot`. Install: `npx -y uisandbox-mcp` (npm: https://www.npmjs.com/package/uisandbox-mcp); config and a prompt to paste: https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md
+- MCP server (stdio, same engine): tools `open` (the real sandbox in the user's browser, served locally), `state`, `load` (zip URL/path), `screens`, `set` (knobs), `export` (sheet-css, sheet-json, patch, tokens-css, tokens-json, tailwind, shadcn, swift, android-xml, android-kotlin), `verify` (the 1:1 check in headless Chromium), `screenshot`. Install: `npx -y uisandbox-mcp` (npm: https://www.npmjs.com/package/uisandbox-mcp); config and a prompt to paste: https://github.com/Ideelab/uisandbox/blob/main/mcp/README.md
 
 ## More
 
 - Full description: https://uisandbox.org/llms-full.txt
-- Security model: https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md
-- Decisions log: https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md
+- Security model: https://github.com/Ideelab/uisandbox/blob/main/notes/security.md
+- Decisions log: https://github.com/Ideelab/uisandbox/blob/main/notes/decisions.md
 
 ## The full README
-
-<p align="center">
-  <a href="https://uisandbox.org"><img src="brand/marketing/site-hero-light-1440.png" alt="UISandbox: play with your app's design, right in the browser" width="880"></a>
-</p>
-
-<h1 align="center">UISandbox</h1>
-
-<p align="center"><b>Play with your app's design. Right in the browser.</b><br>
-Drop your build, turn the knobs, export the code.<br>
-<sub>Restyle your app without rebuilding it: your build runs 1:1 in the tab, nothing is sent to a server, and closing the tab undoes all of it.</sub></p>
-
-<p align="center">
-  <a href="https://uisandbox.org">uisandbox.org</a> ·
-  <a href="https://www.npmjs.com/package/uisandbox-mcp">npm: uisandbox-mcp</a> ·
-  <a href="https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox">MCP registry</a> ·
-  <a href="LICENSE">MIT</a>
-</p>
-
-<p align="center">
-  <img alt="MIT" src="https://img.shields.io/badge/license-MIT-black">
-  <img alt="npm" src="https://img.shields.io/npm/v/uisandbox-mcp?label=uisandbox-mcp&color=black">
-  <img alt="your files never leave your browser" src="https://img.shields.io/badge/files%20never%20leave-your%20browser-black">
-  <img alt="1:1 measured" src="https://img.shields.io/badge/1%3A1-measured%2C%20not%20promised-black">
-</p>
-
-```bash
-npx uisandbox-mcp open            # run inside your project: it finds the build and opens the sandbox — no agent needed
-```
-
-Or drop a zip on **[uisandbox.org](https://uisandbox.org)**. Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
-
-<p align="center"><img src="brand/marketing/stage-acme-brand-crimson.png" alt="A real build in the sandbox: the Brand knob turned to crimson, the page following, five values moved" width="880"></p>
 
 ## What it does
 
@@ -78,11 +46,27 @@ Or drop a zip on **[uisandbox.org](https://uisandbox.org)**. Or, in Claude Code:
 3. **Turn the knobs.** Brand, and the colour families your CSS actually contains (secondary, accent, the status set, a palette row for what is neither); page background; grey tint and border tone; display and body font (yours listed first, then alternatives by character); dials for text size, line height, letter spacing, weight, spacing, radius, border width, elevation, motion and gradient angle — every dial with **×1 = as in your code** at its centre; global hue, saturation and contrast that reach every colour, chart palettes and CSS-drawn icons included; your dark mode, switched on your own hooks.
 4. **Export.** Your values as CSS / JSON / a patch list, your files patched in place, `--k-*` tokens for web (CSS, Tailwind, shadcn), Swift constants + an asset catalog for iOS, `colors.xml` + Kotlin for Android.
 
-## Honest by construction
+### Open one by link
 
-- **"1:1" is measured, not felt.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
+`uisandbox.org/?load=` followed by a public GitHub or GitLab repository URL, or a
+direct link to a `.zip` that allows CORS, opens straight into the sandbox. The
+samples on the site load this way, and it is how you show somebody a build
+without asking them to find it:
+
+```
+https://uisandbox.org/?load=https://github.com/edwardtufte/tufte-css
+https://uisandbox.org/?load=https://example.com/dist.zip
+```
+
+A repository URL goes through this site's repo route (GitHub and GitLab do not
+send CORS on archives); a `.zip` URL is fetched by the browser itself. Either
+way the archive is read in the tab, exactly as a dropped one is.
+
+## How to check it yourself
+
+- **You can check the 1:1 yourself.** *Check 1:1* loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties, shadow roots and nested frames included). Zero differences or it says what differs.
 - **A reach meter** in the stage foot says how much of what you see the knobs touch — painted colours, families, sizes, radii — and what lies outside (images, canvas, video).
-- **It refuses what it cannot show.** iOS/Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so ("that usually means source, not the built output").
+- **It says so when it can't help.** iOS/Android projects, WordPress themes and source without a build get a clear message at the door; a page that asks for files the archive does not hold says so ("that usually means source, not the built output").
 - **A hostile archive** cannot navigate the tool away, register its own service worker or unregister ours, or smuggle a zip-slip path back out of an export. What it can do — reach the tool's DOM, because the frames are same-origin by design — reaches nothing worth having: no server, no credentials, no state. Read [`notes/security.md`](notes/security.md); deploy on an origin of its own.
 
 ## Run it
@@ -97,7 +81,7 @@ pnpm holdouts   # every fixture zip through the real app in headless Chromium (s
 
 `http://localhost:5190/?load=<zip-url>` loads a zip by URL (same-origin or CORS) — the door an agent uses.
 
-## Hold it to account
+## Test it against real builds
 
 `pnpm holdouts` runs every archive in `fixtures/` (real builds from public repos — gitignored, [`notes/decisions.md`](notes/decisions.md) says where each came from) through the app: load, Check 1:1, reach, and a host check (same origin, one worker). Verdicts are held against [`scripts/holdouts.expect.json`](scripts/holdouts.expect.json); a fixture expected `ok` that is not fails the run. `--only <name>`, `--record`, `--base <url> --fixtures <url>` for a production build or the live site.
 
@@ -123,11 +107,22 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 ## MCP
 
-`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. **Claude Code plugin** (skill + server in one): `/plugin marketplace add AlexanderKaan/uisandbox` then `/plugin install uisandbox@uisandbox` — gives `/uisandbox` ("open this app in a sandbox", "try brand #e11d48") and the `uisandbox` MCP server. The skill alone is [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md) (copy into `.claude/skills/`). Codex / Cursor / others: add the MCP server (`npx -y uisandbox-mcp`); the server sends its own instructions and prompts.
+`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. **Claude Code plugin** (skill + server in one): `/plugin marketplace add Ideelab/uisandbox` then `/plugin install uisandbox@uisandbox` — gives `/uisandbox` ("open this app in a sandbox", "try brand #e11d48") and the `uisandbox` MCP server. The skill alone is [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md) (copy into `.claude/skills/`). Codex / Cursor / others: add the MCP server (`npx -y uisandbox-mcp`); the server sends its own instructions and prompts.
 
 ## Deploy
 
-Static, one origin, service worker at the root. Cloudflare Pages: build command `pnpm build`, output `dist/`; `public/_headers` keeps `sw.js` uncached and sets the security headers; `public/_redirects` sends deep links to the app. Put nothing else on the origin.
+One origin, one Cloudflare Worker (`worker/index.mjs`, `wrangler.jsonc`): static assets from `dist/`, the SPA fallback for `?load=`, http→https and www→apex redirects, and the `/__repo/` route that fetches a public GitHub zip for "Connect a repo" (nothing stored; same-origin callers only; a rate-limit rule in the zone). `public/_headers` keeps `sw.js` uncached and sets the security headers. Put nothing else on the origin — the sandboxed frames are same-origin by design ([`notes/security.md`](notes/security.md)).
+
+## Who made this
+
+I'm [Alexander Kaan](https://github.com/AlexanderKaan), and I build open-source
+tooling for user interfaces. UISandbox came out of the design system generator I
+made before it: I could hand somebody a finished kit, but I could not show them
+what their own app would look like in it. This does that other half.
+
+I won't pretend I knew what I was doing at the start. Every decision, and every
+trap I fell into on the way, is in [`notes/decisions.md`](notes/decisions.md) —
+including the ones I had to undo. Issues and pull requests are welcome.
 
 ## Roadmap
 
@@ -135,4 +130,4 @@ Static, one origin, service worker at the root. Cloudflare Pages: build command 
 
 ---
 
-Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE), free forever · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)
+Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Ideelab](https://ideelab.nl/) · [MIT](LICENSE) · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)

@@ -50,7 +50,7 @@ function reportUrl(project: SandboxProject, detail: string): string {
     `**Numbers:** ${project.screens.length} screens · ${project.table.entries.length} values · platform ${project.platform.label}`,
     `**Browser:** ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}`,
   ].join('\n')
-  return `https://github.com/AlexanderKaan/uisandbox/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=build-report`
+  return `https://github.com/Ideelab/uisandbox/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=build-report`
 }
 
 export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, changedCount, warning, warningTitle, coverage, notes }: StageProps) {
@@ -202,7 +202,7 @@ export function Stage({ project, screen, onScreen, frameRef, onLoaded, onPin, ch
         </button>
         {/* The ask, at the moment it has earned it: once something was turned or the check passed. */}
         {(changedCount > 0 || (verify && !('busy' in verify) && verify.ok)) && (
-          <a className="chip stage__star" href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener" title="Useful? A star on GitHub helps others find it"><Star size={12} strokeWidth={2} /> Useful? Star it</a>
+          <a className="chip stage__star" href="https://github.com/Ideelab/uisandbox" target="_blank" rel="noopener" title="Useful? A star on GitHub helps others find it"><Star size={12} strokeWidth={2} /> Useful? Star it</a>
         )}
       </div>
     </section>

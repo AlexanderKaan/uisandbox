@@ -29,11 +29,11 @@
   "homepage": "https://uisandbox.org",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AlexanderKaan/uisandbox.git",
+    "url": "git+https://github.com/Ideelab/uisandbox.git",
     "directory": "mcp"
   },
-  "bugs": "https://github.com/AlexanderKaan/uisandbox/issues",
-  "author": "Alexander Kaan (https://pageminds.com/)",
+  "bugs": "https://github.com/Ideelab/uisandbox/issues",
+  "author": "Alexander Kaan (https://ideelab.nl/)",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.0",

@@ -11,7 +11,7 @@
  * (vite.config.ts) so the door behaves the same in both.
  */
 const MAX_BYTES = 200 * 1024 * 1024
-const UA = 'uisandbox.org (repo zip fetch; https://github.com/AlexanderKaan/uisandbox)'
+const UA = 'uisandbox.org (repo zip fetch; https://github.com/Ideelab/uisandbox)'
 // GitLab answers 406 to a non-browser fetch that accepts gzip (measured); the zip is compressed already.
 const HEADERS = (host) => host === 'GitLab' ? { 'user-agent': UA, 'accept-encoding': 'identity' } : { 'user-agent': UA }
 

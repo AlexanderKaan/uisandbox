@@ -745,7 +745,7 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     uisandbox.org → screenshot, 8 s. llms.txt and README say `npx -y
     uisandbox-mcp`.
 116. **Listed on the official MCP registry** (2026-08-19):
-    `io.github.AlexanderKaan/uisandbox` 0.1.0 → npm `uisandbox-mcp`
+    `io.github.Ideelab/uisandbox` 0.1.0 → npm `uisandbox-mcp`
     (`mcp-publisher login github` + `publish` from mcp/, description ≤ 100
     chars). Directories that read the registry (Smithery, PulseMCP, Glama,
     mcp.so) pick it up from there; submitting there directly is a form each.
@@ -771,7 +771,7 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     `uisandbox.org/?load=https://github.com/user/repo` goes through the repo
     route.
 119. **The repo is a Claude Code plugin + marketplace** (`.claude-plugin/`):
-    `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install
+    `/plugin marketplace add Ideelab/uisandbox` → `/plugin install
     uisandbox@uisandbox` brings the `/uisandbox` skill and the MCP server
     (`npx -y uisandbox-mcp`) in one step; the skill shows up in the skills
     list like any other. The official Anthropic marketplace is a submission
@@ -1786,4 +1786,40 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
        GitHub being up.
 
     Live run after the deploy: 24 of 24, uisandbox.org.
+
+173. The repo moved to `Ideelab/uisandbox`, and the credit with it.
+
+    Every link, slug and remote now points at the organisation:
+    `github.com/Ideelab/uisandbox`, the plugin marketplace slug in the README,
+    the install line and the skill, the Star button's `REPO`, the issue and
+    discussion links, the worker's user agent, `llms.txt`. The footer reads
+    "Alexander Kaan at Ideelab" against ideelab.nl, and the copyright with it.
+    The bare `github.com/AlexanderKaan` profile links stayed: those point at the
+    PERSON, which is the whole point of #168's first-person note.
+
+    Two identifiers were deliberately NOT renamed:
+    `mcp/server.json`'s `name` and `mcp/package.json`'s `mcpName`, both
+    `io.github.AlexanderKaan/uisandbox`. That is a PUBLISHED registry
+    identifier sitting in other people's configs, and the namespace is
+    authenticated against a GitHub account rather than a repository path.
+    Renaming it does not move the entry, it creates a second one and orphans
+    the first. `server.json`'s `repository.url` was left alongside it for the
+    same reason: it is the input to `mcp-publisher`, and whether the registry
+    cross-checks the repo owner against the namespace is not something to find
+    out by breaking a publish the day before launch. npm's own metadata
+    (`repository`, `bugs`) did move — GitHub redirects the old path anyway.
+
+174. `public/llms-full.txt` had drifted, in the one file written for a machine
+    to read and repeat back.
+
+    It was a hand-kept copy of the README, and three days after the copy pass it
+    still carried "Honest by construction", "1:1 is measured, not felt" and
+    "free forever". One source, no mirror — and this was a mirror nobody looked
+    at, which is the kind that rots quietly.
+
+    `scripts/llms.mjs` assembles it now: `public/llms-preamble.md` (the agent-
+    facing part, which is genuinely its own text) plus the README from its first
+    `##`, skipping the badges and centred HTML that are markup for GitHub rather
+    than prose for a reader. The preamble's own "How honesty is enforced" became
+    "How to check it", the same correction #168 made everywhere else.
 

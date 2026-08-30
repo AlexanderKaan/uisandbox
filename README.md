@@ -12,7 +12,7 @@ Drop your build, turn the knobs, export the code.<br>
   <a href="https://uisandbox.org">uisandbox.org</a> ·
   <a href="https://www.npmjs.com/package/uisandbox-mcp">npm: uisandbox-mcp</a> ·
   <a href="https://registry.modelcontextprotocol.io/v0/servers?search=uisandbox">MCP registry</a> ·
-  <a href="https://github.com/AlexanderKaan/uisandbox/discussions">Discussions</a> ·
+  <a href="https://github.com/Ideelab/uisandbox/discussions">Discussions</a> ·
   <a href="LICENSE">MIT</a>
 </p>
 
@@ -25,7 +25,7 @@ Drop your build, turn the knobs, export the code.<br>
 npx uisandbox-mcp open            # run inside your project: it finds the build and opens the sandbox — no agent needed
 ```
 
-Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand? *Try a sample* under the drop zone (the Bootstrap docs, a VitePress site, an admin dashboard). Or, in Claude Code: `/plugin marketplace add AlexanderKaan/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
+Or drop a zip on **[uisandbox.org](https://uisandbox.org)** — no build at hand? *Try a sample* under the drop zone (the Bootstrap docs, a VitePress site, an admin dashboard). Or, in Claude Code: `/plugin marketplace add Ideelab/uisandbox` → `/plugin install uisandbox@uisandbox` and say *"open this app in UISandbox"*.
 
 <p align="center"><img src="brand/marketing/launch.gif" alt="Four real builds in the sandbox: a dashboard's brand colour swept through the spectrum, a docs site switched to its own dark mode, another's hue rotated and its type swapped to monospace, then the 1:1 check reporting no differences" width="880"></p>
 
@@ -99,7 +99,7 @@ notes/           decisions (numbered), traps, lessons, security, roadmap
 
 ## MCP
 
-`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. **Claude Code plugin** (skill + server in one): `/plugin marketplace add AlexanderKaan/uisandbox` then `/plugin install uisandbox@uisandbox` — gives `/uisandbox` ("open this app in a sandbox", "try brand #e11d48") and the `uisandbox` MCP server. The skill alone is [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md) (copy into `.claude/skills/`). Codex / Cursor / others: add the MCP server (`npx -y uisandbox-mcp`); the server sends its own instructions and prompts.
+`npx -y uisandbox-mcp` ([npm](https://www.npmjs.com/package/uisandbox-mcp)) — or `pnpm mcp` from a clone — runs the same engine as an MCP server (stdio): `load` a zip by URL or path, `set` knobs, `export` any format, `verify` the 1:1 check and `screenshot` in headless Chromium against the real app. See [`mcp/README.md`](mcp/README.md) for the tool list and the Claude/Cursor config. **Claude Code plugin** (skill + server in one): `/plugin marketplace add Ideelab/uisandbox` then `/plugin install uisandbox@uisandbox` — gives `/uisandbox` ("open this app in a sandbox", "try brand #e11d48") and the `uisandbox` MCP server. The skill alone is [`skills/uisandbox/SKILL.md`](skills/uisandbox/SKILL.md) (copy into `.claude/skills/`). Codex / Cursor / others: add the MCP server (`npx -y uisandbox-mcp`); the server sends its own instructions and prompts.
 
 ## Deploy
 
@@ -122,4 +122,4 @@ including the ones I had to undo. Issues and pull requests are welcome.
 
 ---
 
-Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Pageminds](https://pageminds.com/) · [MIT](LICENSE) · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)
+Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at [Ideelab](https://ideelab.nl/) · [MIT](LICENSE) · the decisions that shaped it, numbered: [`notes/decisions.md`](notes/decisions.md)

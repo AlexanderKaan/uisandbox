@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { GithubMark } from './Mark'
 
-const REPO = 'AlexanderKaan/uisandbox'
+const REPO = 'Ideelab/uisandbox'
 const KEY = 'us-stars'
 
 /** "Star" — the GitHub button with a live count (one request an hour per browser). */

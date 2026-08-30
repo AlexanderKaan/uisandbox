@@ -4,7 +4,7 @@ import { Check, Copy } from 'lucide-react'
 const LINES: Array<{ id: string; label: string; cmd: string; hint: string }> = [
   { id: 'cli', label: 'Terminal', cmd: 'npx uisandbox-mcp open', hint: 'Run it inside your project: it finds the build (dist/, build/, out/, whatever yours is called) and opens the sandbox in your browser. A folder or zip as argument works too.' },
   { id: 'claude', label: 'Claude Code', cmd: 'claude mcp add uisandbox -- npx -y uisandbox-mcp', hint: 'Then: "open this app in UISandbox". It builds, loads, opens.' },
-  { id: 'plugin', label: '/uisandbox skill', cmd: '/plugin marketplace add AlexanderKaan/uisandbox\n/plugin install uisandbox@uisandbox', hint: 'Two commands in Claude Code: the /uisandbox skill and the MCP server in one plugin.' },
+  { id: 'plugin', label: '/uisandbox skill', cmd: '/plugin marketplace add Ideelab/uisandbox\n/plugin install uisandbox@uisandbox', hint: 'Two commands in Claude Code: the /uisandbox skill and the MCP server in one plugin.' },
   { id: 'mcp', label: 'Any MCP client', cmd: 'npx -y uisandbox-mcp', hint: 'Cursor, Claude Desktop, Codex: add as a stdio server.' },
 ]
 
@@ -37,7 +37,7 @@ export function InstallLine({ compact = false }: { compact?: boolean } = {}) {
         <code className="install__cmd">{line.cmd.split('\n').map((l, i) => <span key={i} className="install__line">{l}</span>)}</code>
         <button type="button" className="install__copy" onClick={copy} aria-label="Copy" title="Copy">{copied ? <Check size={14} strokeWidth={2.5} /> : <Copy size={14} />}</button>
       </div>
-      <div className="install__hint">{line.hint} · <a href="https://www.npmjs.com/package/uisandbox-mcp" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/mcp/README.md" target="_blank" rel="noopener">docs</a></div>
+      <div className="install__hint">{line.hint} · <a href="https://www.npmjs.com/package/uisandbox-mcp" target="_blank" rel="noopener">npm</a> · <a href="https://github.com/Ideelab/uisandbox/blob/main/mcp/README.md" target="_blank" rel="noopener">docs</a></div>
     </div>
   )
 }

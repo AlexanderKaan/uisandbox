@@ -30,7 +30,7 @@ The tool as it is, on its own origin, with a name on it.
   runner against the built preview (`--base`), not only the dev server.
 - **The name on it.** Footer on the intake and the stage:
   "Made with ♥ by [Alexander Kaan](https://github.com/AlexanderKaan) at
-  [Pageminds](https://pageminds.com/) · [MIT](https://opensource.org/licenses/MIT),
+  [Ideelab](https://ideelab.nl/) · [MIT](https://opensource.org/licenses/MIT),
   free forever". GitHub link (icon) in the top bar. `LICENSE` (MIT) in the repo.
 - **README refresh.** The current "Scope, honestly (sprint 1)" is stale: CDN
   stylesheets ARE rewritten (the `/__ext/` proxy), SPA routes ARE discovered,

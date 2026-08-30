@@ -76,7 +76,7 @@ export function Intake({ onArchive, onUrl, onSample, busy, error }: IntakeProps)
         <InstallLine compact />
         <ul className="hero__proof" aria-label="In short">
           <li><Check size={13} strokeWidth={2.5} /> Free</li>
-          <li><Check size={13} strokeWidth={2.5} /> Open source <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">(MIT)</a></li>
+          <li><Check size={13} strokeWidth={2.5} /> Open source <a href="https://github.com/Ideelab/uisandbox/blob/main/LICENSE" target="_blank" rel="noopener license">(MIT)</a></li>
           <li><Check size={13} strokeWidth={2.5} /> Your files never leave your browser <button type="button" className="hero__info" onClick={() => setShowPrivacy(true)} aria-label="How your files stay private" title="How your files stay private"><Info size={13} /></button></li>
         </ul>
       </section>
@@ -198,7 +198,7 @@ function PrivacyCard({ onClose }: { onClose: () => void }) {
         <ul>
           <li><b>Watch the network tab</b> while you drop, turn knobs and export: no request carries your bytes anywhere.</li>
           <li><b>Go offline.</b> Load the page, switch off your network, then drop the zip: everything still works, because nothing needed the network.</li>
-          <li><b>Read the code.</b> It is open source (MIT): <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/src/sandbox/host.ts" target="_blank" rel="noopener">the file that serves your files</a> and <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">the full security note</a>, including what a hostile archive can and cannot do here.</li>
+          <li><b>Read the code.</b> It is open source (MIT): <a href="https://github.com/Ideelab/uisandbox/blob/main/src/sandbox/host.ts" target="_blank" rel="noopener">the file that serves your files</a> and <a href="https://github.com/Ideelab/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">the full security note</a>, including what a hostile archive can and cannot do here.</li>
         </ul>
         <p className="privacy__fine">The one exception, said plainly: <em>Connect a repo</em> sends that public GitHub/GitLab URL through uisandbox.org, because neither host lets a browser fetch an archive directly. Nothing is stored. Drop a zip or a folder and not even that leaves your browser.</p>
       </div>
@@ -296,7 +296,7 @@ function Landing() {
       </section>
       <section className="landing__sec">
         <h2 id="privacy">Your files never leave your browser</h2>
-        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. You can check this yourself: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip: everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
+        <p>There is no server behind the sandbox, no account, no cookies and no analytics. Your files are read in the page and served to the frame by a service worker on this origin; the knobs are a URL hash; exports are generated here. You can check this yourself: watch the network tab while you drop and export (no request carries your bytes), or load the page, go offline and drop the zip: everything still works. The one exception is <em>Connect a repo</em>: a public GitHub or GitLab URL goes through uisandbox.org to fetch the zip, because neither host lets a browser fetch it directly; nothing is stored. A hostile archive cannot navigate this page away, register its own worker, or smuggle a path out of an export. <a href="https://github.com/Ideelab/uisandbox/blob/main/notes/security.md" target="_blank" rel="noopener">The full security note.</a></p>
       </section>
       <section className="landing__sec">
         <h2>From your terminal, or from your agent</h2>
@@ -307,7 +307,7 @@ function Landing() {
       <section className="landing__sec landing__sec--quiet">
         <h2>Who made this</h2>
         <p>I'm <a href="https://github.com/AlexanderKaan" target="_blank" rel="noopener">Alexander Kaan</a>, and I build open-source tooling for user interfaces. UISandbox came out of the design system generator I made before it: I could hand somebody a finished kit, but I could not show them what their own app would look like in it. This does that other half.</p>
-        <p>I won't pretend I knew what I was doing at the start. Every decision, and every trap I fell into on the way, is written down in the repo's <a href="https://github.com/AlexanderKaan/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a> — including the ones I had to undo. It's <a href="https://github.com/AlexanderKaan/uisandbox" target="_blank" rel="noopener">MIT</a>, and issues and pull requests are welcome.</p>
+        <p>I won't pretend I knew what I was doing at the start. Every decision, and every trap I fell into on the way, is written down in the repo's <a href="https://github.com/Ideelab/uisandbox/blob/main/notes/decisions.md" target="_blank" rel="noopener">notes</a> — including the ones I had to undo. It's <a href="https://github.com/Ideelab/uisandbox" target="_blank" rel="noopener">MIT</a>, and issues and pull requests are welcome.</p>
       </section>
     </div>
   )

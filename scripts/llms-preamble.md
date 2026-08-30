@@ -18,9 +18,9 @@ Site: https://uisandbox.org/ · Source: https://github.com/Ideelab/uisandbox · 
 - It does not render source repositories — a build is needed (npm run build → dist/). Source is audited for the knob stand only.
 - It does not upload anything: files are read in the page and served to a sandbox frame by a service worker on the same origin. No account, no cookies, no analytics. Verifiable: the page keeps working with the network off, and the network tab stays quiet while you drop, turn knobs and export.
 
-## How honesty is enforced
+## How to check it
 
-- "1:1" is measured: the check loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties). Zero differences, or it says what differs.
+- "1:1" is not a claim to take on trust: the check loads the untouched build and the tokenised build side by side and diffs the computed styles of every element (18 properties). Zero differences, or it says what differs.
 - A reach meter reports how much of what is painted the knobs touch, and what lies outside (images, canvas, video).
 - Archives it cannot show are refused at the door with a clear reason.
 
@@ -36,3 +36,5 @@ Site: https://uisandbox.org/ · Source: https://github.com/Ideelab/uisandbox · 
 - Full description: https://uisandbox.org/llms-full.txt
 - Security model: https://github.com/Ideelab/uisandbox/blob/main/notes/security.md
 - Decisions log: https://github.com/Ideelab/uisandbox/blob/main/notes/decisions.md
+
+## The full README

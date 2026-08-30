@@ -37,7 +37,7 @@ Limits, so you don't have to find them: it is for web apps — a native iOS or A
 
 There is also an MCP server (`npx uisandbox-mcp`) — in Claude Code, "open this app in UISandbox" builds, loads and opens the real sandbox; what you turn comes back so "export what I changed" works — and a CLI: `npx uisandbox-mcp open ./dist`.
 
-MIT. https://uisandbox.org · https://github.com/AlexanderKaan/uisandbox — happy to answer anything about the rewriter or the 1:1 check.
+MIT. https://uisandbox.org · https://github.com/Ideelab/uisandbox — happy to answer anything about the rewriter or the 1:1 check.
 
 ## Product Hunt
 
