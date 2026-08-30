@@ -1882,3 +1882,42 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     load a build, turn the knobs, export the code." No npm republish needed —
     the description the registry validates lives in `server.json` alone.
 
+177. Publishing under an ORG namespace is a different problem from publishing
+    under a personal one, and the error message points at the wrong fix.
+
+    After the description was under 100, `mcp-publisher publish` returned:
+
+        403 · You have permission to publish: io.github.AlexanderKaan/*
+             Attempting to publish: io.github.Ideelab/uisandbox
+             ... you may need to make your organization membership public
+
+    That suggestion is GitHub's, and it is wrong for this registry. I relayed
+    it without checking, the membership was made public, and nothing changed.
+    The registry's own source says what it actually does:
+
+        // Org namespaces are only granted to org Owners (membership role
+        // "admin"), not to ordinary members.
+        GET /user/memberships/orgs?state=active   → role == "admin"
+
+    Visibility is never read. Two things can make that call come back without
+    the org, and they look identical from outside:
+
+      - you are a Member rather than an Owner, or
+      - the token cannot see the org at all, in which case GitHub answers 403
+        and the registry DEGRADES GRACEFULLY to "no admin orgs" — deliberately,
+        so a minimal personal token still works.
+
+    It was the second. Ideelab has "Third-party application access policy:
+    Access restricted", and the registry authenticates as a GitHub App
+    (`Iv23liUydBbI7Z2Q9bOZ` — the `Iv23li` prefix is the tell), which had never
+    been granted access. "No pending requests" on that settings page was the
+    evidence: the device flow never asks.
+
+    The way through, and the one that touches no organisation setting:
+    `mcp-publisher login github --token=<classic PAT with read:org>`. The docs
+    mention it in one line as how GitHub Actions authenticates.
+
+    `io.github.Ideelab/uisandbox` 0.3.3 is live and latest. The four entries
+    under the personal namespace are to be deprecated, not deleted, so anyone
+    holding the old name is told where it went.
+
