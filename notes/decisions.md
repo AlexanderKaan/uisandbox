@@ -1851,3 +1851,34 @@ react-virtualized 100/100/100 (180 el., all runtime inline styles tokenised).
     "rename it while it is cheap, and know the number before you decide which
     that is."
 
+176. The registry publish failed on a limit that had already been fixed once.
+
+    npm went out as 0.3.3, the GitHub auth for the new `io.github.Ideelab`
+    namespace passed cleanly — the thing I said I was unsure about was fine —
+    and then:
+
+        422 validation failed · body.description · expected length <= 100
+
+    108 characters. `git log -L` on that one field tells the whole story:
+
+        800bb00  server.json: description within the registry's 100 characters
+        933b4b7  Play with your app's design in a safe sandbox
+        7c6d73f  Play with your app's design. Right in the browser.
+
+    Fixed deliberately in a commit that says so in its subject, then broken
+    twice by headline passes that rewrote the description to match the new
+    hero and had no reason to know a limit existed. That is not a lapse anyone
+    will remember not to repeat, so a shorter string is not the fix.
+
+    `src/__tests__/mcpManifest.test.ts` holds four things the registry checks
+    and the suite otherwise cannot see: the description length, that
+    `server.json`'s version and `packages[0].version` match npm's (the registry
+    verifies the named npm version exists), that the namespace is spelled the
+    same in both files, and that the repository URL is the one the code lives
+    in. A publish is the worst moment to learn any of them, because npm has
+    already gone out and cannot be recalled.
+
+    Description now 90 characters: "Play with your app's design in the browser:
+    load a build, turn the knobs, export the code." No npm republish needed —
+    the description the registry validates lives in `server.json` alone.
+
